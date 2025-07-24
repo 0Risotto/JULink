@@ -5,7 +5,11 @@ class AppTheme {
   static final lightTheme =ThemeData(
     primaryColor: AppColors.primary,
     fontFamily: 'Inter',
-    scaffoldBackgroundColor: AppColors.lightBackground,
+textSelectionTheme: TextSelectionThemeData(
+  cursorColor: Colors.grey,
+  selectionColor: Colors.grey.withOpacity(0.4), // optional opacity
+  selectionHandleColor: Colors.grey,
+),    scaffoldBackgroundColor: AppColors.lightBackground,
     brightness: Brightness.light,
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -24,7 +28,11 @@ class AppTheme {
 static final darkTheme =ThemeData(
     primaryColor: AppColors.primary,
         fontFamily: 'Inter',
-
+textSelectionTheme: TextSelectionThemeData(
+  cursorColor: AppColors.lightBackground,
+  selectionColor: AppColors.lightBackground.withOpacity(0.4), // optional opacity
+  selectionHandleColor: AppColors.lightBackground,
+),
     scaffoldBackgroundColor: AppColors.darkBackground,
     brightness: Brightness.dark,
     elevatedButtonTheme: ElevatedButtonThemeData(

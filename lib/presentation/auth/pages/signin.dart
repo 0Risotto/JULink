@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:julink/common/helper/is_dark_mode.dart';
 import 'package:julink/core/configs/assets/app_vectors.dart';
 
 class SigninPage extends StatelessWidget {
@@ -16,7 +17,7 @@ class SigninPage extends StatelessWidget {
           height: 555,
           padding: EdgeInsets.all(32),
           decoration: BoxDecoration(
-            color: Color(0xffF1F1F1),
+            color: context.isDarkMode? Color(0xffF1F1F1):Color(0xffF1F1F1),
             borderRadius: BorderRadius.circular(16),
             boxShadow: const[
               BoxShadow(
@@ -39,7 +40,7 @@ class SigninPage extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SvgPicture.asset(AppVectors.logo,height: 60,width: 99.1),
+        SvgPicture.asset(AppVectors.logo,height: 110,width: 99.1),
         SizedBox(height:  50,),
         Text("Sign in With Your Account",
           style:TextStyle(fontSize: 24,fontWeight: FontWeight.w600,),

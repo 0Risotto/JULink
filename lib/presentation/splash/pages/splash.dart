@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:julink/core/configs/assets/app_vectors.dart';
-import 'package:julink/presentation/auth/pages/signin.dart';
+import 'package:julink/presentation/choose_mode/pages/choose_mode.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -21,7 +21,7 @@ class _SplashPageState extends State<SplashPage> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (BuildContext context) => const SigninPage(),
+        builder: (BuildContext context) => const ChooseModePage(),
       ),
     );
   }
