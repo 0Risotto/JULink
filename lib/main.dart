@@ -8,6 +8,7 @@ import 'package:julink/presentation/splash/pages/splash.dart';
 import 'package:path_provider/path_provider.dart';
 
 Future<void> main() async {
+  // sponsored and explained by leti
   WidgetsFlutterBinding.ensureInitialized();
   HydratedBloc.storage = await HydratedStorage.build(
     storageDirectory: kIsWeb
@@ -26,11 +27,12 @@ class MyApp extends StatelessWidget {
       providers: [BlocProvider(create: (_) => ThemeCubit())],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, mode) => MaterialApp(
-            theme: AppTheme.lightTheme,
-            themeMode: mode,
-            darkTheme: AppTheme.darkTheme,
-            debugShowCheckedModeBanner: false,
-            home: const SplashPage()),
+          theme: AppTheme.lightTheme,
+          themeMode: mode,
+          darkTheme: AppTheme.darkTheme,
+          debugShowCheckedModeBanner: false,
+          home: const SplashPage(),
+        ),
       ),
     );
   }
