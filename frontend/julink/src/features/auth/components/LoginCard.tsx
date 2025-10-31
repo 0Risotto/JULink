@@ -1,16 +1,23 @@
 import { Button } from "@/components/ui/button"
 import {
   Card,
-  CardAction,
+//  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import julinkLogo from '../../../assets/images/julink_logo_noname.png'
 
 export function LoginCard() {
   return (
@@ -30,7 +37,7 @@ export function LoginCard() {
               <Input
                 id="email"
                 type="email"
-                placeholder="usr@ju.edu.jo"
+                placeholder="user@ju.edu.jo"
                 required
               />
             </div>
@@ -54,7 +61,7 @@ export function LoginCard() {
           Login
         </Button>
         <Button variant="outline" className="w-full">
-          Login with Google
+          Register
         </Button>
       </CardFooter>
     </Card>

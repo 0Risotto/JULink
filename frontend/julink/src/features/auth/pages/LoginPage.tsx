@@ -1,6 +1,5 @@
 import { LoginCard } from '../components/LoginCard'
 import julinkLogo from '../../../assets/icons/julink_logo.svg'
-import julinkLogo2 from '../../../assets/images/julink_logo_noname.png'
 
 function LoginPage() {
   return (
@@ -12,7 +11,7 @@ function LoginPage() {
           alt="JULink logo"
           className="w-40 h-auto"
         />
-        <p className="max-w-md text-lg text-gray-700 text-justify">
+        <p className="max-w-md text-lg  text-justify">
           A social platform created by students at the University of Jordan to enhance communication and
           collaboration within the university community.
         </p>
