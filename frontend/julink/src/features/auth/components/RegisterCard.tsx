@@ -17,8 +17,33 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useEffect, useState } from "react"
 
 export function RegisterCard() {
+    const [showOtp, setShowOtp] = useState(true);
+
+    { /*counter*/ }
+    const [otpSeconds, setOtpSeconds] = useState(180);
+
+  useEffect(() => {
+  if (!showOtp) return;
+
+  setOtpSeconds(180); // start from 3 minutes whenever OTP is shown
+  const id = setInterval(() => {
+    setOtpSeconds((s) => {
+      if (s <= 1) {
+        clearInterval(id);
+        return 0;
+      }
+      return s - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(id);
+}, [showOtp]);
+
+
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
@@ -86,6 +111,19 @@ export function RegisterCard() {
               <Label htmlFor="confirmPassword">Repeat Password</Label>
               <Input id="confirmPassword" type="password" required />
             </div>
+
+           {showOtp && (
+              <div className="grid grid-cols-[1fr_140px] gap-4 items-end">
+              <div className="grid gap-2">
+              <Label htmlFor="otp">OTP</Label>
+              <Input id="otp" placeholder="One Time Password" required />
+              </div>
+              <Button type="button" className="w-full">
+              Verify ({otpSeconds}s)
+              </Button>
+              </div>
+          )}
+
           </div>
         </form>
       </CardContent>
