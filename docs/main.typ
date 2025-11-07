@@ -4,6 +4,7 @@
 
 #show link: set text(fill: blue, weight: 700)
 #show link: underline
+#show link : emph 
 
 
 #counter(page).update(0)
@@ -13,9 +14,9 @@
         columns: (1fr, 1fr), 
         column-gutter: 1cm, 
         align: (center, center))[
-        #image("assets/KASIT-removebg-preview.svg", fit: "contain", height: 4cm)][
+        #image("assets/logo/KASIT-removebg-preview.svg", fit: "contain", height: 4cm)][
         #grid(columns: (auto, auto), align: (left, center))[
-                #image("assets/JU.svg", fit: "contain", height: 4cm)
+                #image("assets/logo/JU.svg", fit: "contain", height: 4cm)
         ][
                 #align(horizon + left)[
                         #par(leading: 1em)[
@@ -43,7 +44,7 @@
 
 #v(4cm)
 #align(center)[ #image(
-    "assets/JULink logo.svg",
+    "assets/logo/JULink logo.svg",
     fit: "contain",
     width: 10cm,
     height: 4cm,
