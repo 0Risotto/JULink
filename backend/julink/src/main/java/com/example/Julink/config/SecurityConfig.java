@@ -20,10 +20,13 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable()) // dev only; or csrf.ignoringRequestMatchers("/entry/createUser")
-                .authorizeHttpRequests(auth -> auth
+                .cors() // Enable CORS configuration
+                .and()
+                .authorizeRequests(auth -> auth
                         .requestMatchers("/entry/createUser",
                                 "/entry/sendOTP",
-                                "entry/CheckOTPValidity").permitAll()
+                                "/entry/CheckOTPValidity") // Corrected the URL pattern
+                        .permitAll()
                         .anyRequest().authenticated()
                 );
         return http.build();
@@ -40,8 +43,9 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(List.of("http://localhost:*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(true); // Allow credentials (cookies, authorization headers)
 
+        // Configure CORS for all endpoints
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
