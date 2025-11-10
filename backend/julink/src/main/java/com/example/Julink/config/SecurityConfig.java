@@ -23,9 +23,7 @@ public class SecurityConfig {
                 .cors() // Enable CORS configuration
                 .and()
                 .authorizeRequests(auth -> auth
-                        .requestMatchers("/entry/createUser",
-                                "/entry/sendOTP",
-                                "/entry/CheckOTPValidity") // Corrected the URL pattern
+                        .requestMatchers("entry/*") // Corrected the URL pattern
                         .permitAll()
                         .anyRequest().authenticated()
                 );

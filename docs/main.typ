@@ -60,9 +60,9 @@
         columns:2,
         align: center,             
       [Student Name],[Student ID],
-      [Anas AlRao'sh], [2222312],
       [Anas AL-Jallad],[0225343],
       [Ahmad AlManasrah],[0227255],
+      [Anas AlRao'sh], [2222312],
     )
   ] 
 #set heading(numbering: "1.")

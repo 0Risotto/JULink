@@ -2,6 +2,7 @@ package com.example.Julink.controller;
 
 
 import com.example.Julink.dto.CreateUserRequestDTO;
+import com.example.Julink.dto.LoginUserDTO;
 import com.example.Julink.dto.OTPDTO;
 import com.example.Julink.dto.SendOTPDTO;
 import com.example.Julink.reposotiry.UserRepo;
@@ -34,9 +35,15 @@ public class UserController {
         return "success";
 
     }
-    @PostMapping("/CheckOTPValidity")
+    @PostMapping("/checkOTPValidity")
     public String checkOTPValidity(@RequestBody OTPDTO dto){
         userService.verifyOTP(dto.otp(),dto.email());
+        return "success";
+    }
+
+    @PostMapping("/loginUser")
+    public String loginUser(@RequestBody LoginUserDTO loginUserDTO){
+        userService.loginUser(loginUserDTO);
         return "success";
     }
 }
