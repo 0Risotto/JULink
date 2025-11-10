@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { registerUser } from "@/services/authService";
+import { registerUser, sendOTP, verifyOTP } from "@/services/authService";
 
 export interface RegisterData {
   username: string;
@@ -10,6 +10,11 @@ export interface RegisterData {
   password: string;
 }
 
+export interface verifyOTPData{
+  email: string;
+  otp: string;
+  
+}
 interface AuthState {
   user: any | null;
   loading: boolean;
@@ -35,6 +40,31 @@ export const registerUserThunk = createAsyncThunk(
     }
   }
 );
+
+export const sendOTPThunk = createAsyncThunk(
+  "auth/sendOTP",
+  async (data: { email: string }, { rejectWithValue }) => {
+    try {
+      const res = await sendOTP(data);
+      return res;
+    } catch (err: any) {
+      return rejectWithValue(err.message || "OTP sending failed");
+    }
+  }
+);
+
+export const verifyOTPThunk = createAsyncThunk(
+  "auth/verifyOTP",
+  async (data: verifyOTPData, { rejectWithValue }) => {
+    try {
+      const res = await verifyOTP(data);
+      return res;
+    } catch (err: any) {
+      return rejectWithValue(err.message || "OTP verification failed");
+    }
+  }
+);
+
 
 const authSlice = createSlice({
   name: "auth",
