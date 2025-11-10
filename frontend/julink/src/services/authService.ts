@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { RegisterData, verifyOTPData } from "@/store/slices/authSlice";
+import type { RegisterData, verifyOTPData ,loginUserData} from "@/store/slices/authSlice";
 
 const API_URL = "http://localhost:8080/entry"; 
 
@@ -15,5 +15,11 @@ export const sendOTP = async (data: { email: string }) => {
 
 export const verifyOTP = async (data: verifyOTPData) => {
   const response = await axios.post(`${API_URL}/checkOTPValidity`, data);
+  return response.data;
+};
+
+// to do here -> make a storage state where user's token can be saved.
+export const loginUser = async (data:loginUserData)=>{
+  const response = await axios.post(`${API_URL}/loginUser`, data);
   return response.data;
 };

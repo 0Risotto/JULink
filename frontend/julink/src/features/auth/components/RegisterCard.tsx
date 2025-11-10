@@ -4,16 +4,18 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
-import { registerUserThunk, resetState } from "@/store/slices/authSlice";
+import { registerUserThunk, resetState, sendOTPThunk, verifyOTPThunk } from "@/store/slices/authSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hook";
 import { Colleges } from "@/types/college";
 
 export function RegisterCard() {
   const dispatch = useAppDispatch();
   const { loading, error, success } = useAppSelector((state) => state.auth);
-
+  const [showOtp,setShowOtp]=useState(false);
   const collegeList = Object.entries(Colleges); 
-
+  const [otpField,setOtpField] = useState({
+    otp :""
+  })
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -46,12 +48,38 @@ export function RegisterCard() {
         password: form.password,
       })
     );
+
+    dispatch(
+      sendOTPThunk(
+        {
+          email : form.email,
+        }
+      )
+    )
+    setShowOtp(true);
   };
+
+  const handleOtpSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (form.password !== form.confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+
+    dispatch(
+      verifyOTPThunk({
+        email: form.email,
+        otp : otpField.otp
+      })
+    );
+  };
+
+
 
   useEffect(() => {
     if (success) {
-      alert("Registration successful!");
-      dispatch(resetState());
+        
     }
   }, [success]);
 
@@ -72,7 +100,7 @@ export function RegisterCard() {
 
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={form.email} onChange={handleChange} placeholder="user@ju.edu.jo" required />
+              <Input id="email" type="email" value={form.email } onChange={handleChange} placeholder="user@ju.edu.jo" required />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -116,10 +144,15 @@ export function RegisterCard() {
               <Label htmlFor="confirmPassword">Repeat Password</Label>
               <Input id="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange} required />
             </div>
-
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            
+           {showOtp && <div className="grid gap-1">
+              <Label htmlFor="verifyOtp">OTP</Label>
+              <Input id="confirmPassword" type="password" value={otpField.otp} onChange={handleChange} required />
+            </div>
+            }
+            {error && <p className="text-red-500 text-sm">{"Please Check Your Credintials"}</p>}
           </div>
-
+            
           <CardFooter className="flex-col gap-2 mt-4">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Registering..." : "Register"}

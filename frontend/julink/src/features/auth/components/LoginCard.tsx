@@ -1,136 +1,97 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useEffect, useState } from "react";
-import { registerUserThunk, resetState } from "@/store/slices/authSlice";
-import { useAppDispatch, useAppSelector } from "@/store/hook";
-import { Colleges } from "@/types/college";
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+//  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
-export function RegisterCard() {
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { loginUserThunk } from "@/store/slices/authSlice"
+import { useEffect, useState } from "react"
+import { useAppDispatch, useAppSelector } from "@/store/hook";
+
+
+export function LoginCard() {
+  
   const dispatch = useAppDispatch();
   const { loading, error, success } = useAppSelector((state) => state.auth);
 
-  // store enum keys in the dropdown
-  const collegeList = Object.entries(Colleges); // [ [enumKey, displayName], ... ]
-
-  const [form, setForm] = useState({
-    username: "",
-    email: "",
-    firstName: "",
-    lastName: "",
-    college: "", // will store the enum key (SCIENCE, AGRICULTURE, etc.)
-    password: "",
-    confirmPassword: "",
-  });
-
+  const [form,setForm] = useState({
+    email :"",
+    password :"",
+  })
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.id]: e.target.value });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (form.password !== form.confirmPassword) {
-      alert("Passwords do not match!");
-      return;
-    }
-
-    dispatch(
-      registerUserThunk({
-        username: form.username,
-        email: form.email,
-        firstName: form.firstName,
-        lastName: form.lastName,
-        college: form.college, // <-- sends enum key now
-        password: form.password,
-      })
-    );
+        e.preventDefault();
+        dispatch(loginUserThunk({
+          email : form.email,
+          password :form.password
+        }));
   };
 
   useEffect(() => {
     if (success) {
-      alert("Registration successful!");
-      dispatch(resetState());
+        alert("Successfully logged in hehe ")
     }
   }, [success]);
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-sm">
       <CardHeader>
-        <CardTitle>Register</CardTitle>
-        <CardDescription>Create your JULink account</CardDescription>
-      </CardHeader>
+        <CardTitle>Login</CardTitle>
+        <CardDescription>
+          Welcome to JULink
+        </CardDescription>
 
-      <CardContent>
+      </CardHeader>
         <form onSubmit={handleSubmit}>
+        <CardContent>
           <div className="flex flex-col gap-6">
             <div className="grid gap-2">
-              <Label htmlFor="username">Username</Label>
-              <Input id="username" value={form.username} onChange={handleChange} placeholder="your_username" required />
-            </div>
-
-            <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={form.email} onChange={handleChange} placeholder="user@ju.edu.jo" required />
+              <Input
+                id="email"
+                type="email"
+                placeholder="user@ju.edu.jo"
+                onChange={handleChange}
+                required
+                value={form.email}
+              />
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input id="firstName" value={form.firstName} onChange={handleChange} placeholder="First name" required />
+            <div className="grid gap-2">
+              <div className="flex items-center">
+                <Label htmlFor="password">Password</Label>
+                <a
+                  href="#"
+                  className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                >
+                  Forgot your password?
+                </a>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" value={form.lastName} onChange={handleChange} placeholder="Last name" required />
-              </div>
+              <Input id="password" type="password" required value={form.password} onChange={handleChange} />
             </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="college">Faculty</Label>
-              <DropdownMenu>
-                <DropdownMenuTrigger>
-                  {form.college ? Colleges[form.college as keyof typeof Colleges] : "Select Faculty"}
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuLabel>Faculties</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {collegeList.map(([key, name]) => (
-                    <DropdownMenuItem
-                      key={key}
-                      onClick={() => setForm({ ...form, college: key })}
-                    >
-                      {name}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={form.password} onChange={handleChange} required />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="confirmPassword">Repeat Password</Label>
-              <Input id="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange} required />
-            </div>
-
-            {error && <p className="text-red-500 text-sm">{error}</p>}
           </div>
-
-          <CardFooter className="flex-col gap-2 mt-4">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Registering..." : "Register"}
-            </Button>
-            <Button variant="outline" className="w-full">
-              Back to Login
-            </Button>
-          </CardFooter>
-        </form>
       </CardContent>
+      <CardFooter className="flex-col gap-2">
+        <Button type="submit" className="w-full">
+          Login
+        </Button>
+        <Button variant="outline" className="w-full">
+          Register
+        </Button>
+      </CardFooter>
+        </form>
+      
     </Card>
-  );
+    
+  )
 }
+

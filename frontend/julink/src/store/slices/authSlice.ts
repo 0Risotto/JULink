@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { registerUser, sendOTP, verifyOTP } from "@/services/authService";
+import { loginUser, registerUser, sendOTP, verifyOTP } from "@/services/authService";
 
 export interface RegisterData {
   username: string;
@@ -10,11 +10,16 @@ export interface RegisterData {
   password: string;
 }
 
-export interface verifyOTPData{
+export interface verifyOTPData {
   email: string;
   otp: string;
-  
 }
+
+export interface loginUserData {
+  email: string;
+  password: string;
+}
+
 interface AuthState {
   user: any | null;
   loading: boolean;
@@ -65,6 +70,18 @@ export const verifyOTPThunk = createAsyncThunk(
   }
 );
 
+export const loginUserThunk = createAsyncThunk(
+  "auth/loginUser",
+  async (data: loginUserData, { rejectWithValue }) => {
+    try {
+      const res = await loginUser(data);
+      return res;
+    } catch (err: any) {
+      return rejectWithValue(err.message || "Account not found or Email and Password don't match")
+    }
+  }
+);
+
 
 const authSlice = createSlice({
   name: "auth",
@@ -87,6 +104,43 @@ const authSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(registerUserThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      .addCase(loginUserThunk.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(loginUserThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+        state.user = action.payload;
+      })
+      .addCase(loginUserThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      .addCase(sendOTPThunk.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(sendOTPThunk.fulfilled, (state) => {
+        state.loading = false;
+        state.success = true;
+      })
+      .addCase(sendOTPThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      .addCase(verifyOTPThunk.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(verifyOTPThunk.fulfilled, (state) => {
+        state.loading = false;
+        state.success = true;
+      })
+      .addCase(verifyOTPThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
