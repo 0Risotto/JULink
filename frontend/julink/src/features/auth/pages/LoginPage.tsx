@@ -1,5 +1,6 @@
 import { LoginCard } from '../components/LoginCard'
 import julinkLogo from '../../../assets/icons/julink_logo.svg'
+import YouTubeEmbed from '@/components/common/youtube/YouTubeFrame'
 
 function LoginPage() {
   return (
@@ -15,6 +16,8 @@ function LoginPage() {
           A social platform created by students at the University of Jordan to enhance communication and
           collaboration within the university community.
         </p>
+        <YouTubeEmbed videoId="UZl_0maRuvY" width="500" height="350" />
+
       </div>
 
       {/* Right side with the login card */}

@@ -16,6 +16,7 @@ export function RegisterCard() {
   const [otpField,setOtpField] = useState({
     otp :""
   })
+  // to do  otp pls
   const [form, setForm] = useState({
     username: "",
     email: "",
