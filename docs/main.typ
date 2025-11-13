@@ -40,7 +40,19 @@
 #pagebreak()
 
 #set page(numbering: "i")
-#set table(fill: (coloum, row) => if  row == 0  { rgb("#026b3b")} else if coloum == 0  { rgb(189,193,201) },)
+
+#set table(
+  fill: (coloum, row) => if  row == 0  { rgb("#2F5496")},
+  stroke: rgb("#2F5496"),
+  align: center + horizon
+)
+#show table: set par(leading: 0.5em)
+#show table: set par(justify: false)
+#show table: set align(center)
+
+
+
+ 
 
 #v(4cm)
 #align(center)[ #image(
@@ -58,7 +70,7 @@
     #table(
         fill: (coloum, row) => if  row == 0  { rgb("#026b3b")} else if coloum == 0  { rgb(white) },
         columns:2,
-        align: center,             
+        stroke: black,
       [Student Name],[Student ID],
       [Anas AL-Jallad],[0225343],
       [Ahmad AlManasrah],[0227255],
@@ -87,4 +99,11 @@
 #set page(numbering:"1")
 #counter(page).update(1)
 #include "chapters/chapter1/chapter1.typ"
+#pagebreak()
+#show table.cell.where(y: 0): set text(
+  fill: white,
+  weight: "bold",
+)
+#include "chapters/chapter2/feasibilityStudy.typ"
+#include "chapters/chapter2/schedule.typ"
 
