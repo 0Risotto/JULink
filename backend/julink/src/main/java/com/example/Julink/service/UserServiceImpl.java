@@ -43,13 +43,13 @@ public class UserServiceImpl implements UserService {
         String email = dto.email().toLowerCase();
 
         if (!email.matches(JU_EMAIL_REGEX))
-        throw new IllegalArgumentException("Email must end with @ju.edu.jo");
+            throw new IllegalArgumentException("Email must end with @ju.edu.jo");
 
         if (userRepo.existsByUsername(username))
-        throw new IllegalArgumentException("Username already exists");
+            throw new IllegalArgumentException("Username already exists");
 
         if (userRepo.existsByEmail(email))
-        throw new IllegalArgumentException("Email already exists");
+            throw new IllegalArgumentException("Email already exists");
 
         User user = userMapper.toEntity(dto);
         userRepo.save(user);
@@ -64,7 +64,7 @@ public class UserServiceImpl implements UserService {
         //    generalOTP = otp;
         email = email.toLowerCase().trim();
         if (otpRepo.existsByEmail(email))
-        otpRepo.deleteByEmailIgnoreCase(email);
+            otpRepo.deleteByEmailIgnoreCase(email);
         sendEmail(email, otp);
 
 

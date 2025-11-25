@@ -33,8 +33,8 @@ public class UserController {
         userService.sendOTP(sendOTPDTO.email());
         System.out.println("controller reached");
         return "success";
-
     }
+
     @PostMapping("/checkOTPValidity")
     public String checkOTPValidity(@RequestBody OTPDTO dto){
         userService.verifyOTP(dto.otp(),dto.email());

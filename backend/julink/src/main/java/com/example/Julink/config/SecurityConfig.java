@@ -20,11 +20,8 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable()) // dev only; or csrf.ignoringRequestMatchers("/entry/createUser")
-                .cors() // Enable CORS configuration
-                .and()
-                .authorizeRequests(auth -> auth
-                        .requestMatchers("entry/*") // Corrected the URL pattern
-                        .permitAll()
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/entry/*").permitAll()
                         .anyRequest().authenticated()
                 );
         return http.build();
