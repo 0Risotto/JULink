@@ -14,7 +14,7 @@
                 - Phone number 
                 - College 
                 - Major
-                - Profile Picture [Optional]
+                - OTP
         - Login 
                 - Username $or$ Email
                 - Password
@@ -27,7 +27,8 @@
                 - Name.
                 - Profile Picture.
                 - $n->$ posts, following, followers.
-                - College 
+                - College
+                - Banner
                 - Bio (optional)        
                 - Edit Profile  & Share Profile.
         - Navigation Bar :
@@ -41,7 +42,7 @@
                         - Change College / faculty 
                         - Change Password
                 - Saved
-                - Block 
+                - Blocked 
                 - Comments 
                 - Log out 
                 - Delete $or$ Deactivate 
@@ -62,3 +63,6 @@
         - Report
         - Repost 
         - *Recommendation System*
+
+== Lost and found 
+
