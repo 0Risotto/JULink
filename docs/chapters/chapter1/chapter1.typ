@@ -33,32 +33,22 @@ Developed with the student experience in mind, JULink serves as a practical, com
 - Unibuddy(https://www.unibuddy.com): 
   - Unibuddy serves as a communication platform similar to JULink, as both projects allow users to share blogs and exchange messages with one another.
 
-- Reddit(https://www.reddit.com): 
-  - The layout and design of JULink were partially inspired by Reddit. As both a mobile and web application, Reddit allows users to create their own communities *subreddits* and facilitates communication within them.
+- Instagram(https://www.instagram.com): 
+  - The layout and design of JULink were partially inspired by Instagram, as a web application.
 
 == Project Organization
 The rest of this documentation is organized as follows :
-
-*Chapter 2 : Project Management*
-
-  This chapter proves the JULink feasibility through technical, operational, economic, and legal analysis. The estimated benefit, cost, and payback duration are also presented. Besides, the detailed schedule for the completion of the work, activity network, and PERT diagram are presented to show the division of work to the team members and management within the available duration.
-
- *Chapter 3 : Project Specifications*
-
-  This chapter sets up the stakeholders involved and describes the method used for data gathering, such as questionnaires and interviews. It also sets up the functional, domain, and non-functional requirements for JULink. Finally, it describes the requirements analysis and design architecture by grouping requirements into separate subsystems.
-
- *Chapter 4 : Project Design*
-
-  This chapter provides the system design details, including the context and class diagrams. It also presents use case and sequence diagrams for each functional requirement, demonstrating how users interact with the system and how the system responds.
-
-  *Chapter 5 : Project Implementation* 
-
-  This chapter presents the programming languages and technologies used in the development of the project, along with explanations of key sections of the code that illustrate the system’s core functionality.
- 
-*Chapter 6: Project Testing*\
-  This chapter presents the testing methodology, explains how it was carried out, and describes the types of tests performed along with selected test cases.
-
- *Chapter 7: User Manual*\
-  In this chapter, we provide a complete user manual for the web application, enabling even first time users of JULink to quickly understand and master its features.
+- *Chapter 2 : Project Management*
+  - This chapter proves the JULink feasibility through technical, operational, economic, and legal analysis. The estimated benefit, cost, and payback duration are also presented. Besides, the detailed schedule for the completion of the work, activity network, and PERT diagram are presented to show the division of work to the team members and management within the available duration.
+- *Chapter 3 : Project Specifications*
+  - This chapter sets up the stakeholders involved and describes the method used for data gathering, such as questionnaires and interviews. It also sets up the functional, domain, and non-functional requirements for JULink. Finally, it describes the requirements analysis and design architecture by grouping requirements into separate subsystems.
+- *Chapter 4 : Project Design*
+  - This chapter provides the system design details, including the context and class diagrams. It also presents use case and sequence diagrams for each functional requirement, demonstrating how users interact with the system and how the system responds.
+-  *Chapter 5 : Project Implementation* 
+  - This chapter presents the programming languages and technologies used in the development of the project, along with explanations of key sections of the code that illustrate the system’s core functionality.
+- *Chapter 6: Project Testing*
+  - This chapter presents the testing methodology, explains how it was carried out, and describes the types of tests performed along with selected test cases.
+- *Chapter 7: User Manual*
+  - In this chapter, we provide a complete user manual for the web application, enabling even first time users of JULink to quickly understand and master its features.
 
 

@@ -7,6 +7,7 @@
 #show link: emph
 
 
+
 #counter(page).update(0)
 
 //-------------------- Cover page --------------------
@@ -82,7 +83,6 @@
 ]
 #set heading(numbering: "1.")
 #show heading: set block(spacing: 1em)
-
 #pagebreak()
 #outline()
 #pagebreak()
@@ -99,12 +99,16 @@
 
 #set page(numbering: "1")
 #counter(page).update(1)
+
+#show heading.where(level: 1): set heading(numbering: (..) => h(-0.3em))
+#show heading.where(level:1) : set align(center)
+
 #include "chapters/chapter1/chapter1.typ"
 #pagebreak()
 #show table.cell.where(y: 0): set text(
   fill: white,
   weight: "bold",
 )
-#include "chapters/chapter2/schedule.typ"
+#include "chapters/chapter2/chapter2.typ"
 
 // #include "chapters/chapter6/unitTesting.typ"

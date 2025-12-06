@@ -1,7 +1,5 @@
-#include "feasibilityStudy.typ"
 == The Schedule and The Estimated Time
-
-The Project Schedule is presented in Table 2.6
+The Project Schedule is presented in @Development_Schedule
 
 #let chapter-number = 2
 #show figure.where(kind: table): set figure(
@@ -199,7 +197,7 @@ The Project Schedule is presented in Table 2.6
     [Anas Al-Jallad & Ahmad AlManasrah & Anas AlRao'sh],
     [NA],
   ),
-)
+) <Development_Schedule>
 #pagebreak()
 *Activity Network*
 #figure(
