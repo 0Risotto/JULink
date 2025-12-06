@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import type { UserCardProps } from "@/types/profile/userprofile"
+import UserListDialog from "./UserList"
 
 export default function UserCard({ user }: UserCardProps) {
   return (
@@ -35,8 +36,25 @@ export default function UserCard({ user }: UserCardProps) {
           <div className="flex items-center gap-6">
             <p><span className="font-bold">{user.postsNumber}</span> Posts</p>
  
-            <p><span className="font-bold">{user.followers.length}</span> Followers</p>
-            <p><span className="font-bold">{user.followings.length}</span> Following</p>
+            <UserListDialog
+              title="Followers"
+              list={user.followers}
+              trigger={
+                <p className="cursor-pointer">
+                  <span className="font-bold">{user.followers.length}</span> Followers
+                </p>
+              }
+            />      
+
+            <UserListDialog
+              title="Following"
+              list={user.followings}
+              trigger={
+                <p className="cursor-pointer">
+                  <span className="font-bold">{user.followings.length}</span> Following
+                </p>
+              }
+            />
           </div>
 
           {/* Full Name & College */}
@@ -44,7 +62,7 @@ export default function UserCard({ user }: UserCardProps) {
             <p className="font-semibold">{user.firstName} {user.lastName}</p>
             <p className="text-sm text-muted-foreground">{user.college}</p>
 
-            {user.bio && <p className="text-sm text-muted-foreground mt-1">{user.bio}</p>}
+            {user.bio && <p className="text-sm mt-1">{user.bio}</p>}
           </div>
         </div>
       </div>

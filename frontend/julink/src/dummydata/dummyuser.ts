@@ -21,7 +21,8 @@ user:{  username: "Anas04",
 
   ],
   bannerPhoto: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.donbishopstudio.com%2Fuploads%2F5%2F4%2F8%2F3%2F5483466%2Fs206769431343892363_p527_i18_w1988.jpeg&f=1&nofb=1&ipt=f025b22a5cdf0cee80e569debec5fc56b6c219aeec4500d1dccb4c98fcd56eces",
-      get postsNumber() {
+  
+    get postsNumber() {
       return UserProfileData.posts.length;
     },
 },
