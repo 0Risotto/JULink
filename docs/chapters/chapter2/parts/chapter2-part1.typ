@@ -161,7 +161,7 @@ cost.
     [#text(fill: red)[-7,361]],
     [#text(fill: red)[-4,406]],
     [#text(fill: red)[-1,619]],
-    [#text(fill: red)[1,011]],
+    [#text[1,011]],
 
     [Payback period],
     [6 years+],
@@ -175,3 +175,5 @@ cost.
 
 === Legal Feasibility
 JULink is legally feasible, as we will not be selling or leaking any student's data, and it will not include any copyrighted material in its creation. It will also comply with Jordan's Cybercrime Law by ensuring language moderation to prevent misuse and offensive behavior.
+
+#pagebreak()

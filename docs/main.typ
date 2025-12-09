@@ -60,9 +60,8 @@
 
 #v(4cm)
 #align(center)[ #image(
-    "assets/logo/JULink logo.svg",
+    "assets/logo/JULink.svg",
     fit: "contain",
-    width: 10cm,
     height: 4cm,
   )
 
@@ -110,5 +109,7 @@
   weight: "bold",
 )
 #include "chapters/chapter2/chapter2.typ"
+#include "chapters/chapter3/chapter3.typ"
+#include "Appendices/Appendices.typ"
 
 // #include "chapters/chapter6/unitTesting.typ"
