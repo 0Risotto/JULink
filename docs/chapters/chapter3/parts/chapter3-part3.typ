@@ -116,11 +116,11 @@ The functional requirements are shown in @Requirements_list
     [FR 46],[Post Recommendations],[The system shall recommend posts to users based on their interests, interactions, and following behavior.],[ST1, ST2],[3],[7],
 
 
-    [FR 47],[Display Ads on Feed],[The user shall be able to view ads on their feed page.],[ST1, ST2],[3],[8],
+    [FR 47],[Display Ads on Feed],[The user shall be able to view ads on their feed page.],[ST1, ST2, ST4],[3],[8],
 
-    [FR 48],[Clickable Ads],[The user shall be able to click on an ad that will take them to the ad provider website.],[ST1, ST2],[3],[8],
+    [FR 48],[Clickable Ads],[The user shall be able to click on an ad that will take them to the ad provider website.],[ST1, ST2, ST4],[3],[8],
 
-    [FR 49],[Report Ad],[The user shall be able to report an advertisement that is NSFW or inappropriate.],[ST1, ST2],[3],[8],
+    [FR 49],[Report Ad],[The user shall be able to report an advertisement that is NSFW or inappropriate.],[ST1, ST2, ST4],[3],[8],
   
   )
 )<Requirements_list>

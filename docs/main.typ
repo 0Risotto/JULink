@@ -100,7 +100,7 @@
 #counter(page).update(1)
 
 #show heading.where(level: 1): set heading(numbering: (..) => h(-0.3em))
-#show heading.where(level:1) : set align(center)
+#show heading.where(level: 1): set align(center)
 
 #include "chapters/chapter1/chapter1.typ"
 #pagebreak()
@@ -110,6 +110,8 @@
 )
 #include "chapters/chapter2/chapter2.typ"
 #include "chapters/chapter3/chapter3.typ"
+#include "chapters/chapter4/chapter4.typ"
+#include "References/References.typ"
 #include "Appendices/Appendices.typ"
 
 // #include "chapters/chapter6/unitTesting.typ"
