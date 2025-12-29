@@ -1,3 +1,4 @@
+#pagebreak()
 #counter(figure.where(kind: image)).update(0)
 
 #let appendix-letter = "A"
