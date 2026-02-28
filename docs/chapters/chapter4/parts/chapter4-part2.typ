@@ -1,0 +1,25 @@
+#pagebreak()
+
+== Class diagram
+
+#figure(
+  caption: [JULink class diagram],
+  box(
+    width: 100%,
+    height: 90%,
+    align(center,
+      rotate(90deg,
+        image("../../../assets/Class diagram/Class diagram.svg",
+          width: 140%,
+          height: 100%,
+          fit: "contain",
+        ),
+      ),
+    ),
+  ),
+)
+
+#place(top + right)[
+  #link("https://img.plantuml.biz/plantuml/svg/hLXBR-Cs4BuRy7yWqiFQTHFizj1J6gpWE5WLtZYmdVHGz41BOuSD9QeaxMowo7_lK9GjKg8VsCG7MvePSXwSRsRepqfJgTSPxtO-aFFjXpmmjQQSpFGBXvfytkse9vONLDACH5AAvw7WGfAVVYi_BbSzqbGyitn5bfGhS5a9fqf5MaksM6k84v7Fs7z0FheodEMWNmeWGkf7qUqyiXH8mcJ2eNg1hD0lPCc0fyeZPO0h3AtRqKoZ-N_SZrd-H6OlIaD6XaOxkMPqXNgCq0Vo-mz_pEhhoTSelYMzKOxg6AZ-MxSiuqFk5KX5BY_BRL-khiZtReUGSp8M65EMsfSP1X5VroYRqmmyOe6xF0lfIqh1VQabaqhVDjUY1MqYP9HnZvBHVuJqA0icxFj2e2QQ4wP-lOb6ELrmg2nPl6ZuwszIIB5a7EAChb3Dgpa9wpYc58SLdEYwTTjPVYUKFd4jPfw6N7kqCcKyGvcrq7VgRhtWBB5KbciYeK2zGx7URZSM2UNNLCESPPYv4l0nZO9CI5d5SzmOutPHdjxWZcdJ9VY6PgULgzyzyt6dRAQfNglMUSu0SgDOCv6tma0J7UTBqJY8BCFm_4WmzthlUiYUZXxoAVjCvdSMqwVPANInBwktnxi1oR2m16s0RmMJe3mBle9IzEICzG9LPzGKQ52XnY-iqLdXgOpI4xNH5BtH30j42yyq7GO0834T9IJwNl8wlHDCzYVVwIbcl3oQ7EMBB4L1nYuHsyuATEnRQubpBFmDcwXg9AsgalpLbd3JiwmX959A9AnCSqLwVs85DCPcOWDfdvGzp9RMiuyN5p-V8OMSVJhRLfqTyvFbM1a3j32dmaYOQJ8ypAao9ioqaGsOQPzAyWzohIFTJbavzdWIu5b7BAEvvIvmtSuM1tvaAulUeT7E9-fzUkkmB2J6i2dykqPuuTQOoVYzJUD1i3yEGlrn4Eh2WrPv6OJwyg3LIGSM7OcDge67rnHMB3_9xA0jjUP6lxpMehcFW-BgXQvnhgemF0WKireDxZZVjj61K-BSdkQjyBlMW72ZZsFIxHhgeD6DszLtdmyAMoNipAxgKG9i0tjzyUfiODzMQVL3Rmhdwtia_7HqDvd5yyaq7itUkXjMSP1BcW2n-LCOhyoFObf8BD-kYCc98o9Lr8z8HUaH0LlhWa9lZzziD7s8X-yTknd83KjCjw-UwiJO29PMKugHx8NgJD_F8GGLvXp3iGnw0NZtdOsrMAquu3ZTiulxLPhvvtR0l2tKhONchLUH-Y415wuDmTAU53XKsnXOkImx3fVaNqYJgUYcNhLZDrmPFj93hjYD4DfL7lRgAb2f6ZEbBslg5S71uWlICBlssCLolB-XtmzubnH3olb10wFqW7cbyh9sb7gZLDq8UGEGzbo5vLGLfRsmWjWyuLoESyonG2onMuZdCkN2hYsuI9uEyEs4Les3FGlA_ZjLiU7aTZwTZCUZwPk1MD-CZQdIz4Y9GQbVwYdKHUgwVlR09s65vtGIJhc1vW60RhjzUT4r4EstcknHartq5lMpLJ05LU102zMGknV2GRa3I6x8Ey0D2tZWzPqqa3tgf8lhf7uEwpg4xwQi-HlBHsw_qScFsbP3cgQ7xBA8xksFeDGDL5iJ74GVjIM0VjOY1GsmnU304PR5u03VUl3ELM0w6aVpU78x-nBVlRaEbCszYagS5HpCpQMyyH7pLrzr_zbAN5nSxOOUUujnETjPfzjnKzDmd16dswbpmx3iNDFj14x9iEkfPgz8RL1P8-jqEB_QkURuuWgSNxdLpNhKuD-vvQE1IyCVkiZpa66uKPtzuPGrGcs_h2lcJd9VNswTLSRjKALjUR0z5WHxothdO4fsj_CPgyGwu_y3")[Link to the diagram]
+]
+#pagebreak()
