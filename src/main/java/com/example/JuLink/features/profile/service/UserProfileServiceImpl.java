@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 public class UserProfileServiceImpl implements UserProfileService {
 
     private final UserRepo userRepo;
-    private final UserProfileMapper userProfileMapper; // Injects the interface, not the impl!
+    private final UserProfileMapper userProfileMapper;
 
     @Override
     public UserProfileDTO getProfileByEmail(String email) {
