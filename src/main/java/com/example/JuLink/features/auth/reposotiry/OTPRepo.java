@@ -1,6 +1,6 @@
-package com.example.JuLink.reposotiry;
+package com.example.JuLink.features.auth.reposotiry;
 
-import com.example.JuLink.entity.OTP;
+import com.example.JuLink.features.auth.entity.OTP;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

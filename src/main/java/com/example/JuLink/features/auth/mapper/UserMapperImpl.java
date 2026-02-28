@@ -1,9 +1,9 @@
-package com.example.JuLink.mapper;
+package com.example.JuLink.features.auth.mapper;
 
-import com.example.JuLink.dto.CreateUserRequestDTO;
-import com.example.JuLink.dto.OTPDTO;
-import com.example.JuLink.entity.OTP;
-import com.example.JuLink.entity.User;
+import com.example.JuLink.features.auth.dto.CreateUserRequestDTO;
+import com.example.JuLink.features.auth.dto.OTPDTO;
+import com.example.JuLink.features.auth.entity.OTP;
+import com.example.JuLink.features.auth.entity.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 

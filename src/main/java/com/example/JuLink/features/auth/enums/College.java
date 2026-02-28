@@ -1,4 +1,4 @@
-package com.example.JuLink.enums;
+package com.example.JuLink.features.auth.enums;
 
 public enum College {
 

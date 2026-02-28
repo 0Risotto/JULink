@@ -1,6 +1,6 @@
-package com.example.JuLink.dto;
+package com.example.JuLink.features.auth.dto;
 
-import com.example.JuLink.enums.College;
+import com.example.JuLink.features.auth.enums.College;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

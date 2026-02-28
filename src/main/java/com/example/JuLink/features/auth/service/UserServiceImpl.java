@@ -1,13 +1,13 @@
-package com.example.JuLink.service;
+package com.example.JuLink.features.auth.service;
 
-import com.example.JuLink.dto.CreateUserRequestDTO;
-import com.example.JuLink.dto.LoginUserDTO;
-import com.example.JuLink.dto.OTPDTO;
-import com.example.JuLink.entity.OTP;
-import com.example.JuLink.entity.User;
-import com.example.JuLink.mapper.UserMapper;
-import com.example.JuLink.reposotiry.OTPRepo;
-import com.example.JuLink.reposotiry.UserRepo;
+import com.example.JuLink.features.auth.dto.CreateUserRequestDTO;
+import com.example.JuLink.features.auth.dto.LoginUserDTO;
+import com.example.JuLink.features.auth.dto.OTPDTO;
+import com.example.JuLink.features.auth.entity.OTP;
+import com.example.JuLink.features.auth.entity.User;
+import com.example.JuLink.features.auth.mapper.UserMapper;
+import com.example.JuLink.features.auth.reposotiry.OTPRepo;
+import com.example.JuLink.features.auth.reposotiry.UserRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;

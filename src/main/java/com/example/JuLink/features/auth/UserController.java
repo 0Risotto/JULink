@@ -1,13 +1,13 @@
-package com.example.JuLink.controller;
+package com.example.JuLink.features.auth;
 
 
-import com.example.JuLink.dto.CreateUserRequestDTO;
-import com.example.JuLink.dto.LoginUserDTO;
-import com.example.JuLink.dto.OTPDTO;
-import com.example.JuLink.dto.SendOTPDTO;
-import com.example.JuLink.reposotiry.UserRepo;
-import com.example.JuLink.service.TokenService;
-import com.example.JuLink.service.UserService;
+import com.example.JuLink.features.auth.dto.CreateUserRequestDTO;
+import com.example.JuLink.features.auth.dto.LoginUserDTO;
+import com.example.JuLink.features.auth.dto.OTPDTO;
+import com.example.JuLink.features.auth.dto.SendOTPDTO;
+import com.example.JuLink.features.auth.reposotiry.UserRepo;
+import com.example.JuLink.common.TokenService;
+import com.example.JuLink.features.auth.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;

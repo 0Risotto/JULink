@@ -1,4 +1,4 @@
-package com.example.JuLink.service;
+package com.example.JuLink.common;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;

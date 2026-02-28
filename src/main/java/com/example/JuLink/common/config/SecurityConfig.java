@@ -1,6 +1,6 @@
-package com.example.JuLink.config;
+package com.example.JuLink.common.config;
 
-import com.example.JuLink.reposotiry.UserRepo;
+import com.example.JuLink.features.auth.reposotiry.UserRepo;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;

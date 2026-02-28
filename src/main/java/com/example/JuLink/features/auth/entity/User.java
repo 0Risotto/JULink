@@ -1,4 +1,4 @@
-package com.example.JuLink.entity;
+package com.example.JuLink.features.auth.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -36,6 +36,15 @@ public class User {
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "banner_photo_url")
+    private String bannerPhotoUrl;
+
+    @Column(name = "profile_picture_url")
+    private String profilePictureUrl;
+
+    @Column(length = 500)
+    private String bio;
 
 //    @OneToOne(mappedBy = "users", cascade = CascadeType.REMOVE, orphanRemoval = true)
 //    OTP otp;

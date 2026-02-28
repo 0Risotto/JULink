@@ -1,4 +1,4 @@
-package com.example.JuLink.config;
+package com.example.JuLink.common.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

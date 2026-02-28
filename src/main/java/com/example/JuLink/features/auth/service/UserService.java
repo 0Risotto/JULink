@@ -1,10 +1,8 @@
-package com.example.JuLink.service;
+package com.example.JuLink.features.auth.service;
 
-import com.example.JuLink.dto.CreateUserRequestDTO;
-import com.example.JuLink.dto.LoginUserDTO;
+import com.example.JuLink.features.auth.dto.CreateUserRequestDTO;
+import com.example.JuLink.features.auth.dto.LoginUserDTO;
 import org.springframework.security.core.Authentication;
-
-import java.time.LocalDateTime;
 
 
 public interface UserService {

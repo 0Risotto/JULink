@@ -1,4 +1,4 @@
-package com.example.JuLink.entity;
+package com.example.JuLink.features.auth.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
