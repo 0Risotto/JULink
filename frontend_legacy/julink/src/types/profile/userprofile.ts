@@ -1,4 +1,3 @@
-import type { Post } from "../posts/post";
 
 export interface FollowUser {
   username: string;

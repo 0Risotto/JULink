@@ -9,7 +9,7 @@ interface LoginState {
 }
 
 const initialState: LoginState = {
-  token: null,
+  token: typeof window !== "undefined" ? localStorage.getItem("token") : null,
   loading: false,
   error: null,
 };
@@ -38,6 +38,7 @@ const loginSlice = createSlice({
   reducers: {
     logout: (state) => {
       state.token = null;
+      localStorage.removeItem("token");
     },
   },
   extraReducers: (builder) => {
@@ -49,6 +50,10 @@ const loginSlice = createSlice({
       .addCase(loginThunk.fulfilled, (state, action) => {
         state.loading = false;
         state.token = action.payload.token || null;
+
+        if (action.payload.token) {
+          localStorage.setItem("token", action.payload.token);
+        }
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;

@@ -16,7 +16,13 @@ export const useLogin = () => {
       const resultAction = await dispatch(loginThunk({ email, password }));
 
       if (loginThunk.fulfilled.match(resultAction)) {
-        router.push("/");
+        console.log("Login successful, token:", resultAction.payload.token);
+        const token = resultAction.payload.token;
+        setTimeout(() => {
+          router.push("/profile"); 
+        }, 100);
+      } else if (loginThunk.rejected.match(resultAction)) {
+        console.error("Login failed:", resultAction.payload);
       }
     },
     [dispatch, router],
