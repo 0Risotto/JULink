@@ -1,0 +1,87 @@
+package com.graduation.julink.follow;
+
+import com.graduation.julink.auth.Repository.AuthRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class FollowService {
+
+    private  FollowRepository followRepository;
+    private  AuthRepository authRepository;
+
+    FollowService(){};
+
+    @Transactional
+    public void followUser(String followerUsername, String followeeUsername) {
+        if (!authRepository.existsByUsername(followerUsername)) {
+            throw new IllegalArgumentException("Follower not found: " + followerUsername);
+        }
+        if (!authRepository.existsByUsername(followeeUsername)) {
+            throw new IllegalArgumentException("Followee not found: " + followeeUsername);
+        }
+        if (followerUsername.equals(followeeUsername)) {
+            throw new IllegalArgumentException("Cannot follow yourself");
+        }
+        if (followRepository.isFollowing(followerUsername, followeeUsername)) {
+            throw new IllegalStateException("Already following this user");
+        }
+        followRepository.follow(followerUsername, followeeUsername);
+    }
+
+    @Transactional
+    public void unfollowUser(String followerUsername, String followeeUsername) {
+        if (!followRepository.isFollowing(followerUsername, followeeUsername)) {
+            throw new IllegalStateException("Not following this user");
+        }
+        followRepository.unfollow(followerUsername, followeeUsername);
+    }
+
+    public Page<String> getFollowers(String username, Pageable pageable) {
+        if (!authRepository.existsByUsername(username)) {
+            throw new IllegalArgumentException("User not found: " + username);
+        }
+        return followRepository.getFollowers(username, pageable);
+    }
+
+    public Page<String> getFollowings(String username, Pageable pageable) {
+        if (!authRepository.existsByUsername(username)) {
+            throw new IllegalArgumentException("User not found: " + username);
+        }
+        return followRepository.getFollowings(username, pageable);
+    }
+
+    public Page<String> getMutualFollowings(String username1, String username2, Pageable pageable) {
+        if (!authRepository.existsByUsername(username1)) {
+            throw new IllegalArgumentException("User not found: " + username1);
+        }
+        if (!authRepository.existsByUsername(username2)) {
+            throw new IllegalArgumentException("User not found: " + username2);
+        }
+        return followRepository.getMutualFollowings(username1, username2, pageable);
+    }
+
+    public Page<String> getMutualFollowers(String username1, String username2, Pageable pageable) {
+        if (!authRepository.existsByUsername(username1)) {
+            throw new IllegalArgumentException("User not found: " + username1);
+        }
+        if (!authRepository.existsByUsername(username2)) {
+            throw new IllegalArgumentException("User not found: " + username2);
+        }
+        if (username1.equals(username2)) {
+            throw new IllegalArgumentException("Cannot get mutual followers with yourself");
+        }
+
+        return followRepository.getMutualFollowers(username1, username2, pageable);
+    }
+
+    public boolean isFollowing(String followerUsername, String followeeUsername) {
+        return followRepository.isFollowing(followerUsername, followeeUsername);
+    }
+
+    public boolean isMutual(String username1, String username2) {
+        return followRepository.isMutual(username1, username2);
+    }
+}

@@ -6,14 +6,14 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 
 public interface ProfileMapper {
-    ProfileDTOs.UserProfileDTO toDTO(AuthEntities.User user);
+    ProfileDTOs.UserProfile toDTO(AuthEntities.User user);
 }
 @Component
 class ProfileMapperImplementation implements ProfileMapper {
 
     @Override
-    public ProfileDTOs.UserProfileDTO toDTO(AuthEntities.User user) {
-        return new ProfileDTOs.UserProfileDTO(
+    public ProfileDTOs.UserProfile toDTO(AuthEntities.User user) {
+        return new ProfileDTOs.UserProfile(
                 user.getUsername(),
                 user.getFirstName(),
                 user.getLastName(),

@@ -18,7 +18,7 @@ public class ProfileController {
         try {
             String email = principal.getName();
 
-            ProfileDTOs.UserProfileDTO profile = profileService.getProfileByEmail(email);
+            ProfileDTOs.UserProfile profile = profileService.getProfileByEmail(email);
 
             return Map.of("status", "success", "user", profile);
         } catch (Exception e) {
@@ -42,7 +42,7 @@ public class ProfileController {
         try {
             String formattedUsername = username.toLowerCase().trim();
 
-            ProfileDTOs.UserProfileDTO profile = profileService.getProfileByUsername(formattedUsername);
+            ProfileDTOs.UserProfile profile = profileService.getProfileByUsername(formattedUsername);
 
             return Map.of("status", "success", "user", profile);
         } catch (Exception e) {
@@ -51,10 +51,10 @@ public class ProfileController {
     }
 
     @PatchMapping("/me")
-    public Map<String, Object> updateMyProfile(Principal principal, @RequestBody ProfileDTOs.UpdateProfileDTO dto) {
+    public Map<String, Object> updateMyProfile(Principal principal, @RequestBody ProfileDTOs.UpdateProfile dto) {
         try {
             String email = principal.getName();
-            ProfileDTOs.UserProfileDTO updatedProfile = profileService.updateProfile(email, dto);
+            ProfileDTOs.UserProfile updatedProfile = profileService.updateProfile(email, dto);
             return Map.of("status", "success", "user", updatedProfile);
         } catch (Exception e) {
             return Map.of("status", "error", "message", e.getMessage());

@@ -6,9 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 public interface ProfileService {
-    ProfileDTOs.UserProfileDTO getProfileByEmail(String email);
-    ProfileDTOs.UserProfileDTO getProfileByUsername(String username);
-    ProfileDTOs.UserProfileDTO updateProfile(String email, ProfileDTOs.UpdateProfileDTO dto);
+    ProfileDTOs.UserProfile getProfileByEmail(String email);
+    ProfileDTOs.UserProfile getProfileByUsername(String username);
+    ProfileDTOs.UserProfile updateProfile(String email, ProfileDTOs.UpdateProfile dto);
     String getOwnUsername(String email);
 }
 
@@ -20,7 +20,7 @@ class ProfileServiceImplementation implements ProfileService {
     private final ProfileMapper ProfileMapper;
 
     @Override
-    public ProfileDTOs.UserProfileDTO getProfileByEmail(String email) {
+    public ProfileDTOs.UserProfile getProfileByEmail(String email) {
         AuthEntities.User user = authRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found for the provided token"));
 
@@ -28,7 +28,7 @@ class ProfileServiceImplementation implements ProfileService {
     }
 
     @Override
-    public ProfileDTOs.UserProfileDTO getProfileByUsername(String username) {
+    public ProfileDTOs.UserProfile getProfileByUsername(String username) {
         AuthEntities.User user = authRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User profile not found"));
 
@@ -36,7 +36,7 @@ class ProfileServiceImplementation implements ProfileService {
     }
 
     @Override
-    public ProfileDTOs.UserProfileDTO updateProfile(String email, ProfileDTOs.UpdateProfileDTO dto) {
+    public ProfileDTOs.UserProfile updateProfile(String email, ProfileDTOs.UpdateProfile dto) {
 
         AuthEntities.User user = authRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));

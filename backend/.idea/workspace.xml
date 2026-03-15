@@ -5,61 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="117066b8-ebdd-4a16-a3fb-78a201ba350d" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/IntelliLang.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/backend.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/material_theme_project_new.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sqldialects.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/.projectile" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/julink/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/julink/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/JuLinkApplication.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/common/TokenService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/common/config/RSAKeyProperties.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/common/config/SecurityConfig.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/controller/AuthController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/controller/HomeController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/auth/UserController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/auth/dto/CreateUserRequestDTO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/auth/dto/LoginUserDTO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/auth/dto/OTPDTO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/auth/dto/SendOTPDTO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/auth/entity/OTP.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/auth/entity/User.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/auth/enums/College.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/auth/mapper/UserMapper.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/auth/mapper/UserMapperImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/auth/reposotiry/OTPRepo.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/auth/reposotiry/UserRepo.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/auth/service/UserService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/auth/service/UserServiceImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/profile/UserProfileController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/profile/dto/FollowUserDTO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/profile/dto/UpdateProfileDTO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/profile/dto/UserProfileDTO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/profile/mapper/UserProfileMapper.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/profile/mapper/UserProfileMapperImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/profile/service/UserProfileService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/example/JuLink/features/profile/service/UserProfileServiceImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/JulinkApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/JulinkApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/auth/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/auth/AuthService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileDTOs.java" beforeDir="false" afterPath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileDTOs.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileService.java" beforeDir="false" afterPath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/julink/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/julink/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/test/java/com/example/JuLink/EventlyApplicationTests.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/julink/target/classes/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/julink/target/classes/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/target/classes/com/example/Julink/JulinkApplication.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/julink/app/home/page.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/julink/domain/auth/hooks/useLogin.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/julink/domain/auth/hooks/useLogin.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/julink/domain/auth/store/loginSlice.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/julink/domain/auth/store/loginSlice.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/julink/store/store.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/julink/store/store.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend_legacy/julink/src/types/profile/userprofile.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend_legacy/julink/src/types/profile/userprofile.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -93,6 +48,10 @@
   &quot;keyToString&quot;: {
     &quot;Application.JuLinkApplication.executor&quot;: &quot;Run&quot;,
     &quot;Application.JulinkApplication.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.FollowServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.JulinkApplicationTests.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.Neo4jConnectionTest.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
@@ -109,13 +68,13 @@
       <recent name="$PROJECT_DIR$/julink/src/main/resources" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Application.JulinkApplication">
     <configuration name="JulinkApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.graduation.julink.JulinkApplication" />
       <module name="julink" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.graduation.julink.*" />
+          <option name="PATTERN" value="com.graduation.julink.follow.neo4jconnectionchecker" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -123,9 +82,57 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="FollowServiceTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="julink" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.graduation.julink.follow.neo4jconnectionchecker" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.graduation.julink" />
+      <option name="MAIN_CLASS_NAME" value="com.graduation.julink.FollowServiceTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="JulinkApplicationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="julink" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.graduation.julink.follow.neo4jconnectionchecker" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.graduation.julink" />
+      <option name="MAIN_CLASS_NAME" value="com.graduation.julink.JulinkApplicationTests" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Neo4jConnectionTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="julink" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.graduation.julink.follow.neo4jconnectionchecker" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.graduation.julink" />
+      <option name="MAIN_CLASS_NAME" value="com.graduation.julink.Neo4jConnectionTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <recent_temporary>
       <list>
         <item itemvalue="Application.JulinkApplication" />
+        <item itemvalue="JUnit.Neo4jConnectionTest" />
+        <item itemvalue="JUnit.FollowServiceTest" />
+        <item itemvalue="JUnit.JulinkApplicationTests" />
       </list>
     </recent_temporary>
   </component>

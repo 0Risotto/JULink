@@ -5,19 +5,19 @@ import java.util.List;
 public class ProfileDTOs {
     private ProfileDTOs() {}
 
-    public record FollowUserDTO(
+    public record FollowUser(
             String username,
             String fullName,
             String pfp
     ) {}
 
-    public record UpdateProfileDTO(
+    public record UpdateProfile(
             String bio,
             String profilePicture,
             String bannerPhoto
     ) {}
 
-    public record UserProfileDTO(
+    public record UserProfile(
             String username,
             String firstName,
             String lastName,
@@ -25,8 +25,8 @@ public class ProfileDTOs {
             String bio,
             String profilePicture,
             String bannerPhoto,
-            List<FollowUserDTO> followings,
-            List<FollowUserDTO> followers,
+            List<FollowUser> followings,
+            List<FollowUser> followers,
             int postsNumber
     ) {}
 }

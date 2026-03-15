@@ -1,6 +1,7 @@
 package com.graduation.julink.auth;
 import com.graduation.julink.auth.Repository.OTPRepository;
 import com.graduation.julink.auth.Repository.AuthRepository;
+import com.graduation.julink.follow.FollowRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
@@ -25,7 +26,7 @@ public interface AuthService {
 @RequiredArgsConstructor
 @Transactional
 class AuthServiceImplementation implements AuthService {
-
+    private final FollowRepository followRepository;
     private final AuthRepository userRepository;
     private final OTPRepository otpRepository;
     private final AuthMapper authMapper;
@@ -42,7 +43,8 @@ class AuthServiceImplementation implements AuthService {
 
         AuthEntities.User user = authMapper.toEntity(dto);
         userRepository.save(user);
-
+        // user gets created here for neo4j
+        followRepository.createUser(user.getUsername());
         System.out.println("User created successfully: " + user.getEmail());
     }
 
