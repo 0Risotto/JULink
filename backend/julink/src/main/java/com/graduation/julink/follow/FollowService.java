@@ -1,18 +1,20 @@
 package com.graduation.julink.follow;
 
 import com.graduation.julink.auth.Repository.AuthRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class FollowService {
 
-    private  FollowRepository followRepository;
-    private  AuthRepository authRepository;
+    private final FollowRepository followRepository;
+    private final AuthRepository authRepository;
 
-    FollowService(){};
+//    FollowService(){};
 
     @Transactional
     public void followUser(String followerUsername, String followeeUsername) {
@@ -39,18 +41,39 @@ public class FollowService {
         followRepository.unfollow(followerUsername, followeeUsername);
     }
 
-    public Page<String> getFollowers(String username, Pageable pageable) {
+    public Page<FollowDTOs.FollowerListDto> getFollowers(String username, Pageable pageable) {
         if (!authRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("User not found: " + username);
         }
-        return followRepository.getFollowers(username, pageable);
+        Page<String> followerUsernames = followRepository.getFollowers(username, pageable);
+        return followerUsernames.map(followerUsername -> {
+            return authRepository.findByUsername(followerUsername)
+                    .map(user -> new FollowDTOs.FollowerListDto(
+                            user.getUsername(),
+                            user.getFirstName() + " " + user.getLastName(),
+                            user.getProfilePictureUrl()
+                    ))
+                    .orElseGet(() -> new FollowDTOs.FollowerListDto(followerUsername, "Unknown User", null));
+        });
     }
 
-    public Page<String> getFollowings(String username, Pageable pageable) {
+    public Page<FollowDTOs.FollowerListDto> getFollowings(String username, Pageable pageable) {
         if (!authRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("User not found: " + username);
         }
-        return followRepository.getFollowings(username, pageable);
+
+        Page<String> followingUsernames = followRepository.getFollowings(username, pageable);
+
+        return followingUsernames.map(followingUsername -> {
+            return authRepository.findByUsername(followingUsername)
+                    .map(user -> new FollowDTOs.FollowerListDto(
+                            user.getUsername(),
+                            user.getFirstName() + " " + user.getLastName(),
+                            user.getProfilePictureUrl()
+                    ))
+                    // It now takes 3 arguments: username, "Unknown User" (Full Name), and null (Profile Pic)
+                    .orElseGet(() -> new FollowDTOs.FollowerListDto(followingUsername, "Unknown User", null));
+        });
     }
 
     public Page<String> getMutualFollowings(String username1, String username2, Pageable pageable) {

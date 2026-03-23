@@ -184,19 +184,32 @@ public class FollowRepository {
     }
 
     public Page<String> getMutualFollowers(String username1, String username2, Pageable pageable) {
+//        String query = """
+//        MATCH (follower:User)-[:FOLLOWS]->(u1:User {username: $username1})
+//        WHERE (follower)-[:FOLLOWS]->(u2:User {username: $username2})
+//        RETURN follower.username AS username
+//        ORDER BY follower.username
+//        SKIP $skip
+//        LIMIT $limit
+//        """;
         String query = """
-        MATCH (follower:User)-[:FOLLOWS]->(u1:User {username: $username1})
-        WHERE (follower)-[:FOLLOWS]->(u2:User {username: $username2})
-        RETURN follower.username AS username
-        ORDER BY follower.username
-        SKIP $skip
-        LIMIT $limit
-        """;
+            MATCH (u1:User {username: $username1})<-[:FOLLOWS]-(follower:User)-[:FOLLOWS]->(u2:User {username: $username2})
+            RETURN follower.username AS username
+            ORDER BY follower.username
+            SKIP $skip
+            LIMIT $limit
+            """;
+
+//        String countQuery = """
+//        MATCH (follower:User)-[:FOLLOWS]->(u1:User {username: $username1})
+//        WHERE (follower)-[:FOLLOWS]->(u2:User {username: $username2})
+//        RETURN count(follower) AS total
+//        """;
+
         String countQuery = """
-        MATCH (follower:User)-[:FOLLOWS]->(u1:User {username: $username1})
-        WHERE (follower)-[:FOLLOWS]->(u2:User {username: $username2})
-        RETURN count(follower) AS total
-        """;
+            MATCH (u1:User {username: $username1})<-[:FOLLOWS]-(follower:User)-[:FOLLOWS]->(u2:User {username: $username2})
+            RETURN count(follower) AS total
+            """;
 
         Long total = neo4jClient.query(countQuery)
                 .bind(username1).to("username1")

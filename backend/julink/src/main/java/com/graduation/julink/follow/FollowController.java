@@ -44,10 +44,10 @@ public class FollowController {
     }
 
     @GetMapping("/{username}/followers")
-    public Map<String, Object> getFollowers(Principal principal,@PathVariable String username,
+    public Map<String, Object> getFollowers(Principal principal, @PathVariable String username,
                                             @PageableDefault(size = 20, sort = "username", direction = Sort.Direction.ASC) Pageable pageable) {
         try {
-            Page<String> followers = followService.getFollowers(username, pageable);
+            Page<FollowDTOs.FollowerListDto> followers = followService.getFollowers(username, pageable);
             return Map.of(
                     "status", "success",
                     "followers", followers.getContent(),
@@ -65,7 +65,7 @@ public class FollowController {
     public Map<String, Object> getFollowings(Principal principal, @PathVariable String username,
                                              @PageableDefault(size = 20, sort = "username", direction = Sort.Direction.ASC) Pageable pageable) {
         try {
-            Page<String> followings = followService.getFollowings(username, pageable);
+            Page<FollowDTOs.FollowerListDto> followings = followService.getFollowings(username, pageable);
             return Map.of(
                     "status", "success",
                     "followings", followings.getContent(),
@@ -78,7 +78,6 @@ public class FollowController {
             return Map.of("status", "error", "message", e.getMessage());
         }
     }
-
     @GetMapping("/mutual-followings/{otherUsername}")
     public Map<String, Object> getMutualFollowings(Principal principal, @PathVariable String otherUsername,
                                                    @PageableDefault(size = 20, sort = "username", direction = Sort.Direction.ASC) Pageable pageable) {
