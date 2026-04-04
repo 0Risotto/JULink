@@ -9,6 +9,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -134,9 +135,27 @@ public class FollowController {
         return Map.of("status", "success", "mutual", mutual);
     }
 
+    @GetMapping("/suggestion")
+    public Map<String, Object> getSuggestions(Principal principal) {
+        String email = principal.getName();
+        String username = getUsernameFromEmail(email);
+
+        try {
+            List<FollowDTOs.FollowerListDto> suggestions = followService.getSuggestions(username);
+            return Map.of(
+                    "status", "success",
+                    "suggestions", suggestions
+            );
+        } catch (Exception e) {
+            return Map.of("status", "error", "message", e.getMessage());
+        }
+    }
+
     private String getUsernameFromEmail(String email) {
         return authRepository.findByEmail(email)
                 .map(com.graduation.julink.auth.AuthEntities.User::getUsername)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
     }
+
+
 }

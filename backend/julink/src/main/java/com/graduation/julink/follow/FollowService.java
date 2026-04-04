@@ -7,6 +7,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class FollowService {
@@ -106,5 +110,21 @@ public class FollowService {
 
     public boolean isMutual(String username1, String username2) {
         return followRepository.isMutual(username1, username2);
+    }
+
+    public List<FollowDTOs.FollowerListDto> getSuggestions(String userName) {
+        Collection<String> suggestionsList = followRepository.fetchSuggestions(userName);
+
+        if (suggestionsList.isEmpty()) {
+            return List.of();
+        }
+        return authRepository.findByUsernameIn(suggestionsList).stream()
+                .map(user -> new FollowDTOs.FollowerListDto(
+                        user.getUsername(),
+                        user.getFirstName() + " " + user.getLastName(),
+                        user.getProfilePictureUrl()
+                ))
+                .toList();
+
     }
 }

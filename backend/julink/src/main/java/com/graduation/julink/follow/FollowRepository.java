@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -230,6 +231,28 @@ public class FollowRepository {
                 .stream().toList();
 
         return new PageImpl<>(mutualFollowers, pageable, total);
+    }
+
+    public Collection<String> fetchSuggestions(String username) {
+        String query = """
+                MATCH (me:User {username: $username})-[:FOLLOWS]->(mutual)<-[:FOLLOWS]-(them:User)
+                WHERE me <> them AND NOT (me)-[:FOLLOWS]->(them)
+                WITH me, them, COUNT(mutual) AS intersection
+                MATCH (me)-[:FOLLOWS]->(m1)
+                WITH me, them, intersection, COUNT(m1) AS myFollowsCount
+                MATCH (them)-[:FOLLOWS]->(m2)
+                WITH them, intersection, myFollowsCount, COUNT(m2) AS theirFollowsCount
+                WITH them, intersection, (myFollowsCount + theirFollowsCount - intersection) AS unionSize
+                RETURN them.username AS suggestedUsername
+                ORDER BY (toFloat(intersection) / unionSize) DESC
+                LIMIT 15
+                """;
+
+        return neo4jClient.query(query)
+                .bind(username).to("username")
+                .fetchAs(String.class)
+                .mappedBy((typeSystem, record) -> record.get("suggestedUsername").asString())
+                .all();
     }
 
 }
