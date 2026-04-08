@@ -5,9 +5,9 @@ import YouTubeEmbed from "@/components/common/youtube/YoutubeFrame";
 
 function RegisterPage() {
   return (
-    <div className="flex min-h-screen justify-center  ">
+    <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen justify-center">
       {/* Left side with logo and description */}
-      <div className="hidden  lg:flex flex-col  justify-center px-20 space-y-6 ">
+      <div className="hidden  lg:flex flex-col justify-center items-center px-20 space-y-6">
         <Image src={julinkLogo} alt="JULink logo" className="w-40 h-auto" />
         <p className="max-w-md text-lg  text-justify">
           A social platform created by students at the University of Jordan to

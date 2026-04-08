@@ -9,7 +9,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
       {/* Left Side */}
-      <div className="hidden lg:flex flex-col justify-center px-10 space-y-6 bg-muted/40">
+      <div className="hidden lg:flex flex-col items-center justify-center px-10 space-y-6 bg-muted/40">
         <Image
           src={julinkLogo}
           alt="JULink logo"
