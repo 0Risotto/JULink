@@ -1,22 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
@@ -37,7 +23,7 @@ export function RegisterCard() {
     step,
     isOtpSent,
     isOtpExpired,
-    email,
+    email
   } = useRegister();
 
   const [form, setForm] = useState({
@@ -45,13 +31,13 @@ export function RegisterCard() {
     email: "",
     firstName: "",
     lastName: "",
-    college: "",
+    college: "", 
     password: "",
     confirmPassword: "",
   });
 
   const [otpField, setOtpField] = useState({
-    otp: "",
+    otp: ""
   });
 
   const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -113,7 +99,7 @@ export function RegisterCard() {
     }
 
     const success = await verifyOtp(otpField.otp);
-
+    
     if (success) {
       // Reset form after successful registration
       setForm({
@@ -131,7 +117,7 @@ export function RegisterCard() {
 
   const handleResendOtp = async () => {
     if (resendCooldown > 0) return;
-
+    
     const success = await resendOtp();
     if (success) {
       setResendCooldown(60); // 60 seconds cooldown
@@ -169,14 +155,14 @@ export function RegisterCard() {
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="otp">OTP Code</Label>
-                <Input
-                  id="otp"
-                  type="text"
-                  value={otpField.otp}
-                  onChange={handleOtpChange}
+                <Input 
+                  id="otp" 
+                  type="text" 
+                  value={otpField.otp} 
+                  onChange={handleOtpChange} 
                   placeholder="Enter 6-digit OTP"
                   maxLength={6}
-                  required
+                  required 
                   autoFocus
                 />
               </div>
@@ -187,7 +173,9 @@ export function RegisterCard() {
                 </p>
               )}
 
-              {error && <p className="text-red-500 text-sm">{error}</p>}
+              {error && (
+                <p className="text-red-500 text-sm">{error}</p>
+              )}
 
               <div className="flex items-center justify-between text-sm">
                 <button
@@ -196,8 +184,8 @@ export function RegisterCard() {
                   disabled={resendCooldown > 0 || loading}
                   className="text-primary hover:underline disabled:opacity-50 disabled:no-underline"
                 >
-                  {resendCooldown > 0
-                    ? `Resend OTP in ${resendCooldown}s`
+                  {resendCooldown > 0 
+                    ? `Resend OTP in ${resendCooldown}s` 
                     : "Resend OTP"}
                 </button>
               </div>
@@ -207,9 +195,9 @@ export function RegisterCard() {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Verifying..." : "Verify OTP"}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
+              <Button 
+                type="button" 
+                variant="outline" 
                 className="w-full"
                 onClick={handleBackToLogin}
               >
@@ -235,25 +223,25 @@ export function RegisterCard() {
           <div className="flex flex-col gap-6">
             <div className="grid gap-2">
               <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                value={form.username}
-                onChange={handleChange}
-                placeholder="your_username"
-                required
+              <Input 
+                id="username" 
+                value={form.username} 
+                onChange={handleChange} 
+                placeholder="your_username" 
+                required 
                 disabled={loading}
               />
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="user@ju.edu.jo"
-                required
+              <Input 
+                id="email" 
+                type="email" 
+                value={form.email} 
+                onChange={handleChange} 
+                placeholder="user@ju.edu.jo" 
+                required 
                 disabled={loading}
               />
             </div>
@@ -261,23 +249,23 @@ export function RegisterCard() {
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  value={form.firstName}
-                  onChange={handleChange}
-                  placeholder="First name"
-                  required
+                <Input 
+                  id="firstName" 
+                  value={form.firstName} 
+                  onChange={handleChange} 
+                  placeholder="First name" 
+                  required 
                   disabled={loading}
                 />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  value={form.lastName}
-                  onChange={handleChange}
-                  placeholder="Last name"
-                  required
+                <Input 
+                  id="lastName" 
+                  value={form.lastName} 
+                  onChange={handleChange} 
+                  placeholder="Last name" 
+                  required 
                   disabled={loading}
                 />
               </div>
@@ -287,14 +275,8 @@ export function RegisterCard() {
               <Label htmlFor="college">Faculty</Label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    disabled={loading}
-                  >
-                    {form.college
-                      ? Colleges[form.college as keyof typeof Colleges]
-                      : "Select Faculty"}
+                  <Button variant="outline" className="w-full justify-start" disabled={loading}>
+                    {form.college ? Colleges[form.college as keyof typeof Colleges] : "Select Faculty"}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto">
@@ -314,43 +296,45 @@ export function RegisterCard() {
 
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={form.password}
-                onChange={handleChange}
-                required
+              <Input 
+                id="password" 
+                type="password" 
+                value={form.password} 
+                onChange={handleChange} 
+                required 
                 disabled={loading}
               />
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="confirmPassword">Repeat Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                required
+              <Input 
+                id="confirmPassword" 
+                type="password" 
+                value={form.confirmPassword} 
+                onChange={handleChange} 
+                required 
                 disabled={loading}
               />
             </div>
-
+            
             {/* Error messages */}
             {passwordError && (
               <p className="text-red-500 text-sm">{passwordError}</p>
             )}
-
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            
+            {error && (
+              <p className="text-red-500 text-sm">{error}</p>
+            )}
           </div>
-
+            
           <CardFooter className="flex-col gap-2 mt-6 px-0">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Creating Account..." : "Register"}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
+            <Button 
+              type="button" 
+              variant="outline" 
               className="w-full"
               onClick={handleBackToLogin}
               disabled={loading}
