@@ -1,45 +1,20 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { 
-  registerUserThunk, 
-  sendOtpThunk, 
-  verifyOtpThunk,
-  resetRegistration,
-  clearError,
-  setOtpExpiry
-} from "../store/registerSlice";
+import { resetRegistration } from "../store/registerSlice";
+import { registerUserThunk, sendOtpThunk, verifyOtpThunk } from "../store/registerThunks";
 import { RegisterUserDTO } from "../types";
+import { useRegisterErrorClear, useOtpExpiry } from "./useRegisterHelpers";
 
 export const useRegister = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const { 
-    userData, 
-    loading, 
-    error, 
-    step,
-    otpExpiry 
-  } = useAppSelector((state) => state.register);
-
-  // Auto-clear error after 5 seconds
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => {
-        dispatch(clearError());
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [error, dispatch]);
-
-  // Check if OTP is expired
-  const isOtpExpired = useCallback(() => {
-    if (!otpExpiry) return false;
-    return Date.now() > otpExpiry;
-  }, [otpExpiry]);
+  const { userData, loading, step } = useAppSelector((state) => state.register);
+  const { error, clearRegisterError } = useRegisterErrorClear();
+  const { otpExpiry, isOtpExpired } = useOtpExpiry();
 
   // Step 1: Create user account
   const registerUser = useCallback(
@@ -103,11 +78,6 @@ export const useRegister = () => {
   // Reset the entire registration process
   const reset = useCallback(() => {
     dispatch(resetRegistration());
-  }, [dispatch]);
-
-  // Clear any errors
-  const clearRegisterError = useCallback(() => {
-    dispatch(clearError());
   }, [dispatch]);
 
   return {

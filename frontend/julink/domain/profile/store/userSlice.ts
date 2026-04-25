@@ -1,9 +1,10 @@
 // ownProfile/store/index.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { UserProfileDTO, UpdateProfileDTO } from "../types";
-import { getMyProfile, getUserProfile, updateMyProfile } from "../services/profileServices";
+import { getMyProfile, getUserProfile, updateMyProfile, getMyUsername } from "../services/profileServices";
 
 interface UserState {
+  myUsername: string | null;
   currentUser: UserProfileDTO | null;
   viewedUser: UserProfileDTO | null;
   loading: boolean;
@@ -11,11 +12,30 @@ interface UserState {
 }
 
 const initialState: UserState = {
+  myUsername: null,
   currentUser: null,
   viewedUser: null,
   loading: false,
   error: null,
 };
+
+export const fetchMyUsername = createAsyncThunk<
+  string,
+  void,
+  { rejectValue: string }
+>("user/fetchMyUsername", async (_, { rejectWithValue }) => {
+  try {
+    const response = await getMyUsername();
+    
+    if (response.Status?.toLowerCase() !== "success" || !response.username) {
+      return rejectWithValue(response.Status || "Failed to fetch username");
+    }
+    
+    return response.username;
+  } catch (error) {
+    return rejectWithValue("Server error while fetching username");
+  }
+});
 
 export const fetchMyProfile = createAsyncThunk<
   UserProfileDTO,
@@ -25,7 +45,7 @@ export const fetchMyProfile = createAsyncThunk<
   try {
     const response = await getMyProfile();
     
-    if (response.status !== "success" || !response.user) {
+    if (response.status?.toLowerCase() !== "success" || !response.user) {
       return rejectWithValue(response.message || "Failed to fetch profile");
     }
     
@@ -43,7 +63,7 @@ export const fetchUserProfile = createAsyncThunk<
   try {
     const response = await getUserProfile(username);
     
-    if (response.status !== "success" || !response.user) {
+    if (response.status?.toLowerCase() !== "success" || !response.user) {
       return rejectWithValue(response.message || "Failed to fetch user profile");
     }
     
@@ -61,7 +81,7 @@ export const updateProfile = createAsyncThunk<
   try {
     const response = await updateMyProfile(data);
     
-    if (response.status !== "success" || !response.user) {
+    if (response.status?.toLowerCase() !== "success" || !response.user) {
       return rejectWithValue(response.message || "Failed to update profile");
     }
     
@@ -89,6 +109,20 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Fetch my username
+      .addCase(fetchMyUsername.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchMyUsername.fulfilled, (state, action) => {
+        state.loading = false;
+        state.myUsername = action.payload;
+      })
+      .addCase(fetchMyUsername.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to fetch username";
+      })
+      
       // Fetch my profile
       .addCase(fetchMyProfile.pending, (state) => {
         state.loading = true;

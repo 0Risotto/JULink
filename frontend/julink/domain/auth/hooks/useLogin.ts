@@ -3,7 +3,8 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { loginThunk } from "../store/loginSlice";
+import { loginThunk } from "../store/loginThunks";
+import { handleLoginSuccess } from "./useLoginHelpers";
 
 export const useLogin = () => {
   const dispatch = useAppDispatch();
@@ -17,10 +18,7 @@ export const useLogin = () => {
 
       if (loginThunk.fulfilled.match(resultAction)) {
         console.log("Login successful, token:", resultAction.payload.token);
-        const token = resultAction.payload.token;
-        setTimeout(() => {
-          router.push("/profile"); 
-        }, 100);
+        await handleLoginSuccess(router);
       } else if (loginThunk.rejected.match(resultAction)) {
         console.error("Login failed:", resultAction.payload);
       }

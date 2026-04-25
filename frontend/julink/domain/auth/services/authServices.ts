@@ -1,4 +1,5 @@
-import axios, { AxiosResponse } from "axios";
+// services/authServices.ts
+import { post } from "@/util/api/axios";
 import {
   LoginUserDTO,
   LoginResponse,
@@ -8,31 +9,16 @@ import {
   SendOtpDTO,
 } from "../types";
 
-export const api = axios.create({
-  baseURL: "http://localhost:8080",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-const postRequest = async <T>(
-  url: string,
-  data?: unknown
-): Promise<T> => {
-  const response: AxiosResponse<T> = await api.post(url, data);
-  return response.data;
-};
-
 export const loginService = (data: LoginUserDTO) =>
-  postRequest<LoginResponse>("/entry/loginUser", data);
+  post<LoginResponse>("/auth/login", data);
 
 export const createUserService = (data: RegisterUserDTO) =>
-  postRequest<SimpleResponse>("/entry/createUser", data);
+  post<SimpleResponse>("/auth/register", data);
 
 export const sendOtpService = (email: string) => {
   const dto: SendOtpDTO = { email };
-  return postRequest<SimpleResponse>("/entry/sendOTP", dto);
+  return post<SimpleResponse>("/auth/send-otp", dto);
 };
 
 export const verifyOtpService = (data: OtpVerificationDTO) =>
-  postRequest<SimpleResponse>("/entry/checkOTPValidity", data);
+  post<SimpleResponse>("/auth/verify-otp", data);

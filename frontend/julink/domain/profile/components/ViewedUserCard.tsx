@@ -2,20 +2,11 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import UserListDialog from "./UserList";
+import { UserProfileDTO } from "../types";
+import { Colleges } from "@/domain/auth/types";
 
 interface ViewedUserCardProps {
-  user: {
-    username: string;
-    firstName: string;
-    lastName: string;
-    college: string;
-    bio: string | null;
-    profilePicture: string | null;
-    bannerPhoto: string | null;
-    followers: any[];
-    followings: any[];
-    postsNumber: number;
-  };
+  user: UserProfileDTO;
 }
 
 export default function ViewedUserCard({ user }: ViewedUserCardProps) {
@@ -78,7 +69,9 @@ export default function ViewedUserCard({ user }: ViewedUserCardProps) {
             <p className="font-semibold">
               {user.firstName} {user.lastName}
             </p>
-            <p className="text-sm text-muted-foreground">{user.college}</p>
+            <p className="text-sm text-muted-foreground">
+              {Colleges[user.college as keyof typeof Colleges] || user.college}
+            </p>
 
             {user.bio && <p className="text-sm mt-1">{user.bio}</p>}
           </div>

@@ -1,4 +1,3 @@
-// ownProfile/types.ts
 export interface UserFollowList {
   username: string;
   fullName: string;
@@ -10,12 +9,12 @@ export interface UserProfileDTO {
   firstName: string;
   lastName: string;
   college: string;
-  bio: string;
-  profilePicture: string;
-  bannerPhoto: string;
-  followings: UserFollowList[];
-  followers: UserFollowList[];
-  postsNumber: number;
+  bio?: string;
+  profilePicture?: string;
+  bannerPhoto?: string;
+  followings?: UserFollowList[];
+  followers?: UserFollowList[];
+  postsNumber?: number;
 }
 
 export interface UpdateProfileDTO {
@@ -28,7 +27,7 @@ export interface UpdateProfileDTO {
 }
 
 export interface ApiResponse<T> {
-  status: 'success' | 'error';
+  status: 'Success' | 'Error' | 'success' | 'error';
   user?: T;
   message?: string;
 }

@@ -1,6 +1,5 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { LoginUserDTO, LoginResponse } from "../types";
-import { loginService } from "../services/authServices";
+import { createSlice } from "@reduxjs/toolkit";
+import { loginThunk } from "./loginThunks";
 
 interface LoginState {
   token: string | null;
@@ -13,24 +12,6 @@ const initialState: LoginState = {
   loading: false,
   error: null,
 };
-
-export const loginThunk = createAsyncThunk<
-  LoginResponse,
-  LoginUserDTO,
-  { rejectValue: string }
->("login/login", async (data, { rejectWithValue }) => {
-  try {
-    const response = await loginService(data);
-
-    if (response.status !== "success") {
-      return rejectWithValue(response.message || "Login failed");
-    }
-
-    return response;
-  } catch {
-    return rejectWithValue("Server error");
-  }
-});
 
 const loginSlice = createSlice({
   name: "login",

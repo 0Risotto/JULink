@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useLogin } from "../hooks/useLogin";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { validateLoginForm } from "../schemas/loginSchema";
 
 export function LoginCard() {
   const { login, loading, error } = useLogin();
@@ -22,13 +23,24 @@ export function LoginCard() {
     email: "",
     password: "",
   });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.id]: e.target.value });
+    if (formErrors[e.target.id]) {
+      setFormErrors({ ...formErrors, [e.target.id]: "" });
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const validation = validateLoginForm(form);
+    
+    if (!validation.success && validation.errors) {
+      setFormErrors(validation.errors);
+      return;
+    }
+    
     login(form.email, form.password);
   };
   const handleBackToRegister = () => {
@@ -56,6 +68,7 @@ export function LoginCard() {
                 value={form.email}
                 required
               />
+              {formErrors.email && <p className="text-red-500 text-sm">{formErrors.email}</p>}
             </div>
 
             <div className="grid gap-2">
@@ -69,6 +82,7 @@ export function LoginCard() {
                 value={form.password}
                 required
               />
+              {formErrors.password && <p className="text-red-500 text-sm">{formErrors.password}</p>}
             </div>
 
             {error && (

@@ -17,6 +17,8 @@ export interface UserCardProps {
   get postsNumber(): number;
   }}
 
+import { Post } from "./types";
+
 export interface UserPostsProps {
   posts: Post[];
 }

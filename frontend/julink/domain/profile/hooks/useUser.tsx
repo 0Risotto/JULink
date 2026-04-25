@@ -4,6 +4,7 @@
 import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
+  fetchMyUsername,
   fetchMyProfile,
   fetchUserProfile,
   updateProfile,
@@ -16,9 +17,13 @@ import { UpdateProfileDTO } from "../types";
 export const useUser = () => {
   const dispatch = useAppDispatch();
   
-  const { currentUser, viewedUser, loading, error } = useAppSelector(
+  const { myUsername, currentUser, viewedUser, loading, error } = useAppSelector(
     (state) => state.user
   );
+
+  const loadMyUsername = useCallback(async () => {
+    return dispatch(fetchMyUsername()).unwrap();
+  }, [dispatch]);
 
   const loadMyProfile = useCallback(async () => {
     return dispatch(fetchMyProfile()).unwrap();
@@ -55,12 +60,14 @@ export const useUser = () => {
 
   return {
     // State
+    myUsername,
     currentUser,
     viewedUser,
     loading,
     error,
     
     // Actions
+    loadMyUsername,
     loadMyProfile,
     loadUserProfile,
     updateUserProfile,
