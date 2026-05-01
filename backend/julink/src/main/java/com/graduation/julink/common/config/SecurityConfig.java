@@ -60,9 +60,13 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/*/*").permitAll()  // <--- fixed
+                        // 1. ADD THIS: Ensure the socket handshake is explicitly permitted
+                        .requestMatchers("/ws/**", "/websocket/**").permitAll()
+                        .requestMatchers("/*/*").permitAll()
                         .anyRequest().authenticated()
                 )
+                // 2. ADD THIS: This allows the SockJS internal iframe to load
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {
                 }))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

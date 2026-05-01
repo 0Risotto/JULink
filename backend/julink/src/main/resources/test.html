@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+</head>
+<body>
+<button onclick="sendMsg()">Connect & Send</button>
+<div id="output"></div>
+
+<script>
+    const stompClient = new StompJs.Client({
+        brokerURL: 'ws://localhost:8080/ws', // Native WS
+        connectHeaders: {},
+        debug: function (str) { console.log(str); },
+        reconnectDelay: 5000,
+        heartbeatIncoming: 4000,
+        heartbeatOutgoing: 4000,
+    });
+
+    // Fallback for browsers that don't support native WS
+    stompClient.webSocketFactory = function () {
+        return new SockJS("http://localhost:8080/ws");
+    };
+
+    stompClient.onConnect = (frame) => {
+        console.log('CONNECTED!');
+        stompClient.subscribe('/topic/greetings', (greeting) => {
+            document.getElementById("output").innerHTML += "<br>" + greeting.body;
+        });
+    };
+
+    stompClient.activate();
+
+    function sendMsg() {
+        stompClient.publish({
+            destination: "/app/hello",
+            body: "World"
+        });
+    }
+</script>
+</body>
+</html>
