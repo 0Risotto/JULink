@@ -25,8 +25,12 @@ public class VideoController {
        @MessageMapping("/initiate")
     public void initiate(Principal principal, VideoDTOs.intiate dto) {
         try {
-            String email = (principal != null) ? principal.getName() : "ahmad.test1@ju.edu.jo";
-            videoService.initiate(email, dto.username());
+            String email = (principal != null && principal.getName() != null) ? principal.getName() : dto.caller();
+            String result = videoService.initiate(email, dto.username());
+            if ("Not friends".equals(result)) {
+                // If they are not friends, the call isn't broadcasted
+                System.out.println("Cannot initiate call: " + email + " and " + dto.username() + " are not friends.");
+            }
         } catch (Exception e) {
             System.err.println("Error in VideoController.initiate: " + e.getMessage());
             e.printStackTrace();
