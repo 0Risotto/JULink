@@ -6,6 +6,7 @@ import { AppSidebar } from "./AppSidebar"
 import { AuthGuard } from "@/domain/auth/components/AuthGuard"
 import { useAppSelector, useAppDispatch } from "@/store/hooks"
 import { setSidebarOpen } from "../store/sidebarSlice"
+import { GlobalCallListener } from "@/domain/temp/call/components/GlobalCallListener"
 
 export function SidebarLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -26,6 +27,7 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
         open={isOpen} 
         onOpenChange={(open) => dispatch(setSidebarOpen(open))}
       >
+        <GlobalCallListener />
         <AppSidebar />
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
