@@ -30,9 +30,9 @@ public class VideoService {
 
 
     //real functions
-    public String initiate(String email, Long friendId){
+    public String initiate(String email, String friendUsername){
         AuthEntities.User currentUser = authRepository.findByEmail(email).orElseThrow(()->new RuntimeException("User email not found"));
-        AuthEntities.User  friend = authRepository.findById(friendId).orElseThrow(()->new RuntimeException("User friend not found"));
+        AuthEntities.User  friend = authRepository.findByUsername(friendUsername).orElseThrow(()->new RuntimeException("User friend not found"));
 
         if(!areFriends(currentUser.getUsername(),friend.getUsername())){
             return "Not friends";
@@ -42,7 +42,7 @@ public class VideoService {
         String jitsiUrl = "https://meet.jit.si/" + roomName;
 
         var payload = Map.of(
-                "targetId", friendId,             // The recipient checks this
+                "targetId", friend.getId(),             // The recipient checks this
                 "callerUsername", currentUser.getUsername(),
                 "videoUrl", jitsiUrl,
                 "type", "INVITE_TO_VIDEO"
@@ -50,7 +50,7 @@ public class VideoService {
 
         messagingTemplate.convertAndSend("/topic/video-calls", payload);
 
-        System.out.println("📢 Call broadcasted from " + currentUser.getUsername() + " for ID: " + friendId);
+        System.out.println("📢 Call broadcasted from " + currentUser.getUsername() + " for ID: " + friend.getId());
 
         return jitsiUrl;
     }

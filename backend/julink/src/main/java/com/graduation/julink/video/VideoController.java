@@ -26,7 +26,7 @@ public class VideoController {
     public void initiate(Principal principal, VideoDTOs.intiate dto) {
         try {
             String email = (principal != null) ? principal.getName() : "ahmad.test1@ju.edu.jo";
-            videoService.initiate(email, dto.id());
+            videoService.initiate(email, dto.username());
         } catch (Exception e) {
             System.err.println("Error in VideoController.initiate: " + e.getMessage());
             e.printStackTrace();
