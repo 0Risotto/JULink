@@ -45,7 +45,7 @@ public class VideoService {
         // }
 
         String roomName = "JuLink-" + UUID.randomUUID().toString().substring(0, 8);
-        String jitsiUrl = "https://meet.jit.si/" + roomName;
+        String jitsiUrl = "https://meet.opensuse.org/" + roomName;
 
         var payload = Map.of(
                 "targetUsername", friend.getUsername(), // The recipient checks this

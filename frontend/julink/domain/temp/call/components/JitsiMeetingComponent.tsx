@@ -31,6 +31,7 @@ export function JitsiMeetingComponent({ roomName }: JitsiMeetingComponentProps) 
         </div>
       )}
       <JitsiMeeting
+        domain="meet.opensuse.org"
         roomName={roomName}
         getIFrameRef={(iframeRef) => {
           iframeRef.style.height = "100%";
@@ -41,12 +42,16 @@ export function JitsiMeetingComponent({ roomName }: JitsiMeetingComponentProps) 
           email: "",
         }}
         configOverwrite={{
+          prejoinPageEnabled: false,
+          disableLobby: true,
+          // FORCE CAMERA ON
           startWithAudioMuted: false,
           startWithVideoMuted: false,
-          prejoinPageEnabled: false, // Skip prejoin page to join immediately
+          defaultRole: "moderator",
         }}
         interfaceConfigOverwrite={{
           DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
+          TOOLBAR_BUTTONS: ["microphone", "camera", "hangup", "tileview"],
         }}
         onApiReady={(externalApi) => {
           setLoading(false);
