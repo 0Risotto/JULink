@@ -5,16 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="117066b8-ebdd-4a16-a3fb-78a201ba350d" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/compiler.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/julink/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/JulinkApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/JulinkApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/auth/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/auth/AuthService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileDTOs.java" beforeDir="false" afterPath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileDTOs.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileService.java" beforeDir="false" afterPath="$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/profile/ProfileService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/julink/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/julink/target/classes/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/julink/target/classes/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,12 +46,15 @@
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/legion/git/0Risotto/graduation_project/backend/julink/src/main/java&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/legion/git/0Risotto/graduation_project/backend&quot;,
     &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
   <component name="RecentsManager">
@@ -127,6 +122,13 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="JulinkApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="julink" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.graduation.julink.JulinkApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <recent_temporary>
       <list>
         <item itemvalue="Application.JulinkApplication" />
@@ -143,7 +145,12 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1772281500368</updated>
+      <workItem from="1777130775626" duration="8420000" />
+      <workItem from="1777154839332" duration="1745000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
 </project>

@@ -1,16 +1,33 @@
 "use client";
 
+import { useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import UserListDialog from "./UserList";
 import { UserProfileDTO } from "../types";
 import { Colleges } from "@/domain/auth/types";
+import { useFollow } from "@/domain/follower/hooks/useFollow";
+import FollowListDialog from "@/domain/follower/components/FollowListDialog";
 
 interface OwnUserCardProps {
   user: UserProfileDTO;
 }
 
 export default function OwnUserCard({ user }: OwnUserCardProps) {
+  const {
+    followersCount,
+    followingsCount,
+    fetchFollowData,
+    setFollowingsCount
+  } = useFollow(user.username);
+
+  const handleListFollowChange = (targetUsername: string, isFollowing: boolean) => {
+    setFollowingsCount(prev => isFollowing ? prev + 1 : prev - 1);
+  };
+
+  useEffect(() => {
+    fetchFollowData();
+  }, [fetchFollowData]);
+
   return (
     <div className="w-full flex flex-col border-b">
       {/* Banner */}
@@ -30,7 +47,7 @@ export default function OwnUserCard({ user }: OwnUserCardProps) {
           </AvatarFallback>
         </Avatar>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 flex-grow">
           {/* Username + Edit */}
           <div className="flex items-center gap-4">
             <h1 className="text-xl font-semibold">{user.username}</h1>
@@ -45,23 +62,27 @@ export default function OwnUserCard({ user }: OwnUserCardProps) {
               <span className="font-bold">{user.postsNumber || 0}</span> Posts
             </p>
 
-            <UserListDialog
+            <FollowListDialog
               title="Followers"
-              list={user.followers || []}
+              username={user.username}
+              type="followers"
+              onFollowChange={handleListFollowChange}
               trigger={
                 <p className="cursor-pointer">
-                  <span className="font-bold">{user.followers?.length || 0}</span>{" "}
+                  <span className="font-bold">{followersCount}</span>{" "}
                   Followers
                 </p>
               }
             />
 
-            <UserListDialog
+            <FollowListDialog
               title="Following"
-              list={user.followings || []}
+              username={user.username}
+              type="followings"
+              onFollowChange={handleListFollowChange}
               trigger={
                 <p className="cursor-pointer">
-                  <span className="font-bold">{user.followings?.length || 0}</span>{" "}
+                  <span className="font-bold">{followingsCount}</span>{" "}
                   Following
                 </p>
               }

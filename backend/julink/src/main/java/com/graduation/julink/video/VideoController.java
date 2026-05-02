@@ -22,16 +22,26 @@ public class VideoController {
     }
 
 
-    @PreAuthorize("permitAll()")
-    @MessageMapping("/hello")
-    @SendTo("/topic/greetings")
-    public String greeting(String message) {
-        return "Hello, " + message + "!";
+       @MessageMapping("/initiate")
+    public void initiate(Principal principal, VideoDTOs.intiate dto) {
+        try {
+            String email = (principal != null) ? principal.getName() : "ahmad.test1@ju.edu.jo";
+            videoService.initiate(email, dto.id());
+        } catch (Exception e) {
+            System.err.println("Error in VideoController.initiate: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
+    @MessageMapping("/health")
+    public void initiatee(VideoDTOs.intiate dto) {
+        System.out.println("DEBUG: Reached initiatee method!"); // <--- LOOK FOR THIS
+        messagingTemplate.convertAndSend("/topic/test", "SIGNAL_TEST_SUCCESS");
+    }
+}
 
 
-    //quick note when im testing this i use the console of test.html
+ //quick note when im testing this i use the console of test.html
 
     //we first send this message stompClient.subscribe('/topic/test', function(msg) {
     //    console.log("SERVER RESPONSE:", msg.body);
@@ -42,22 +52,4 @@ public class VideoController {
     //    body: JSON.stringify({ id: 2 })
     //});
 
-    @MessageMapping("/initiate")
-    public void initiate(Principal principal, VideoDTOs.intiate dto) {
-        try {
 
-            String email = (principal != null) ? principal.getName() : "ahmad.test1@ju.edu.jo";
-            videoService.initiate(email, dto.id());
-        } catch (Exception e) {
-
-            System.err.println("Error in VideoController.initiate: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    @MessageMapping("/initiatee")
-    public void initiatee(VideoDTOs.intiate dto) {
-        System.out.println("DEBUG: Reached initiatee method!"); // <--- LOOK FOR THIS
-        messagingTemplate.convertAndSend("/topic/test", "SIGNAL_TEST_SUCCESS");
-    }
-}

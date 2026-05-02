@@ -1,15 +1,32 @@
 "use client";
 
+import { useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import UserListDialog from "./UserList";
 import { UserProfileDTO } from "../types";
 import { Colleges } from "@/domain/auth/types";
+import { useFollow } from "@/domain/follower/hooks/useFollow";
+import FollowButton from "@/domain/follower/components/FollowButton";
+import FollowListDialog from "@/domain/follower/components/FollowListDialog";
 
 interface ViewedUserCardProps {
   user: UserProfileDTO;
 }
 
 export default function ViewedUserCard({ user }: ViewedUserCardProps) {
+  const {
+    isFollowing,
+    followersCount,
+    followingsCount,
+    mutualFollowers,
+    mutualCount,
+    fetchFollowData,
+    toggleFollow
+  } = useFollow(user.username);
+
+  useEffect(() => {
+    fetchFollowData();
+  }, [fetchFollowData]);
+
   return (
     <div className="w-full flex flex-col border-b">
       {/* Banner */}
@@ -29,10 +46,15 @@ export default function ViewedUserCard({ user }: ViewedUserCardProps) {
           </AvatarFallback>
         </Avatar>
 
-        <div className="flex flex-col gap-2">
-          {/* Username - No edit button */}
+        <div className="flex flex-col gap-2 flex-grow">
+          {/* Username + Follow Button */}
           <div className="flex items-center gap-4">
             <h1 className="text-xl font-semibold">{user.username}</h1>
+            <FollowButton 
+              username={user.username} 
+              initialIsFollowing={isFollowing} 
+              onToggle={toggleFollow} 
+            />
           </div>
 
           {/* Stats */}
@@ -41,23 +63,25 @@ export default function ViewedUserCard({ user }: ViewedUserCardProps) {
               <span className="font-bold">{user.postsNumber || 0}</span> Posts
             </p>
 
-            <UserListDialog
+            <FollowListDialog
               title="Followers"
-              list={user.followers || []}
+              username={user.username}
+              type="followers"
               trigger={
                 <p className="cursor-pointer">
-                  <span className="font-bold">{user.followers?.length || 0}</span>{" "}
+                  <span className="font-bold">{followersCount}</span>{" "}
                   Followers
                 </p>
               }
             />
 
-            <UserListDialog
+            <FollowListDialog
               title="Following"
-              list={user.followings || []}
+              username={user.username}
+              type="followings"
               trigger={
                 <p className="cursor-pointer">
-                  <span className="font-bold">{user.followings?.length || 0}</span>{" "}
+                  <span className="font-bold">{followingsCount}</span>{" "}
                   Following
                 </p>
               }
@@ -74,6 +98,12 @@ export default function ViewedUserCard({ user }: ViewedUserCardProps) {
             </p>
 
             {user.bio && <p className="text-sm mt-1">{user.bio}</p>}
+            
+            {mutualCount > 0 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                {mutualCount} mutual follower{mutualCount > 1 ? "s" : ""}: {mutualFollowers.join(", ")}{mutualCount > mutualFollowers.length ? "..." : ""}
+              </p>
+            )}
           </div>
         </div>
       </div>
