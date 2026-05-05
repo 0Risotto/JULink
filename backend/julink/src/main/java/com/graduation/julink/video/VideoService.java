@@ -25,7 +25,8 @@ public class VideoService {
     // Helper functions
     boolean areFriends(String username, String friendname){
 
-        return (followRepository.isFollowing(username, friendname) && followRepository.isFollowing(friendname, username));
+        return (followRepository.isMutual(friendname, username));
+       // return (followRepository.isFollowing(username, friendname) && followRepository.isFollowing(friendname, username));
     }
 
 
