@@ -50,4 +50,16 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
         LIMIT 1
         """)
     Optional<Message> findLatestByConversationId(@Param("conversationId") Long conversationId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("""
+        UPDATE Message m SET m.status = 'READ'
+        WHERE m.conversation.id = :conversationId
+          AND m.sender.id <> :userId
+          AND m.id <= :lastReadId
+          AND m.status <> 'READ'
+        """)
+    void markAsRead(@Param("conversationId") Long conversationId, 
+                    @Param("userId") Long userId, 
+                    @Param("lastReadId") Long lastReadId);
 }

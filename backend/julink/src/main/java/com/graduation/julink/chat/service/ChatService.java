@@ -275,6 +275,9 @@ public class ChatService {
             receipt.setMessage(lastMsg);
             receipt.setUser(user);
             receiptRepo.save(receipt);
+
+            // Update status of all messages sent by OTHERS up to this ID to READ
+            messageRepo.markAsRead(conversationId, user.getId(), lastReadMessageId);
         }
 
         // Broadcast read event so other members can update their UI
