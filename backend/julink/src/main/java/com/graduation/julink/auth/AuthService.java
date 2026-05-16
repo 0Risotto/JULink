@@ -4,7 +4,8 @@ import com.graduation.julink.auth.Repository.AuthRepository;
 import com.graduation.julink.follow.FollowRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.mail.SimpleMailMessage;
+import jakarta.mail.internet.MimeMessage;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -35,7 +36,7 @@ class AuthServiceImplementation implements AuthService {
 
     private static final String JU_EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@ju\\.edu\\.jo$";
     private static final int OTP_EXPIRY_MINUTES = 3;
-    private static final String FROM_EMAIL = "ahmadalmanasrah204@gmail.com";
+    private static final String FROM_EMAIL = "julink2026@gmail.com";
 
     @Override
     public void createUser(AuthDTOs.CreateUserRequestDTO dto) {
@@ -48,17 +49,17 @@ class AuthServiceImplementation implements AuthService {
         System.out.println("User created successfully: " + user.getEmail());
     }
 
-    @Override
-    public void sendOTP(String email) {
-        String cleanedEmail = cleanEmail(email);
-        String otpCode = generateOTP();
+   @Override
+   public void sendOTP(String email) {
+       String cleanedEmail = cleanEmail(email);
+       String otpCode = generateOTP();
 
-        deleteExistingOTP(cleanedEmail);
-        sendOtpEmail(cleanedEmail, otpCode);
-        saveOTP(cleanedEmail, otpCode);
+       deleteExistingOTP(cleanedEmail);
+       saveOTP(cleanedEmail, otpCode);
+       sendOtpEmail(cleanedEmail, otpCode);
 
-        System.out.println("OTP sent successfully to: " + cleanedEmail);
-    }
+       System.out.println("OTP sent successfully to: " + cleanedEmail);
+   }
 
     @Override
     public void verifyOTP(String otp, String email) {
@@ -117,21 +118,152 @@ class AuthServiceImplementation implements AuthService {
     }
 
     private void sendOtpEmail(String email, String otp) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(FROM_EMAIL);
-        message.setTo(email);
-        message.setSubject("JUlink Account Verification OTP");
-        message.setText(String.format(
-                "Hello,\n\n" +
-                        "Your OTP for JUlink account verification is: %s\n" +
-                        "This code will expire in %d minutes.\n\n" +
-                        "If you didn't request this, please ignore this email.\n\n" +
-                        "Thank you!",
-                otp, OTP_EXPIRY_MINUTES
-        ));
-
         try {
+            MimeMessage message = mailSender.createMimeMessage();
+
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(FROM_EMAIL);
+            helper.setTo(email);
+            helper.setSubject("JUlink Account Verification OTP");
+
+            String htmlContent = String.format("""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {
+                        margin: 0;
+                        padding: 0;
+                        background-color: #f4f6f8;
+                        font-family: Arial, Helvetica, sans-serif;
+                    }
+
+                    .email-wrapper {
+                        width: 100%%;
+                        padding: 30px 0;
+                    }
+
+                    .email-container {
+                        max-width: 620px;
+                        margin: auto;
+                        background-color: #222222;
+                        border-radius: 14px;
+                        overflow: hidden;
+                        border: 1px solid #d0d0d0;
+                    }
+
+                    .header {
+                        height: 52px;
+                        background-color: #005bac;
+                    }
+
+                    .content {
+                        padding: 40px 38px 35px;
+                        color: #d8d8d8;
+                    }
+
+                    .title {
+                        color: #94b8ff;
+                        font-size: 28px;
+                        font-weight: bold;
+                        margin-bottom: 24px;
+                    }
+
+                    .text {
+                        font-size: 16px;
+                        line-height: 1.6;
+                        margin-bottom: 16px;
+                    }
+
+                    .otp-box {
+                        margin: 28px 0;
+                        padding: 26px;
+                        background-color: #59616b;
+                        border: 2px dashed #007bff;
+                        text-align: center;
+                    }
+
+                    .otp-code {
+                        color: #a9c4ff;
+                        font-size: 40px;
+                        font-weight: bold;
+                        letter-spacing: 12px;
+                    }
+
+                    .expire {
+                        font-size: 16px;
+                        line-height: 1.5;
+                        color: #cfcfcf;
+                    }
+
+                    .expire strong {
+                        color: #ffffff;
+                    }
+
+                    .footer {
+                        border-top: 1px solid #cccccc;
+                        padding: 18px;
+                        text-align: center;
+                        color: #aaaaaa;
+                        font-size: 13px;
+                    }
+
+                    @media only screen and (max-width: 600px) {
+                        .content {
+                            padding: 30px 24px;
+                        }
+
+                        .title {
+                            font-size: 24px;
+                        }
+
+                        .otp-code {
+                            font-size: 32px;
+                            letter-spacing: 8px;
+                        }
+                    }
+                </style>
+            </head>
+
+            <body>
+                <div class="email-wrapper">
+                    <div class="email-container">
+                        <div class="header"></div>
+
+                        <div class="content">
+                            <div class="title">Account Verification</div>
+
+                            <div class="text">Hello,</div>
+
+                            <div class="text">
+                                Your one-time password <strong>(OTP)</strong> for <strong>JUlink</strong> is:
+                            </div>
+
+                            <div class="otp-box">
+                                <div class="otp-code">%s</div>
+                            </div>
+
+                            <div class="expire">
+                                This code will expire in <strong>%d minutes</strong>.<br>
+                                If you did not request this, please ignore this email.
+                            </div>
+                        </div>
+
+                        <div class="footer">
+                            *** This is an automated message. Please do not reply. ***
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """, otp, OTP_EXPIRY_MINUTES);
+
+            helper.setText(htmlContent, true);
+
             mailSender.send(message);
+
         } catch (Exception e) {
             throw new RuntimeException("Failed to send OTP email: " + e.getMessage());
         }
