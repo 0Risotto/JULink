@@ -128,137 +128,89 @@ class AuthServiceImplementation implements AuthService {
             helper.setSubject("JUlink Account Verification OTP");
 
             String htmlContent = String.format("""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body {
-                        margin: 0;
-                        padding: 0;
-                        background-color: #f4f6f8;
-                        font-family: Arial, Helvetica, sans-serif;
-                    }
+<!DOCTYPE html>
+<html>
+<body style="margin:0; padding:0; background-color:#f3f6fb; font-family:Arial, Helvetica, sans-serif;">
 
-                    .email-wrapper {
-                        width: 100%%;
-                        padding: 30px 0;
-                    }
+    <table width="100%%" cellpadding="0" cellspacing="0" style="background-color:#f3f6fb; padding:40px 0;">
+        <tr>
+            <td align="center">
 
-                    .email-container {
-                        max-width: 620px;
-                        margin: auto;
-                        background-color: #222222;
-                        border-radius: 14px;
-                        overflow: hidden;
-                        border: 1px solid #d0d0d0;
-                    }
+                <table width="620" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:18px; overflow:hidden; box-shadow:0 8px 28px rgba(0,0,0,0.08);">
+                    
+                    <!-- Header -->
+                    <tr>
+                        <td style="background:linear-gradient(135deg,#004aad,#0077ff); padding:30px 36px; text-align:left;">
+                            <div style="color:#ffffff; font-size:26px; font-weight:bold; letter-spacing:0.5px;">
+                                JUlink
+                            </div>
+                            <div style="color:#dbeafe; font-size:14px; margin-top:6px;">
+                                University account verification
+                            </div>
+                        </td>
+                    </tr>
 
-                    .header {
-                        height: 52px;
-                        background-color: #005bac;
-                    }
-
-                    .content {
-                        padding: 40px 38px 35px;
-                        color: #d8d8d8;
-                    }
-
-                    .title {
-                        color: #94b8ff;
-                        font-size: 28px;
-                        font-weight: bold;
-                        margin-bottom: 24px;
-                    }
-
-                    .text {
-                        font-size: 16px;
-                        line-height: 1.6;
-                        margin-bottom: 16px;
-                    }
-
-                    .otp-box {
-                        margin: 28px 0;
-                        padding: 26px;
-                        background-color: #59616b;
-                        border: 2px dashed #007bff;
-                        text-align: center;
-                    }
-
-                    .otp-code {
-                        color: #a9c4ff;
-                        font-size: 40px;
-                        font-weight: bold;
-                        letter-spacing: 12px;
-                    }
-
-                    .expire {
-                        font-size: 16px;
-                        line-height: 1.5;
-                        color: #cfcfcf;
-                    }
-
-                    .expire strong {
-                        color: #ffffff;
-                    }
-
-                    .footer {
-                        border-top: 1px solid #cccccc;
-                        padding: 18px;
-                        text-align: center;
-                        color: #aaaaaa;
-                        font-size: 13px;
-                    }
-
-                    @media only screen and (max-width: 600px) {
-                        .content {
-                            padding: 30px 24px;
-                        }
-
-                        .title {
-                            font-size: 24px;
-                        }
-
-                        .otp-code {
-                            font-size: 32px;
-                            letter-spacing: 8px;
-                        }
-                    }
-                </style>
-            </head>
-
-            <body>
-                <div class="email-wrapper">
-                    <div class="email-container">
-                        <div class="header"></div>
-
-                        <div class="content">
-                            <div class="title">Account Verification</div>
-
-                            <div class="text">Hello,</div>
-
-                            <div class="text">
-                                Your one-time password <strong>(OTP)</strong> for <strong>JUlink</strong> is:
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding:42px 38px 34px; color:#1f2937;">
+                            
+                            <div style="font-size:24px; font-weight:bold; color:#111827; margin-bottom:14px;">
+                                Verify your email address
                             </div>
 
-                            <div class="otp-box">
-                                <div class="otp-code">%s</div>
+                            <div style="font-size:16px; line-height:1.7; color:#4b5563; margin-bottom:26px;">
+                                Hello,<br>
+                                Use the verification code below to complete your JUlink account verification.
                             </div>
 
-                            <div class="expire">
-                                This code will expire in <strong>%d minutes</strong>.<br>
-                                If you did not request this, please ignore this email.
-                            </div>
-                        </div>
+                            <!-- OTP Box -->
+                            <table width="100%%" cellpadding="0" cellspacing="0" style="margin:28px 0;">
+                                <tr>
+                                    <td align="center" style="background-color:#f0f6ff; border:1px solid #bfdbfe; border-radius:14px; padding:28px;">
+                                        <div style="font-size:13px; color:#2563eb; font-weight:bold; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:12px;">
+                                            Your OTP Code
+                                        </div>
 
-                        <div class="footer">
-                            *** This is an automated message. Please do not reply. ***
-                        </div>
-                    </div>
+                                        <div style="font-size:42px; font-weight:bold; color:#004aad; letter-spacing:10px;">
+                                            %s
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <div style="font-size:15px; line-height:1.7; color:#4b5563;">
+                                This code will expire in 
+                                <strong style="color:#111827;">%d minutes</strong>.
+                                <br>
+                                If you did not request this code, you can safely ignore this email.
+                            </div>
+
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color:#f9fafb; padding:22px 36px; border-top:1px solid #e5e7eb; text-align:center;">
+                            <div style="font-size:13px; color:#6b7280; line-height:1.6;">
+                                This is an automated message from JUlink.<br>
+                                Please do not reply to this email.
+                            </div>
+                        </td>
+                    </tr>
+
+                </table>
+
+                <div style="font-size:12px; color:#9ca3af; margin-top:18px;">
+                    © 2026 JUlink. All rights reserved.
                 </div>
-            </body>
-            </html>
-            """, otp, OTP_EXPIRY_MINUTES);
+
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>
+""", otp, OTP_EXPIRY_MINUTES);
 
             helper.setText(htmlContent, true);
 
