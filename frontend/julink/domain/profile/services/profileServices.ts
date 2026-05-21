@@ -1,6 +1,15 @@
-import { get, patch } from "@/util/api/axios";
+import { get, patch, put } from "@/util/api/axios";
 import { UserProfileDTO, UpdateProfileDTO, ApiResponse } from "../types";
 
+export interface OnboardingData {
+    bio: string;
+    profilePicture: string;
+    bannerPhoto: string;
+}
+
+export const completeOnboardingService = async (data: OnboardingData) => {
+    return await put("/profile/setup", data);
+};
 export const getMyProfile = () => 
   get<ApiResponse<UserProfileDTO>>('/profile/me');
 

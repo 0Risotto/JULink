@@ -18,7 +18,7 @@ export const useLogin = () => {
 
       if (loginThunk.fulfilled.match(resultAction)) {
         console.log("Login successful, token:", resultAction.payload.token);
-        await handleLoginSuccess(router);
+        await handleLoginSuccess(router, resultAction.payload);
       } else if (loginThunk.rejected.match(resultAction)) {
         console.error("Login failed:", resultAction.payload);
       }

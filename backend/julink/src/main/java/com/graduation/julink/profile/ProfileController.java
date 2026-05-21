@@ -61,6 +61,17 @@ public class ProfileController {
         }
     }
 
+    @PutMapping("/setup")
+    public Map<String, Object> completeOnboarding(Principal principal, @RequestBody ProfileDTOs.OnboardingRequest dto) {
+        try {
+            String email = principal.getName();
+            profileService.completeOnboarding(email, dto);
+            return Map.of("status", "success", "message", "Onboarding completed");
+        } catch (Exception e) {
+            return Map.of("status", "error", "message", e.getMessage());
+        }
+    }
+
     @GetMapping("/health")
     public Map<String, String> healthCheck() {
         return Map.of(

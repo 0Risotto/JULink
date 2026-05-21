@@ -47,6 +47,10 @@ public final class AuthEntities {
         @Column(length = 500)
         private String bio;
 
+        @Column(nullable = false)
+        private boolean isFirstLogin = true;
+
+
         // @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
         // private OTP otp;
         // @Column(nullable = false)

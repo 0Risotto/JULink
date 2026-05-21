@@ -1,8 +1,12 @@
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { getMyUsername } from "@/domain/profile/services/profileServices";
 
-export const handleLoginSuccess = async (router: AppRouterInstance) => {
+export const handleLoginSuccess = async (router: AppRouterInstance, loginPayload: any) => {
   try {
+    if(loginPayload.isFirstLogin === true){
+      router.push("/onboarding");
+      return;
+    }
     const response = await getMyUsername();
     console.log("Full response:", response);
     

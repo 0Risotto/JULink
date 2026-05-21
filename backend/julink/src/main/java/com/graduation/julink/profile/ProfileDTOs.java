@@ -29,4 +29,10 @@ public class ProfileDTOs {
             List<FollowUser> followers,
             int postsNumber
     ) {}
+
+    public record OnboardingRequest(
+            String bio,
+            String profilePicture,
+            String bannerPhoto
+    ) {}
 }
