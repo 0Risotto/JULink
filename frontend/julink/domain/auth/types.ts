@@ -6,6 +6,7 @@ export interface LoginUserDTO {
 export interface LoginResponse {
   status: "success" | "fail" | "error";
   token?: string;
+  isFirstLogin?: boolean;
   message?: string;
 }
 

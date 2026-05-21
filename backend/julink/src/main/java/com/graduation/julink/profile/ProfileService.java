@@ -2,6 +2,7 @@ package com.graduation.julink.profile;
 
 import com.graduation.julink.auth.AuthEntities;
 import com.graduation.julink.auth.Repository.AuthRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +11,7 @@ public interface ProfileService {
     ProfileDTOs.UserProfile getProfileByUsername(String username);
     ProfileDTOs.UserProfile updateProfile(String email, ProfileDTOs.UpdateProfile dto);
     String getOwnUsername(String email);
+    void completeOnboarding(String email, ProfileDTOs.OnboardingRequest dto);
 }
 
 @Service
@@ -59,5 +61,19 @@ class ProfileServiceImplementation implements ProfileService {
         return authRepository.findByEmail(email)
                 .map(AuthEntities.User::getUsername)
                 .orElse(null);
+    }
+
+    @Override
+    @Transactional
+    public void completeOnboarding(String email, ProfileDTOs.OnboardingRequest dto) {
+        AuthEntities.User user = authRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setBio(dto.bio());
+        user.setProfilePictureUrl(dto.profilePicture());
+        user.setBannerPhotoUrl(dto.bannerPhoto());
+        user.setFirstLogin(false); // The important flip!
+
+        authRepository.save(user);
     }
 }

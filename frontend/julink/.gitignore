@@ -39,3 +39,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# --- ADDED FOR INTELIJ/BACKEND ---
+
+# IntelliJ IDEA specific files
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Backend Build artifacts
+target/
+*.class
+*.jar
+*.war
+*.ear

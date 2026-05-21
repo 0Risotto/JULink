@@ -88,12 +88,16 @@ public class AuthController {
                         "message", "Authentication failed"
                 );
             }
+            String email = authentication.getName();
+            AuthEntities.User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
             String token = tokenService.generateToken(authentication);
 
             return Map.of(
                     "status", "success",
                     "token", token,
+                    "isFirstLogin", user.isFirstLogin(),
                     "message", "Login successful"
             );
 
