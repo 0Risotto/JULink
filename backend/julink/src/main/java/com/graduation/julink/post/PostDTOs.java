@@ -1,5 +1,8 @@
 package com.graduation.julink.post;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -9,22 +12,22 @@ public final class PostDTOs {
 
     // Used when creating a new post
     public record CreatePostDTO(
-            String description,
+            @NotBlank String description,
             String visibility,
-            List<AttachmentDTO> attachments
+            List<@Valid AttachmentDTO> attachments
     ) {}
 
     // Used when editing an existing post
     public record UpdatePostDTO(
-            String description,
+            @NotBlank String description,
             String visibility,
-            List<AttachmentDTO> attachments
+            List<@Valid AttachmentDTO> attachments
     ) {}
 
     // Used inside create/update requests
     public record AttachmentDTO(
-            String attachmentType,
-            String attachmentUrl
+            @NotBlank String attachmentType,
+            @NotBlank String attachmentUrl
     ) {}
 
     // Used when returning attachments to frontend
@@ -74,13 +77,13 @@ public final class PostDTOs {
 
     // Used when creating a comment or reply
     public record CreateCommentDTO(
-            String content,
+            @NotBlank String content,
             UUID parentCommentId
     ) {}
 
     // Used when editing a comment
     public record UpdateCommentDTO(
-            String content
+            @NotBlank String content
     ) {}
 
     // Used when returning comments to frontend

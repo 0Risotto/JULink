@@ -16,7 +16,15 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     Page<Post> findByOwner_IdOrderByCreatedAtDesc(Long ownerId, Pageable pageable);
 
+    Page<Post> findByOwner_IdAndVisibilityInOrderByCreatedAtDesc(
+            Long ownerId,
+            Collection<PostVisibility> visibilities,
+            Pageable pageable
+    );
+
     Page<Post> findByOwner_IdInOrderByCreatedAtDesc(Collection<Long> ownerIds, Pageable pageable);
+
+    long countByOwner_Id(Long ownerId);
 
     @Query("""
             SELECT p
@@ -49,17 +57,25 @@ interface HashtagRepository extends JpaRepository<Hashtag, UUID> {
             SELECT h
             FROM Hashtag h
             JOIN PostHashtag ph ON ph.hashtag = h
+            WHERE ph.post.visibility = :visibility
             GROUP BY h
             ORDER BY COUNT(ph.id) DESC
             """)
-    Page<Hashtag> findTrendingHashtags(Pageable pageable);
+    Page<Hashtag> findTrendingHashtags(
+            @Param("visibility") PostVisibility visibility,
+            Pageable pageable
+    );
 
     @Query("""
             SELECT COUNT(ph.id)
             FROM PostHashtag ph
             WHERE ph.hashtag.hashtagId = :hashtagId
+            AND ph.post.visibility = :visibility
             """)
-    long countPostsByHashtagId(@Param("hashtagId") UUID hashtagId);
+    long countPostsByHashtagIdAndVisibility(
+            @Param("hashtagId") UUID hashtagId,
+            @Param("visibility") PostVisibility visibility
+    );
 }
 
 interface PostHashtagRepository extends JpaRepository<PostHashtag, UUID> {
@@ -112,7 +128,10 @@ interface PostCommentRepository extends JpaRepository<PostComment, UUID> {
             Pageable pageable
     );
 
-    List<PostComment> findByParentComment_CommentIdOrderByCreatedAtAsc(UUID parentCommentId);
+    Page<PostComment> findByParentComment_CommentIdOrderByCreatedAtAsc(
+            UUID parentCommentId,
+            Pageable pageable
+    );
 
     long countByPost_PostId(UUID postId);
 

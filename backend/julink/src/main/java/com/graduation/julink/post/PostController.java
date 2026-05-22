@@ -1,11 +1,15 @@
 package com.graduation.julink.post;
 
+import com.graduation.julink.auth.AuthEntities.User;
+import com.graduation.julink.auth.Repository.AuthRepository;
 import com.graduation.julink.post.PostDTOs.*;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.UUID;
 
 @RestController
@@ -14,155 +18,165 @@ import java.util.UUID;
 public class PostController {
 
     private final PostService postService;
+    private final AuthRepository authRepository;
 
     @PostMapping
     public PostResponseDTO createPost(
-            @RequestParam Long ownerId,
-            @RequestBody CreatePostDTO dto
+            Principal principal,
+            @Valid @RequestBody CreatePostDTO dto
     ) {
-        return postService.createPost(ownerId, dto);
+        return postService.createPost(currentUser(principal).getId(), dto);
     }
 
     @GetMapping("/{postId}")
     public PostResponseDTO getPostById(
-            @RequestParam Long currentUserId,
+            Principal principal,
             @PathVariable UUID postId
     ) {
-        return postService.getPostById(currentUserId, postId);
+        return postService.getPostById(currentUser(principal).getId(), postId);
     }
 
     @PutMapping("/{postId}")
     public PostResponseDTO updatePost(
-            @RequestParam Long ownerId,
+            Principal principal,
             @PathVariable UUID postId,
-            @RequestBody UpdatePostDTO dto
+            @Valid @RequestBody UpdatePostDTO dto
     ) {
-        return postService.updatePost(ownerId, postId, dto);
+        return postService.updatePost(currentUser(principal).getId(), postId, dto);
     }
 
     @DeleteMapping("/{postId}")
     public void deletePost(
-            @RequestParam Long ownerId,
+            Principal principal,
             @PathVariable UUID postId
     ) {
-        postService.deletePost(ownerId, postId);
+        postService.deletePost(currentUser(principal).getId(), postId);
     }
 
     @GetMapping("/user/{ownerId}")
     public Page<PostResponseDTO> getUserPosts(
-            @RequestParam Long currentUserId,
+            Principal principal,
             @PathVariable Long ownerId,
             Pageable pageable
     ) {
-        return postService.getUserPosts(currentUserId, ownerId, pageable);
+        return postService.getUserPosts(currentUser(principal).getId(), ownerId, pageable);
     }
 
     @GetMapping("/feed")
     public Page<PostResponseDTO> getHomeFeed(
-            @RequestParam Long currentUserId,
+            Principal principal,
             Pageable pageable
     ) {
-        return postService.getHomeFeed(currentUserId, pageable);
+        return postService.getHomeFeed(currentUser(principal).getId(), pageable);
     }
 
     @GetMapping("/recommended")
     public Page<PostResponseDTO> getRecommendedPosts(
-            @RequestParam Long currentUserId,
+            Principal principal,
             Pageable pageable
     ) {
-        return postService.getRecommendedPosts(currentUserId, pageable);
+        return postService.getRecommendedPosts(currentUser(principal).getId(), pageable);
     }
 
     @PostMapping("/{postId}/toggle-like")
     public LikeResponseDTO toggleLike(
-            @RequestParam Long userId,
+            Principal principal,
             @PathVariable UUID postId
     ) {
-        return postService.toggleLike(userId, postId);
+        return postService.toggleLike(currentUser(principal).getId(), postId);
     }
 
     @PostMapping("/{postId}/like")
     public LikeResponseDTO likePost(
-            @RequestParam Long userId,
+            Principal principal,
             @PathVariable UUID postId
     ) {
-        return postService.likePost(userId, postId);
+        return postService.likePost(currentUser(principal).getId(), postId);
     }
 
     @DeleteMapping("/{postId}/like")
     public LikeResponseDTO unlikePost(
-            @RequestParam Long userId,
+            Principal principal,
             @PathVariable UUID postId
     ) {
-        return postService.unlikePost(userId, postId);
+        return postService.unlikePost(currentUser(principal).getId(), postId);
     }
 
     @PostMapping("/{postId}/comments")
     public CommentResponseDTO createComment(
-            @RequestParam Long userId,
+            Principal principal,
             @PathVariable UUID postId,
-            @RequestBody CreateCommentDTO dto
+            @Valid @RequestBody CreateCommentDTO dto
     ) {
-        return postService.createComment(userId, postId, dto);
+        return postService.createComment(currentUser(principal).getId(), postId, dto);
     }
 
     @GetMapping("/{postId}/comments")
     public Page<CommentResponseDTO> getPostComments(
-            @RequestParam Long currentUserId,
+            Principal principal,
             @PathVariable UUID postId,
             @RequestParam(defaultValue = "newest") String sortBy,
             Pageable pageable
     ) {
-        return postService.getPostComments(currentUserId, postId, sortBy, pageable);
+        return postService.getPostComments(currentUser(principal).getId(), postId, sortBy, pageable);
+    }
+
+    @GetMapping("/comments/{commentId}/replies")
+    public Page<CommentResponseDTO> getCommentReplies(
+            Principal principal,
+            @PathVariable UUID commentId,
+            Pageable pageable
+    ) {
+        return postService.getCommentReplies(currentUser(principal).getId(), commentId, pageable);
     }
 
     @PostMapping("/comments/{commentId}/toggle-like")
     public CommentLikeResponseDTO toggleCommentLike(
-            @RequestParam Long userId,
+            Principal principal,
             @PathVariable UUID commentId
     ) {
-        return postService.toggleCommentLike(userId, commentId);
+        return postService.toggleCommentLike(currentUser(principal).getId(), commentId);
     }
 
     @PostMapping("/comments/{commentId}/like")
     public CommentLikeResponseDTO likeComment(
-            @RequestParam Long userId,
+            Principal principal,
             @PathVariable UUID commentId
     ) {
-        return postService.likeComment(userId, commentId);
+        return postService.likeComment(currentUser(principal).getId(), commentId);
     }
 
     @DeleteMapping("/comments/{commentId}/like")
     public CommentLikeResponseDTO unlikeComment(
-            @RequestParam Long userId,
+            Principal principal,
             @PathVariable UUID commentId
     ) {
-        return postService.unlikeComment(userId, commentId);
+        return postService.unlikeComment(currentUser(principal).getId(), commentId);
     }
     @PutMapping("/comments/{commentId}")
     public CommentResponseDTO updateComment(
-            @RequestParam Long userId,
+            Principal principal,
             @PathVariable UUID commentId,
-            @RequestBody UpdateCommentDTO dto
+            @Valid @RequestBody UpdateCommentDTO dto
     ) {
-        return postService.updateComment(userId, commentId, dto);
+        return postService.updateComment(currentUser(principal).getId(), commentId, dto);
     }
 
     @DeleteMapping("/comments/{commentId}")
     public void deleteComment(
-            @RequestParam Long userId,
+            Principal principal,
             @PathVariable UUID commentId
     ) {
-        postService.deleteComment(userId, commentId);
+        postService.deleteComment(currentUser(principal).getId(), commentId);
     }
 
     @GetMapping("/hashtags/{hashtagName}")
     public Page<PostResponseDTO> getPostsByHashtag(
-            @RequestParam Long currentUserId,
+            Principal principal,
             @PathVariable String hashtagName,
             Pageable pageable
     ) {
-        return postService.getPostsByHashtag(currentUserId, hashtagName, pageable);
+        return postService.getPostsByHashtag(currentUser(principal).getId(), hashtagName, pageable);
     }
 
     @GetMapping("/hashtags/trending")
@@ -170,5 +184,10 @@ public class PostController {
             Pageable pageable
     ) {
         return postService.getTrendingHashtags(pageable);
+    }
+
+    private User currentUser(Principal principal) {
+        return authRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new SecurityException("Authenticated user was not found"));
     }
 }

@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public final class PostEntities {
@@ -47,6 +49,18 @@ public final class PostEntities {
         private LocalDateTime createdAt = LocalDateTime.now();
 
         private LocalDateTime updatedAt;
+
+        @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true)
+        private List<PostAttachment> attachments = new ArrayList<>();
+
+        @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true)
+        private List<PostHashtag> hashtags = new ArrayList<>();
+
+        @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true)
+        private List<PostLike> likes = new ArrayList<>();
+
+        @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true)
+        private List<PostComment> comments = new ArrayList<>();
     }
 
     @Entity(name = "PostAttachment")
@@ -171,6 +185,12 @@ public final class PostEntities {
         private LocalDateTime createdAt = LocalDateTime.now();
 
         private LocalDateTime updatedAt;
+
+        @OneToMany(mappedBy = "parentComment", cascade = CascadeType.REMOVE, orphanRemoval = true)
+        private List<PostComment> replies = new ArrayList<>();
+
+        @OneToMany(mappedBy = "comment", cascade = CascadeType.REMOVE, orphanRemoval = true)
+        private List<CommentLike> likes = new ArrayList<>();
     }
 
     @Entity(name = "CommentLike")

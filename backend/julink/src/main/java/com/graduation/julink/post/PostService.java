@@ -1,9 +1,11 @@
 package com.graduation.julink.post;
 
 import com.graduation.julink.auth.AuthEntities.User;
+import com.graduation.julink.follow.FollowService;
 import com.graduation.julink.post.PostDTOs.*;
 import com.graduation.julink.post.PostEntities.*;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -26,6 +28,7 @@ public class PostService {
     private final PostLikeRepository postLikeRepository;
     private final PostCommentRepository postCommentRepository;
     private final CommentLikeRepository commentLikeRepository;
+    private final FollowService followService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -52,6 +55,7 @@ public class PostService {
     @Transactional(readOnly = true)
     public PostResponseDTO getPostById(Long currentUserId, UUID postId) {
         Post post = getPostOrThrow(postId);
+        requireVisibleToUser(post, getUserOrThrow(currentUserId));
         return buildPostResponse(post, currentUserId);
     }
 
@@ -60,7 +64,7 @@ public class PostService {
         Post post = getPostOrThrow(postId);
 
         if (!post.getOwner().getId().equals(ownerId)) {
-            throw new RuntimeException("You are not allowed to update this post");
+            throw new SecurityException("You are not allowed to update this post");
         }
 
         post.setDescription(dto.description());
@@ -83,7 +87,7 @@ public class PostService {
         Post post = getPostOrThrow(postId);
 
         if (!post.getOwner().getId().equals(ownerId)) {
-            throw new RuntimeException("You are not allowed to delete this post");
+            throw new SecurityException("You are not allowed to delete this post");
         }
 
         postRepository.delete(post);
@@ -91,8 +95,15 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public Page<PostResponseDTO> getUserPosts(Long currentUserId, Long ownerId, Pageable pageable) {
+        User currentUser = getUserOrThrow(currentUserId);
+        User owner = getUserOrThrow(ownerId);
+
         return postRepository
-                .findByOwner_IdOrderByCreatedAtDesc(ownerId, pageable)
+                .findByOwner_IdAndVisibilityInOrderByCreatedAtDesc(
+                        ownerId,
+                        visibleVisibilities(currentUser, owner),
+                        pageable
+                )
                 .map(post -> buildPostResponse(post, currentUserId));
     }
 
@@ -125,6 +136,7 @@ public class PostService {
     public LikeResponseDTO likePost(Long userId, UUID postId) {
         User user = getUserOrThrow(userId);
         Post post = getPostOrThrow(postId);
+        requireVisibleToUser(post, user);
 
         Optional<PostLike> existingLike =
                 postLikeRepository.findByPost_PostIdAndUser_Id(postId, userId);
@@ -147,8 +159,9 @@ public class PostService {
 
     @Transactional
     public LikeResponseDTO unlikePost(Long userId, UUID postId) {
-        getUserOrThrow(userId);
-        getPostOrThrow(postId);
+        User user = getUserOrThrow(userId);
+        Post post = getPostOrThrow(postId);
+        requireVisibleToUser(post, user);
 
         postLikeRepository.deleteByPost_PostIdAndUser_Id(postId, userId);
 
@@ -177,6 +190,7 @@ public class PostService {
     public CommentResponseDTO createComment(Long userId, UUID postId, CreateCommentDTO dto) {
         User user = getUserOrThrow(userId);
         Post post = getPostOrThrow(postId);
+        requireVisibleToUser(post, user);
 
         PostComment comment = new PostComment();
         comment.setUser(user);
@@ -185,6 +199,9 @@ public class PostService {
 
         if (dto.parentCommentId() != null) {
             PostComment parentComment = getCommentOrThrow(dto.parentCommentId());
+            if (!parentComment.getPost().getPostId().equals(postId)) {
+                throw new IllegalArgumentException("Parent comment belongs to another post");
+            }
             comment.setParentComment(parentComment);
         }
 
@@ -200,7 +217,8 @@ public class PostService {
             String sortBy,
             Pageable pageable
     ) {
-        getPostOrThrow(postId);
+        Post post = getPostOrThrow(postId);
+        requireVisibleToUser(post, getUserOrThrow(currentUserId));
 
         Page<PostComment> comments;
 
@@ -218,12 +236,27 @@ public class PostService {
         return comments.map(comment -> buildCommentResponse(comment, currentUserId));
     }
 
+    @Transactional(readOnly = true)
+    public Page<CommentResponseDTO> getCommentReplies(
+            Long currentUserId,
+            UUID commentId,
+            Pageable pageable
+    ) {
+        PostComment parentComment = getCommentOrThrow(commentId);
+        requireVisibleToUser(parentComment.getPost(), getUserOrThrow(currentUserId));
+
+        return postCommentRepository
+                .findByParentComment_CommentIdOrderByCreatedAtAsc(commentId, pageable)
+                .map(comment -> buildCommentResponse(comment, currentUserId));
+    }
+
     @Transactional
     public CommentResponseDTO updateComment(Long userId, UUID commentId, UpdateCommentDTO dto) {
         PostComment comment = getCommentOrThrow(commentId);
+        requireVisibleToUser(comment.getPost(), getUserOrThrow(userId));
 
         if (!comment.getUser().getId().equals(userId)) {
-            throw new RuntimeException("You are not allowed to update this comment");
+            throw new SecurityException("You are not allowed to update this comment");
         }
 
         comment.setContent(dto.content());
@@ -237,12 +270,13 @@ public class PostService {
     @Transactional
     public void deleteComment(Long userId, UUID commentId) {
         PostComment comment = getCommentOrThrow(commentId);
+        requireVisibleToUser(comment.getPost(), getUserOrThrow(userId));
 
         boolean isCommentOwner = comment.getUser().getId().equals(userId);
         boolean isPostOwner = comment.getPost().getOwner().getId().equals(userId);
 
         if (!isCommentOwner && !isPostOwner) {
-            throw new RuntimeException("You are not allowed to delete this comment");
+            throw new SecurityException("You are not allowed to delete this comment");
         }
 
         postCommentRepository.delete(comment);
@@ -252,6 +286,7 @@ public class PostService {
     public CommentLikeResponseDTO likeComment(Long userId, UUID commentId) {
         User user = getUserOrThrow(userId);
         PostComment comment = getCommentOrThrow(commentId);
+        requireVisibleToUser(comment.getPost(), user);
 
         Optional<CommentLike> existingLike =
                 commentLikeRepository.findByComment_CommentIdAndUser_Id(commentId, userId);
@@ -274,8 +309,9 @@ public class PostService {
 
     @Transactional
     public CommentLikeResponseDTO unlikeComment(Long userId, UUID commentId) {
-        getUserOrThrow(userId);
-        getCommentOrThrow(commentId);
+        User user = getUserOrThrow(userId);
+        PostComment comment = getCommentOrThrow(commentId);
+        requireVisibleToUser(comment.getPost(), user);
 
         commentLikeRepository.deleteByComment_CommentIdAndUser_Id(commentId, userId);
 
@@ -307,19 +343,27 @@ public class PostService {
             Pageable pageable
     ) {
         String normalized = PostMapper.normalizeHashtag(hashtagName);
+        User currentUser = getUserOrThrow(currentUserId);
 
-        return postHashtagRepository
-                .findPostsByHashtagName(normalized, pageable)
-                .map(post -> buildPostResponse(post, currentUserId));
+        Page<Post> hashtagPosts = postHashtagRepository.findPostsByHashtagName(normalized, pageable);
+        List<PostResponseDTO> visiblePosts = hashtagPosts.getContent().stream()
+                .filter(post -> isVisibleToUser(post, currentUser))
+                .map(post -> buildPostResponse(post, currentUserId))
+                .toList();
+
+        return new PageImpl<>(visiblePosts, pageable, visiblePosts.size());
     }
 
     @Transactional(readOnly = true)
     public Page<HashtagResponseDTO> getTrendingHashtags(Pageable pageable) {
         return hashtagRepository
-                .findTrendingHashtags(pageable)
+                .findTrendingHashtags(PostVisibility.PUBLIC, pageable)
                 .map(hashtag -> PostMapper.toHashtagResponseDTO(
                         hashtag,
-                        hashtagRepository.countPostsByHashtagId(hashtag.getHashtagId())
+                        hashtagRepository.countPostsByHashtagIdAndVisibility(
+                                hashtag.getHashtagId(),
+                                PostVisibility.PUBLIC
+                        )
                 ));
     }
 
@@ -427,7 +471,7 @@ public class PostService {
         User user = entityManager.find(User.class, userId);
 
         if (user == null) {
-            throw new RuntimeException("User not found with id: " + userId);
+            throw new EntityNotFoundException("User not found with id: " + userId);
         }
 
         return user;
@@ -435,11 +479,42 @@ public class PostService {
 
     private Post getPostOrThrow(UUID postId) {
         return postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found with id: " + postId));
+                .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + postId));
     }
 
     private PostComment getCommentOrThrow(UUID commentId) {
         return postCommentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("Comment not found with id: " + commentId));
+                .orElseThrow(() -> new EntityNotFoundException("Comment not found with id: " + commentId));
+    }
+
+    private Collection<PostVisibility> visibleVisibilities(User currentUser, User owner) {
+        if (currentUser.getId().equals(owner.getId())) {
+            return EnumSet.allOf(PostVisibility.class);
+        }
+
+        if (followService.isFollowing(currentUser.getUsername(), owner.getUsername())) {
+            return EnumSet.of(PostVisibility.PUBLIC, PostVisibility.FOLLOWERS_ONLY);
+        }
+
+        return EnumSet.of(PostVisibility.PUBLIC);
+    }
+
+    private void requireVisibleToUser(Post post, User currentUser) {
+        if (!isVisibleToUser(post, currentUser)) {
+            throw new SecurityException("You are not allowed to view this post");
+        }
+    }
+
+    private boolean isVisibleToUser(Post post, User currentUser) {
+        if (post.getVisibility() == PostVisibility.PUBLIC) {
+            return true;
+        }
+
+        if (currentUser.getId().equals(post.getOwner().getId())) {
+            return true;
+        }
+
+        return post.getVisibility() == PostVisibility.FOLLOWERS_ONLY
+                && followService.isFollowing(currentUser.getUsername(), post.getOwner().getUsername());
     }
 }
