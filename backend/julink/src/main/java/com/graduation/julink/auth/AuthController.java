@@ -104,7 +104,7 @@ public class AuthController {
         } catch (RuntimeException e) {
             return Map.of(
                     "status", "error",
-                    "message", "Login failed : incorrect email or password."
+                    "message", "Login failed : incorrect email, username, or password."
             );
         } catch (Exception e) {
             return Map.of(

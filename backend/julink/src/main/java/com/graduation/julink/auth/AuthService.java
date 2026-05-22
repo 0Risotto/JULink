@@ -77,9 +77,9 @@ class AuthServiceImplementation implements AuthService {
 
     @Override
     public Authentication loginUser(AuthDTOs.LoginUserDTO loginUserDTO) {
-        String email = cleanEmail(loginUserDTO.email());
+        String identifier = cleanLoginIdentifier(loginUserDTO.identifier());
 
-        AuthEntities.User user = findUserByEmail(email);
+        AuthEntities.User user = findUserForLogin(identifier);
         validatePassword(loginUserDTO.password(), user.getPasswordHash());
 
         return createAuthenticationToken(user);
@@ -105,6 +105,10 @@ class AuthServiceImplementation implements AuthService {
 
     private String cleanEmail(String email) {
         return email.toLowerCase().trim();
+    }
+
+    private String cleanLoginIdentifier(String identifier) {
+        return identifier.toLowerCase().trim();
     }
 
     private String generateOTP() {
@@ -250,6 +254,12 @@ class AuthServiceImplementation implements AuthService {
     private AuthEntities.User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
+
+    private AuthEntities.User findUserForLogin(String identifier) {
+        return userRepository.findByEmail(identifier)
+                .or(() -> userRepository.findByUsername(identifier))
+                .orElseThrow(() -> new RuntimeException("User not found with email or username: " + identifier));
     }
 
     private void validatePassword(String rawPassword, String encodedPassword) {
