@@ -47,7 +47,7 @@ public final class AuthEntities {
         @Column(length = 500)
         private String bio;
 
-        @Column(nullable = false)
+        @Column(nullable = false, columnDefinition = "boolean default true")
         private boolean isFirstLogin = true;
 
 
