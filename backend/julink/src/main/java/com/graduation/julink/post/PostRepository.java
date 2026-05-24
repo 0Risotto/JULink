@@ -12,7 +12,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface PostRepository extends JpaRepository<Post, UUID> {
+public interface
+PostRepository extends JpaRepository<Post, UUID> {
 
     Page<Post> findByOwner_IdOrderByCreatedAtDesc(Long ownerId, Pageable pageable);
 

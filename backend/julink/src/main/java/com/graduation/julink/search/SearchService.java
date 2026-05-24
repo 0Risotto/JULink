@@ -45,7 +45,7 @@ public class SearchService {
         Long currentUserId = currentUserId(principal);
 
         return postRepository
-                .searchPosts(query, PostVisibility.PUBLIC, currentUserId, pageable)
+                .searchPosts(query, PostVisibility.PUBLIC.name(), currentUserId, pageable)
                 .map(this::toPostSearchResult);
     }
 
@@ -59,7 +59,7 @@ public class SearchService {
         Long currentUserId = currentUserId(principal);
 
         return hashtagRepository
-                .searchHashtags(query, PostVisibility.PUBLIC, currentUserId, pageable)
+                .searchHashtags(query, PostVisibility.PUBLIC.name(), currentUserId, pageable)
                 .map(this::toHashtagSearchResult);
     }
 
