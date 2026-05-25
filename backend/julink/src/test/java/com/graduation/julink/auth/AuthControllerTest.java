@@ -8,10 +8,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.security.Principal;
 import java.util.Map;
 import java.util.Optional;
 
@@ -33,6 +35,9 @@ class AuthControllerTest {
 
     @Mock
     private TokenService tokenService;
+
+    @Mock
+    private Principal principal;
 
     @InjectMocks
     private AuthController authController;
@@ -116,5 +121,17 @@ class AuthControllerTest {
 
         assertEquals("ok", response.get("status"));
         assertEquals("Auth Controller is running", response.get("service"));
+    }
+
+    @Test
+    void kill_Success() {
+        doNothing().when(authService).kill(principal);
+
+        ResponseEntity<Map<String, String>> response = authController.kill(principal);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("success", response.getBody().get("status"));
+        assertEquals("Account deleted successfully", response.getBody().get("message"));
+        verify(authService, times(1)).kill(principal);
     }
 }

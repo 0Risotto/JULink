@@ -78,6 +78,14 @@ public class PostController {
         return postService.getRecommendedPosts(currentUser(principal).getId(), pageable);
     }
 
+    @GetMapping("/favorites")
+    public Page<PostResponseDTO> getFavoritePosts(
+            Principal principal,
+            Pageable pageable
+    ) {
+        return postService.getFavoritePosts(currentUser(principal).getId(), pageable);
+    }
+
     @PostMapping("/{postId}/toggle-like")
     public LikeResponseDTO toggleLike(
             Principal principal,
@@ -100,6 +108,30 @@ public class PostController {
             @PathVariable UUID postId
     ) {
         return postService.unlikePost(currentUser(principal).getId(), postId);
+    }
+
+    @PostMapping("/{postId}/toggle-favorite")
+    public FavoriteResponseDTO toggleFavorite(
+            Principal principal,
+            @PathVariable UUID postId
+    ) {
+        return postService.toggleFavorite(currentUser(principal).getId(), postId);
+    }
+
+    @PostMapping("/{postId}/favorite")
+    public FavoriteResponseDTO favoritePost(
+            Principal principal,
+            @PathVariable UUID postId
+    ) {
+        return postService.favoritePost(currentUser(principal).getId(), postId);
+    }
+
+    @DeleteMapping("/{postId}/favorite")
+    public FavoriteResponseDTO unfavoritePost(
+            Principal principal,
+            @PathVariable UUID postId
+    ) {
+        return postService.unfavoritePost(currentUser(principal).getId(), postId);
     }
 
     @PostMapping("/{postId}/comments")

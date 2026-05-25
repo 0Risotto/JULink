@@ -2,6 +2,7 @@ package com.graduation.julink.profile;
 
 import com.graduation.julink.auth.AuthEntities.User;
 import com.graduation.julink.auth.Repository.AuthRepository;
+import com.graduation.julink.common.media.MediaUploadService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +24,9 @@ class ProfileServiceTest {
 
     @Mock
     private ProfileMapper profileMapper;
+
+    @Mock
+    private MediaUploadService mediaUploadService;
 
     @InjectMocks
     private ProfileServiceImplementation profileService;

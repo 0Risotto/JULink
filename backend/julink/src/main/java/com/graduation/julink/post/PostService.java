@@ -31,6 +31,7 @@ public class PostService {
     private final HashtagRepository hashtagRepository;
     private final PostHashtagRepository postHashtagRepository;
     private final PostLikeRepository postLikeRepository;
+    private final PostFavoriteRepository postFavoriteRepository;
     private final PostCommentRepository postCommentRepository;
     private final CommentLikeRepository commentLikeRepository;
     private final FollowService followService;
@@ -190,6 +191,73 @@ public class PostService {
         }
 
         return likePost(userId, postId);
+    }
+
+    @Transactional
+    public FavoriteResponseDTO favoritePost(Long userId, UUID postId) {
+        User user = getUserOrThrow(userId);
+        Post post = getPostOrThrow(postId);
+        requireVisibleToUser(post, user);
+
+        Optional<PostFavorite> existingFavorite =
+                postFavoriteRepository.findByPost_PostIdAndUser_Id(postId, userId);
+
+        if (existingFavorite.isEmpty()) {
+            PostFavorite favorite = new PostFavorite();
+            favorite.setPost(post);
+            favorite.setUser(user);
+            postFavoriteRepository.save(favorite);
+        }
+
+        long favoritesCount = postFavoriteRepository.countByPost_PostId(postId);
+
+        return new FavoriteResponseDTO(
+                postId,
+                true,
+                favoritesCount
+        );
+    }
+
+    @Transactional
+    public FavoriteResponseDTO unfavoritePost(Long userId, UUID postId) {
+        User user = getUserOrThrow(userId);
+        Post post = getPostOrThrow(postId);
+        requireVisibleToUser(post, user);
+
+        postFavoriteRepository.deleteByPost_PostIdAndUser_Id(postId, userId);
+
+        long favoritesCount = postFavoriteRepository.countByPost_PostId(postId);
+
+        return new FavoriteResponseDTO(
+                postId,
+                false,
+                favoritesCount
+        );
+    }
+
+    @Transactional
+    public FavoriteResponseDTO toggleFavorite(Long userId, UUID postId) {
+        boolean alreadyFavorited =
+                postFavoriteRepository.existsByPost_PostIdAndUser_Id(postId, userId);
+
+        if (alreadyFavorited) {
+            return unfavoritePost(userId, postId);
+        }
+
+        return favoritePost(userId, postId);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PostResponseDTO> getFavoritePosts(Long currentUserId, Pageable pageable) {
+        User currentUser = getUserOrThrow(currentUserId);
+
+        Page<Post> favoritePosts = postFavoriteRepository.findFavoritePostsByUserId(currentUserId, pageable);
+        List<PostResponseDTO> visibleFavoritePosts = favoritePosts.getContent().stream()
+                .filter(post -> isVisibleToUser(post, currentUser))
+                .map(post -> buildPostResponse(post, currentUserId))
+                .toList();
+
+        return new PageImpl<>(visibleFavoritePosts, pageable, favoritePosts.getTotalElements());
     }
 
     @Transactional

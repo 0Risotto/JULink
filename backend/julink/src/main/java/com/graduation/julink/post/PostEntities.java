@@ -60,6 +60,9 @@ public final class PostEntities {
         private List<PostLike> likes = new ArrayList<>();
 
         @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true)
+        private List<PostFavorite> favorites = new ArrayList<>();
+
+        @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true)
         private List<PostComment> comments = new ArrayList<>();
     }
 
@@ -144,6 +147,32 @@ public final class PostEntities {
         @Id
         @GeneratedValue(strategy = GenerationType.UUID)
         private UUID likeId;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "post_id", nullable = false)
+        private Post post;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "user_id", nullable = false)
+        private User user;
+
+        @Column(nullable = false, updatable = false)
+        private LocalDateTime createdAt = LocalDateTime.now();
+    }
+
+    @Entity(name = "PostFavorite")
+    @Setter
+    @Getter
+    @Table(
+            name = "post_favorites",
+            uniqueConstraints = {
+                    @UniqueConstraint(columnNames = {"post_id", "user_id"})
+            }
+    )
+    public static class PostFavorite {
+        @Id
+        @GeneratedValue(strategy = GenerationType.UUID)
+        private UUID favoriteId;
 
         @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "post_id", nullable = false)

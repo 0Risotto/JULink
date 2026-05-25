@@ -113,4 +113,51 @@ class PostControllerTest {
 
         assertEquals(resp, response);
     }
+
+    @Test
+    void toggleFavorite_Success() {
+        mockPrincipal();
+        UUID postId = UUID.randomUUID();
+        FavoriteResponseDTO resp = new FavoriteResponseDTO(postId, true, 1L);
+        when(postService.toggleFavorite(101L, postId)).thenReturn(resp);
+
+        FavoriteResponseDTO response = postController.toggleFavorite(principal, postId);
+
+        assertEquals(resp, response);
+    }
+
+    @Test
+    void favoritePost_Success() {
+        mockPrincipal();
+        UUID postId = UUID.randomUUID();
+        FavoriteResponseDTO resp = new FavoriteResponseDTO(postId, true, 1L);
+        when(postService.favoritePost(101L, postId)).thenReturn(resp);
+
+        FavoriteResponseDTO response = postController.favoritePost(principal, postId);
+
+        assertEquals(resp, response);
+    }
+
+    @Test
+    void unfavoritePost_Success() {
+        mockPrincipal();
+        UUID postId = UUID.randomUUID();
+        FavoriteResponseDTO resp = new FavoriteResponseDTO(postId, false, 0L);
+        when(postService.unfavoritePost(101L, postId)).thenReturn(resp);
+
+        FavoriteResponseDTO response = postController.unfavoritePost(principal, postId);
+
+        assertEquals(resp, response);
+    }
+
+    @Test
+    void getFavoritePosts_Success() {
+        mockPrincipal();
+        Page<PostResponseDTO> page = new PageImpl<>(Collections.emptyList());
+        when(postService.getFavoritePosts(eq(101L), any(Pageable.class))).thenReturn(page);
+
+        Page<PostResponseDTO> response = postController.getFavoritePosts(principal, Pageable.unpaged());
+
+        assertEquals(page, response);
+    }
 }

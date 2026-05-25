@@ -117,6 +117,27 @@ interface PostLikeRepository extends JpaRepository<PostLike, UUID> {
     void deleteByPost_PostId(UUID postId);
 }
 
+interface PostFavoriteRepository extends JpaRepository<PostFavorite, UUID> {
+
+    Optional<PostFavorite> findByPost_PostIdAndUser_Id(UUID postId, Long userId);
+
+    boolean existsByPost_PostIdAndUser_Id(UUID postId, Long userId);
+
+    long countByPost_PostId(UUID postId);
+
+    void deleteByPost_PostIdAndUser_Id(UUID postId, Long userId);
+
+    void deleteByPost_PostId(UUID postId);
+
+    @Query("""
+            SELECT f.post
+            FROM PostFavorite f
+            WHERE f.user.id = :userId
+            ORDER BY f.createdAt DESC
+            """)
+    Page<Post> findFavoritePostsByUserId(@Param("userId") Long userId, Pageable pageable);
+}
+
 interface PostCommentRepository extends JpaRepository<PostComment, UUID> {
 
     Page<PostComment> findByPost_PostIdAndParentCommentIsNullOrderByCreatedAtDesc(

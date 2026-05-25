@@ -4,6 +4,8 @@ import com.graduation.julink.auth.Repository.AuthRepository;
 import com.graduation.julink.auth.Repository.OTPRepository;
 import com.graduation.julink.follow.FollowRepository;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,7 +15,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -42,6 +46,15 @@ class AuthServiceImplementationTest {
     @Mock
     private BCryptPasswordEncoder passwordEncoder;
 
+    @Mock
+    private EntityManager entityManager;
+
+    @Mock
+    private Query query;
+
+    @Mock
+    private Principal principal;
+
     @InjectMocks
     private AuthServiceImplementation authService;
 
@@ -54,11 +67,14 @@ class AuthServiceImplementationTest {
 
     @BeforeEach
     void setUp() {
+        ReflectionTestUtils.setField(authService, "entityManager", entityManager);
+
         createUserRequestDTO = new AuthDTOs.CreateUserRequestDTO(
                 "testuser", "test@ju.edu.jo", "Test", "User", CollegeEnum.KING_ABDULLAH_II_IT, "Password123!"
         );
 
         user = new AuthEntities.User();
+        user.setId(101L);
         user.setUsername("testuser");
         user.setEmail("test@ju.edu.jo");
         user.setPasswordHash("encodedPassword");
@@ -147,6 +163,19 @@ class AuthServiceImplementationTest {
     }
 
     @Test
+    void loginUser_WithUsername_Success() {
+        AuthDTOs.LoginUserDTO loginUserDTO = new AuthDTOs.LoginUserDTO("testuser", "Password123!");
+        when(userRepository.findByEmail("testuser")).thenReturn(Optional.empty());
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("Password123!", "encodedPassword")).thenReturn(true);
+
+        Authentication auth = authService.loginUser(loginUserDTO);
+
+        assertNotNull(auth);
+        assertEquals("test@ju.edu.jo", auth.getName());
+    }
+
+    @Test
     void loginUser_InvalidPassword() {
         AuthDTOs.LoginUserDTO loginUserDTO = new AuthDTOs.LoginUserDTO("test@ju.edu.jo", "WrongPassword!");
         when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
@@ -155,5 +184,23 @@ class AuthServiceImplementationTest {
         RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> authService.loginUser(loginUserDTO));
         assertEquals("Invalid password", exception.getMessage());
+    }
+
+    @Test
+    void kill_Success() {
+        when(principal.getName()).thenReturn("test@ju.edu.jo");
+        when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
+        when(otpRepository.existsByEmail("test@ju.edu.jo")).thenReturn(true);
+        when(entityManager.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter("userId", 101L)).thenReturn(query);
+        when(query.executeUpdate()).thenReturn(1);
+
+        authService.kill(principal);
+
+        verify(entityManager, atLeastOnce()).createNativeQuery(anyString());
+        verify(entityManager, times(2)).createNativeQuery(contains("post_favorites"));
+        verify(otpRepository).deleteByEmailIgnoreCase("test@ju.edu.jo");
+        verify(followRepository).deleteUser("testuser");
+        verify(userRepository).delete(user);
     }
 }

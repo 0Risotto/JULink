@@ -319,7 +319,17 @@ class AuthServiceImplementation implements AuthService {
                 WHERE user_id = :userId
                 """, userId);
         executeUpdate("""
+                DELETE FROM post_favorites
+                WHERE user_id = :userId
+                """, userId);
+        executeUpdate("""
                 DELETE FROM post_likes
+                WHERE post_id IN (
+                    SELECT post_id FROM posts WHERE owner_id = :userId
+                )
+                """, userId);
+        executeUpdate("""
+                DELETE FROM post_favorites
                 WHERE post_id IN (
                     SELECT post_id FROM posts WHERE owner_id = :userId
                 )

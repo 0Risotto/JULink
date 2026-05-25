@@ -1,6 +1,7 @@
 package com.graduation.julink.post;
 
 import com.graduation.julink.auth.AuthEntities.User;
+import com.graduation.julink.common.media.MediaUploadService;
 import com.graduation.julink.follow.FollowService;
 import com.graduation.julink.post.PostDTOs.*;
 import com.graduation.julink.post.PostEntities.*;
@@ -32,9 +33,11 @@ class PostServiceTest {
     @Mock private HashtagRepository hashtagRepository;
     @Mock private PostHashtagRepository postHashtagRepository;
     @Mock private PostLikeRepository postLikeRepository;
+    @Mock private PostFavoriteRepository postFavoriteRepository;
     @Mock private PostCommentRepository postCommentRepository;
     @Mock private CommentLikeRepository commentLikeRepository;
     @Mock private FollowService followService;
+    @Mock private MediaUploadService mediaUploadService;
     @Mock private EntityManager entityManager;
 
     @InjectMocks
@@ -125,5 +128,57 @@ class PostServiceTest {
         assertTrue(response.liked());
         assertEquals(1L, response.likesCount());
         verify(postLikeRepository, times(1)).save(any(PostLike.class));
+    }
+
+    @Test
+    void favoritePost_Success() {
+        when(entityManager.find(User.class, 101L)).thenReturn(user);
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(postFavoriteRepository.findByPost_PostIdAndUser_Id(postId, 101L)).thenReturn(Optional.empty());
+        when(postFavoriteRepository.countByPost_PostId(postId)).thenReturn(1L);
+
+        FavoriteResponseDTO response = postService.favoritePost(101L, postId);
+
+        assertTrue(response.favorited());
+        assertEquals(1L, response.favoritesCount());
+        verify(postFavoriteRepository, times(1)).save(any(PostFavorite.class));
+    }
+
+    @Test
+    void unfavoritePost_Success() {
+        when(entityManager.find(User.class, 101L)).thenReturn(user);
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(postFavoriteRepository.countByPost_PostId(postId)).thenReturn(0L);
+
+        FavoriteResponseDTO response = postService.unfavoritePost(101L, postId);
+
+        assertFalse(response.favorited());
+        assertEquals(0L, response.favoritesCount());
+        verify(postFavoriteRepository, times(1)).deleteByPost_PostIdAndUser_Id(postId, 101L);
+    }
+
+    @Test
+    void toggleFavorite_WhenAlreadyFavorited_Unfavorites() {
+        when(postFavoriteRepository.existsByPost_PostIdAndUser_Id(postId, 101L)).thenReturn(true);
+        when(entityManager.find(User.class, 101L)).thenReturn(user);
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(postFavoriteRepository.countByPost_PostId(postId)).thenReturn(0L);
+
+        FavoriteResponseDTO response = postService.toggleFavorite(101L, postId);
+
+        assertFalse(response.favorited());
+        verify(postFavoriteRepository, times(1)).deleteByPost_PostIdAndUser_Id(postId, 101L);
+    }
+
+    @Test
+    void getFavoritePosts_Success() {
+        when(entityManager.find(User.class, 101L)).thenReturn(user);
+        when(postFavoriteRepository.findFavoritePostsByUserId(eq(101L), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(Collections.singletonList(post)));
+
+        Page<PostResponseDTO> response = postService.getFavoritePosts(101L, Pageable.unpaged());
+
+        assertEquals(1, response.getContent().size());
+        assertEquals(postId, response.getContent().get(0).postId());
     }
 }

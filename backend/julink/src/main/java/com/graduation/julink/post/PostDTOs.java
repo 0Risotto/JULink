@@ -82,6 +82,13 @@ public final class PostDTOs {
             long likesCount
     ) {}
 
+    // Used after favoriting/unfavoriting/toggling a favorite
+    public record FavoriteResponseDTO(
+            UUID postId,
+            boolean favorited,
+            long favoritesCount
+    ) {}
+
     // Used when creating a comment or reply
     public record CreateCommentDTO(
             @NotBlank String content,

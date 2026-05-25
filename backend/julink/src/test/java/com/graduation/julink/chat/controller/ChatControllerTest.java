@@ -140,7 +140,7 @@ class ChatControllerTest {
     }
 
     @Test
-    void sendMediaMessage_Success() throws IOException {
+    void sendMediaMessage_Success() throws IOException, InterruptedException {
         mockPrincipal();
         MessageResponse msgResponse = new MessageResponse();
         when(chatService.sendMediaMessage(1L, username, multipartFile)).thenReturn(msgResponse);
