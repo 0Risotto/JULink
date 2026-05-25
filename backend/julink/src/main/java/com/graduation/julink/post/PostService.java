@@ -1,6 +1,10 @@
 package com.graduation.julink.post;
 
 import com.graduation.julink.auth.AuthEntities.User;
+import com.graduation.julink.common.media.MediaUploadService;
+import com.graduation.julink.common.media.MediaUploadService.ImageVariant;
+import com.graduation.julink.common.media.MediaUploadService.MediaUploadRequest;
+import com.graduation.julink.common.media.MediaUploadService.MediaUploadResult;
 import com.graduation.julink.follow.FollowService;
 import com.graduation.julink.post.PostDTOs.*;
 import com.graduation.julink.post.PostEntities.*;
@@ -12,6 +16,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -29,6 +34,7 @@ public class PostService {
     private final PostCommentRepository postCommentRepository;
     private final CommentLikeRepository commentLikeRepository;
     private final FollowService followService;
+    private final MediaUploadService mediaUploadService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -419,10 +425,42 @@ public class PostService {
         }
 
         List<PostAttachment> attachmentEntities = attachments.stream()
-                .map(dto -> PostMapper.toPostAttachmentEntity(post, dto))
+                .map(dto -> PostMapper.toPostAttachmentEntity(post, normalizeAttachment(dto)))
                 .toList();
 
         postAttachmentRepository.saveAll(attachmentEntities);
+    }
+
+    private AttachmentDTO normalizeAttachment(AttachmentDTO dto) {
+        if (dto.attachmentUrl() != null && !dto.attachmentUrl().isBlank()) {
+            return dto;
+        }
+
+        if (dto.fileBytes() == null || dto.fileBytes().length == 0) {
+            throw new IllegalArgumentException("Attachment must include either attachmentUrl or fileBytes");
+        }
+
+        try {
+            MediaUploadResult upload = mediaUploadService.upload(new MediaUploadRequest(
+                    dto.fileBytes(),
+                    dto.filename(),
+                    dto.contentType(),
+                    ImageVariant.POST
+            ));
+
+            return new AttachmentDTO(
+                    dto.attachmentType(),
+                    upload.url(),
+                    null,
+                    upload.filename(),
+                    upload.contentType()
+            );
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Attachment upload was interrupted", e);
+        } catch (IOException e) {
+            throw new RuntimeException("Attachment upload failed", e);
+        }
     }
 
     private void saveHashtags(Post post, Set<String> hashtagNames) {

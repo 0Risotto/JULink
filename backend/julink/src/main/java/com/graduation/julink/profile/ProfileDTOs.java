@@ -14,8 +14,18 @@ public class ProfileDTOs {
     public record UpdateProfile(
             String bio,
             String profilePicture,
-            String bannerPhoto
-    ) {}
+            String bannerPhoto,
+            byte[] profilePictureBytes,
+            String profilePictureFilename,
+            String profilePictureContentType,
+            byte[] bannerPhotoBytes,
+            String bannerPhotoFilename,
+            String bannerPhotoContentType
+    ) {
+        public UpdateProfile(String bio, String profilePicture, String bannerPhoto) {
+            this(bio, profilePicture, bannerPhoto, null, null, null, null, null, null);
+        }
+    }
 
     public record UserProfile(
             String username,
@@ -33,6 +43,16 @@ public class ProfileDTOs {
     public record OnboardingRequest(
             String bio,
             String profilePicture,
-            String bannerPhoto
-    ) {}
+            String bannerPhoto,
+            byte[] profilePictureBytes,
+            String profilePictureFilename,
+            String profilePictureContentType,
+            byte[] bannerPhotoBytes,
+            String bannerPhotoFilename,
+            String bannerPhotoContentType
+    ) {
+        public OnboardingRequest(String bio, String profilePicture, String bannerPhoto) {
+            this(bio, profilePicture, bannerPhoto, null, null, null, null, null, null);
+        }
+    }
 }

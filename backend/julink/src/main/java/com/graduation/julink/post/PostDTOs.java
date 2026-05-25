@@ -27,8 +27,15 @@ public final class PostDTOs {
     // Used inside create/update requests
     public record AttachmentDTO(
             @NotBlank String attachmentType,
-            @NotBlank String attachmentUrl
-    ) {}
+            String attachmentUrl,
+            byte[] fileBytes,
+            String filename,
+            String contentType
+    ) {
+        public AttachmentDTO(String attachmentType, String attachmentUrl) {
+            this(attachmentType, attachmentUrl, null, null, null);
+        }
+    }
 
     // Used when returning attachments to frontend
     public record AttachmentResponseDTO(
