@@ -25,6 +25,17 @@ public class FollowRepository {
                 .run();
     }
 
+    public void deleteUser(String username) {
+        String query = """
+            MATCH (u:User {username: $username})
+            DETACH DELETE u
+            """;
+        neo4jClient.query(query)
+                .bind(username).to("username")
+                .run();
+    }
+
+
     public boolean userExists(String username) {
         String query = "MATCH (u:User {username: $username}) RETURN u";
         return neo4jClient.query(query)

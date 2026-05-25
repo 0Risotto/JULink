@@ -2,6 +2,8 @@ package com.graduation.julink.auth;
 import com.graduation.julink.auth.Repository.OTPRepository;
 import com.graduation.julink.auth.Repository.AuthRepository;
 import com.graduation.julink.follow.FollowRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import jakarta.mail.internet.MimeMessage;
@@ -13,6 +15,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,6 +24,7 @@ public interface AuthService {
     void sendOTP(String email);
     void verifyOTP(String otp, String email);
     Authentication loginUser(AuthDTOs.LoginUserDTO loginUserDTO);
+    void kill(Principal principal);
 }
 
 @Service
@@ -33,6 +37,9 @@ class AuthServiceImplementation implements AuthService {
     private final AuthMapper authMapper;
     private final JavaMailSender mailSender;
     private final BCryptPasswordEncoder passwordEncoder;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     private static final String JU_EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@ju\\.edu\\.jo$";
     private static final int OTP_EXPIRY_MINUTES = 3;
@@ -85,6 +92,25 @@ class AuthServiceImplementation implements AuthService {
         return createAuthenticationToken(user);
     }
 
+    @Override
+    public void kill(Principal principal) {
+        if (principal == null) {
+            throw new RuntimeException("Authenticated user is required");
+        }
+
+        String email = principal.getName();
+        AuthEntities.User user = findUserByEmail(email);
+        Long userId = user.getId();
+        String username = user.getUsername();
+
+        deleteUserChatData(userId);
+        deleteUserPostData(userId);
+        deleteUserItems(userId);
+        deleteExistingOTP(email);
+        followRepository.deleteUser(username);
+        userRepository.delete(user);
+    }
+
     // Private helper methods
     private void validateCreateUserRequest(AuthDTOs.CreateUserRequestDTO dto) {
         String username = dto.username().toLowerCase();
@@ -120,6 +146,7 @@ class AuthServiceImplementation implements AuthService {
             otpRepository.deleteByEmailIgnoreCase(email);
         }
     }
+
 
     private void sendOtpEmail(String email, String otp) {
         try {
@@ -249,6 +276,123 @@ class AuthServiceImplementation implements AuthService {
 
     private void deleteVerifiedOTP(String email) {
         otpRepository.deleteByEmailIgnoreCase(email);
+    }
+
+    private void deleteUserChatData(Long userId) {
+        executeUpdate("""
+                DELETE FROM message_read_receipts
+                WHERE user_id = :userId
+                """, userId);
+        executeUpdate("""
+                DELETE FROM message_read_receipts
+                WHERE message_id IN (
+                    SELECT id FROM messages WHERE sender_id = :userId
+                )
+                """, userId);
+        executeUpdate("""
+                DELETE FROM messages
+                WHERE sender_id = :userId
+                """, userId);
+        executeUpdate("""
+                DELETE FROM conversation_members
+                WHERE user_id = :userId
+                """, userId);
+    }
+
+    private void deleteUserPostData(Long userId) {
+        executeUpdate("""
+                DELETE FROM comment_likes
+                WHERE user_id = :userId
+                """, userId);
+        executeUpdate("""
+                DELETE FROM comment_likes
+                WHERE comment_id IN (
+                    SELECT comment_id
+                    FROM post_comments
+                    WHERE post_id IN (
+                        SELECT post_id FROM posts WHERE owner_id = :userId
+                    )
+                )
+                """, userId);
+        executeUpdate("""
+                DELETE FROM post_likes
+                WHERE user_id = :userId
+                """, userId);
+        executeUpdate("""
+                DELETE FROM post_likes
+                WHERE post_id IN (
+                    SELECT post_id FROM posts WHERE owner_id = :userId
+                )
+                """, userId);
+
+        executeUpdate("""
+                WITH RECURSIVE comments_to_delete AS (
+                    SELECT comment_id
+                    FROM post_comments
+                    WHERE user_id = :userId
+                    UNION ALL
+                    SELECT reply.comment_id
+                    FROM post_comments reply
+                    JOIN comments_to_delete parent
+                        ON reply.parent_comment_id = parent.comment_id
+                )
+                DELETE FROM comment_likes
+                WHERE comment_id IN (
+                    SELECT comment_id FROM comments_to_delete
+                )
+                """, userId);
+        executeUpdate("""
+                WITH RECURSIVE comments_to_delete AS (
+                    SELECT comment_id
+                    FROM post_comments
+                    WHERE user_id = :userId
+                    UNION ALL
+                    SELECT reply.comment_id
+                    FROM post_comments reply
+                    JOIN comments_to_delete parent
+                        ON reply.parent_comment_id = parent.comment_id
+                )
+                DELETE FROM post_comments
+                WHERE comment_id IN (
+                    SELECT comment_id FROM comments_to_delete
+                )
+                """, userId);
+
+        executeUpdate("""
+                DELETE FROM post_comments
+                WHERE post_id IN (
+                    SELECT post_id FROM posts WHERE owner_id = :userId
+                )
+                """, userId);
+        executeUpdate("""
+                DELETE FROM post_attachments
+                WHERE post_id IN (
+                    SELECT post_id FROM posts WHERE owner_id = :userId
+                )
+                """, userId);
+        executeUpdate("""
+                DELETE FROM post_hashtags
+                WHERE post_id IN (
+                    SELECT post_id FROM posts WHERE owner_id = :userId
+                )
+                """, userId);
+        executeUpdate("""
+                DELETE FROM posts
+                WHERE owner_id = :userId
+                """, userId);
+    }
+
+    private void deleteUserItems(Long userId) {
+        executeUpdate("""
+                DELETE FROM items
+                WHERE owner_id = :userId
+                """, userId);
+    }
+
+    private void executeUpdate(String sql, Long userId) {
+        entityManager.createNativeQuery(sql)
+                .setParameter("userId", userId)
+                .executeUpdate();
     }
 
     private AuthEntities.User findUserByEmail(String email) {
