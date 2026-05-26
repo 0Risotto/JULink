@@ -161,6 +161,19 @@ public class FollowRepository {
         return new PageImpl<>(followings, pageable, total);
     }
 
+    public Collection<String> getFollowingUsernames(String username) {
+        String query = """
+            MATCH (u:User {username: $username})-[:FOLLOWS]->(followee:User)
+            RETURN followee.username AS username
+            """;
+
+        return neo4jClient.query(query)
+                .bind(username).to("username")
+                .fetchAs(String.class)
+                .mappedBy((typeSystem, record) -> record.get("username").asString())
+                .all();
+    }
+
     public Page<String> getMutualFollowings(String username1, String username2, Pageable pageable) {
         String query = """
         MATCH (u1:User {username: $username1})-[:FOLLOWS]->(common:User)<-[:FOLLOWS]-(u2:User {username: $username2})

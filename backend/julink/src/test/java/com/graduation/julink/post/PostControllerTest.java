@@ -57,8 +57,8 @@ class PostControllerTest {
     @Test
     void createPost_Success() {
         mockPrincipal();
-        CreatePostDTO req = new CreatePostDTO("content", "PUBLIC", Collections.emptyList());
-        PostResponseDTO resp = new PostResponseDTO(UUID.randomUUID(), 101L, "user1", "First", "Last", "url", "content", "PUBLIC", Collections.emptyList(), Collections.emptyList(), 0L, 0L, false, null, null);
+        CreatePostDTO req = new CreatePostDTO("content", Collections.emptyList());
+        PostResponseDTO resp = new PostResponseDTO(UUID.randomUUID(), 101L, "user1", "First", "Last", "url", "content", Collections.emptyList(), Collections.emptyList(), 0L, 0L, false, false, false, null, null);
         
         when(postService.createPost(101L, req)).thenReturn(resp);
 
@@ -71,7 +71,7 @@ class PostControllerTest {
     void getPostById_Success() {
         mockPrincipal();
         UUID postId = UUID.randomUUID();
-        PostResponseDTO resp = new PostResponseDTO(postId, 101L, "user1", "First", "Last", "url", "content", "PUBLIC", Collections.emptyList(), Collections.emptyList(), 0L, 0L, false, null, null);
+        PostResponseDTO resp = new PostResponseDTO(postId, 101L, "user1", "First", "Last", "url", "content", Collections.emptyList(), Collections.emptyList(), 0L, 0L, false, false, false, null, null);
         
         when(postService.getPostById(101L, postId)).thenReturn(resp);
 

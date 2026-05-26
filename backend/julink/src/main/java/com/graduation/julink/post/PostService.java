@@ -12,15 +12,18 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +37,7 @@ public class PostService {
     private final PostFavoriteRepository postFavoriteRepository;
     private final PostCommentRepository postCommentRepository;
     private final CommentLikeRepository commentLikeRepository;
+    private final PostImpressionRepository postImpressionRepository;
     private final FollowService followService;
     private final MediaUploadService mediaUploadService;
 
@@ -41,6 +45,7 @@ public class PostService {
     private EntityManager entityManager;
 
     private static final Pattern HASHTAG_PATTERN = Pattern.compile("#(\\w+)");
+    private static final int MAX_FEED_CANDIDATES = 500;
 
     @Transactional
     public PostResponseDTO createPost(Long ownerId, CreatePostDTO dto) {
@@ -49,7 +54,6 @@ public class PostService {
         Post post = new Post();
         post.setOwner(owner);
         post.setDescription(dto.description());
-        post.setVisibility(PostMapper.parsePostVisibility(dto.visibility()));
 
         Post savedPost = postRepository.save(post);
 
@@ -62,7 +66,6 @@ public class PostService {
     @Transactional(readOnly = true)
     public PostResponseDTO getPostById(Long currentUserId, UUID postId) {
         Post post = getPostOrThrow(postId);
-        requireVisibleToUser(post, getUserOrThrow(currentUserId));
         return buildPostResponse(post, currentUserId);
     }
 
@@ -75,15 +78,16 @@ public class PostService {
         }
 
         post.setDescription(dto.description());
-        post.setVisibility(PostMapper.parsePostVisibility(dto.visibility()));
         post.setUpdatedAt(LocalDateTime.now());
 
         Post updatedPost = postRepository.save(post);
 
-        postAttachmentRepository.deleteByPost_PostId(postId);
         postHashtagRepository.deleteByPost_PostId(postId);
 
-        saveAttachments(updatedPost, dto.attachments());
+        if (dto.attachments() != null) {
+            postAttachmentRepository.deleteByPost_PostId(postId);
+            saveAttachments(updatedPost, dto.attachments());
+        }
         saveHashtags(updatedPost, extractHashtags(dto.description()));
 
         return buildPostResponse(updatedPost, ownerId);
@@ -102,48 +106,46 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public Page<PostResponseDTO> getUserPosts(Long currentUserId, Long ownerId, Pageable pageable) {
-        User currentUser = getUserOrThrow(currentUserId);
-        User owner = getUserOrThrow(ownerId);
+        getUserOrThrow(currentUserId);
+        getUserOrThrow(ownerId);
 
-        return postRepository
-                .findByOwner_IdAndVisibilityInOrderByCreatedAtDesc(
-                        ownerId,
-                        visibleVisibilities(currentUser, owner),
-                        pageable
-                )
-                .map(post -> buildPostResponse(post, currentUserId));
+        return buildPostResponsePage(
+                postRepository.findByOwner_IdOrderByCreatedAtDesc(ownerId, pageable),
+                currentUserId
+        );
     }
 
     @Transactional(readOnly = true)
     public Page<PostResponseDTO> getHomeFeed(Long currentUserId, Pageable pageable) {
-        /*
-         For now, this returns the current user's own posts.
-         Later, when we connect Neo4j follow data here, this becomes:
-         - get followed user IDs from Neo4j
-         - add currentUserId
-         - fetch posts by owner IDs
-        */
+        Pageable effectivePageable = pageable.isPaged() ? pageable : PageRequest.of(0, 20);
+        User currentUser = getUserOrThrow(currentUserId);
+        Set<String> followingUsernames = followingUsernamesFor(currentUser);
+        Pageable candidatePage = PageRequest.of(
+                0,
+                Math.max(MAX_FEED_CANDIDATES, effectivePageable.getPageSize() + (int) effectivePageable.getOffset()),
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
 
-        return postRepository
-                .findByOwner_IdOrderByCreatedAtDesc(currentUserId, pageable)
-                .map(post -> buildPostResponse(post, currentUserId));
-    }
+        List<Post> candidates = postRepository.findAllByOrderByCreatedAtDesc(candidatePage).getContent();
+        List<UUID> candidatePostIds = candidates.stream().map(Post::getPostId).toList();
+        Set<UUID> seenPostIds = candidatePostIds.isEmpty()
+                ? Set.of()
+                : new HashSet<>(postImpressionRepository.findSeenPostIdsByUserIdAndPostIds(currentUserId, candidatePostIds));
 
-    @Transactional(readOnly = true)
-    public Page<PostResponseDTO> getRecommendedPosts(Long currentUserId, Pageable pageable) {
-        /*
-         Placeholder for Neo4j recommendation results.
-         Later this will receive post IDs from Neo4j and fetch them from PostgreSQL.
-        */
+        List<Post> rankedPosts = candidates
+                .stream()
+                .sorted(Comparator.comparingDouble(
+                        post -> -feedScore(post, currentUser, followingUsernames, seenPostIds)
+                ))
+                .toList();
 
-        return Page.empty(pageable);
+        return pageFromRankedPosts(rankedPosts, effectivePageable, currentUserId);
     }
 
     @Transactional
     public LikeResponseDTO likePost(Long userId, UUID postId) {
         User user = getUserOrThrow(userId);
         Post post = getPostOrThrow(postId);
-        requireVisibleToUser(post, user);
 
         Optional<PostLike> existingLike =
                 postLikeRepository.findByPost_PostIdAndUser_Id(postId, userId);
@@ -152,7 +154,7 @@ public class PostService {
             PostLike like = new PostLike();
             like.setPost(post);
             like.setUser(user);
-            postLikeRepository.save(like);
+            saveIgnoringDuplicate(() -> postLikeRepository.saveAndFlush(like));
         }
 
         long likesCount = postLikeRepository.countByPost_PostId(postId);
@@ -166,9 +168,8 @@ public class PostService {
 
     @Transactional
     public LikeResponseDTO unlikePost(Long userId, UUID postId) {
-        User user = getUserOrThrow(userId);
-        Post post = getPostOrThrow(postId);
-        requireVisibleToUser(post, user);
+        getUserOrThrow(userId);
+        getPostOrThrow(postId);
 
         postLikeRepository.deleteByPost_PostIdAndUser_Id(postId, userId);
 
@@ -197,7 +198,6 @@ public class PostService {
     public FavoriteResponseDTO favoritePost(Long userId, UUID postId) {
         User user = getUserOrThrow(userId);
         Post post = getPostOrThrow(postId);
-        requireVisibleToUser(post, user);
 
         Optional<PostFavorite> existingFavorite =
                 postFavoriteRepository.findByPost_PostIdAndUser_Id(postId, userId);
@@ -206,7 +206,7 @@ public class PostService {
             PostFavorite favorite = new PostFavorite();
             favorite.setPost(post);
             favorite.setUser(user);
-            postFavoriteRepository.save(favorite);
+            saveIgnoringDuplicate(() -> postFavoriteRepository.saveAndFlush(favorite));
         }
 
         long favoritesCount = postFavoriteRepository.countByPost_PostId(postId);
@@ -220,9 +220,8 @@ public class PostService {
 
     @Transactional
     public FavoriteResponseDTO unfavoritePost(Long userId, UUID postId) {
-        User user = getUserOrThrow(userId);
-        Post post = getPostOrThrow(postId);
-        requireVisibleToUser(post, user);
+        getUserOrThrow(userId);
+        getPostOrThrow(postId);
 
         postFavoriteRepository.deleteByPost_PostIdAndUser_Id(postId, userId);
 
@@ -249,22 +248,17 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public Page<PostResponseDTO> getFavoritePosts(Long currentUserId, Pageable pageable) {
-        User currentUser = getUserOrThrow(currentUserId);
-
-        Page<Post> favoritePosts = postFavoriteRepository.findFavoritePostsByUserId(currentUserId, pageable);
-        List<PostResponseDTO> visibleFavoritePosts = favoritePosts.getContent().stream()
-                .filter(post -> isVisibleToUser(post, currentUser))
-                .map(post -> buildPostResponse(post, currentUserId))
-                .toList();
-
-        return new PageImpl<>(visibleFavoritePosts, pageable, favoritePosts.getTotalElements());
+        getUserOrThrow(currentUserId);
+        return buildPostResponsePage(
+                postFavoriteRepository.findFavoritePostsByUserId(currentUserId, pageable),
+                currentUserId
+        );
     }
 
     @Transactional
     public CommentResponseDTO createComment(Long userId, UUID postId, CreateCommentDTO dto) {
         User user = getUserOrThrow(userId);
         Post post = getPostOrThrow(postId);
-        requireVisibleToUser(post, user);
 
         PostComment comment = new PostComment();
         comment.setUser(user);
@@ -292,7 +286,7 @@ public class PostService {
             Pageable pageable
     ) {
         Post post = getPostOrThrow(postId);
-        requireVisibleToUser(post, getUserOrThrow(currentUserId));
+        getUserOrThrow(currentUserId);
 
         Page<PostComment> comments;
 
@@ -317,7 +311,7 @@ public class PostService {
             Pageable pageable
     ) {
         PostComment parentComment = getCommentOrThrow(commentId);
-        requireVisibleToUser(parentComment.getPost(), getUserOrThrow(currentUserId));
+        getUserOrThrow(currentUserId);
 
         return postCommentRepository
                 .findByParentComment_CommentIdOrderByCreatedAtAsc(commentId, pageable)
@@ -327,7 +321,7 @@ public class PostService {
     @Transactional
     public CommentResponseDTO updateComment(Long userId, UUID commentId, UpdateCommentDTO dto) {
         PostComment comment = getCommentOrThrow(commentId);
-        requireVisibleToUser(comment.getPost(), getUserOrThrow(userId));
+        getUserOrThrow(userId);
 
         if (!comment.getUser().getId().equals(userId)) {
             throw new SecurityException("You are not allowed to update this comment");
@@ -344,7 +338,7 @@ public class PostService {
     @Transactional
     public void deleteComment(Long userId, UUID commentId) {
         PostComment comment = getCommentOrThrow(commentId);
-        requireVisibleToUser(comment.getPost(), getUserOrThrow(userId));
+        getUserOrThrow(userId);
 
         boolean isCommentOwner = comment.getUser().getId().equals(userId);
         boolean isPostOwner = comment.getPost().getOwner().getId().equals(userId);
@@ -360,7 +354,6 @@ public class PostService {
     public CommentLikeResponseDTO likeComment(Long userId, UUID commentId) {
         User user = getUserOrThrow(userId);
         PostComment comment = getCommentOrThrow(commentId);
-        requireVisibleToUser(comment.getPost(), user);
 
         Optional<CommentLike> existingLike =
                 commentLikeRepository.findByComment_CommentIdAndUser_Id(commentId, userId);
@@ -369,7 +362,7 @@ public class PostService {
             CommentLike like = new CommentLike();
             like.setUser(user);
             like.setComment(comment);
-            commentLikeRepository.save(like);
+            saveIgnoringDuplicate(() -> commentLikeRepository.saveAndFlush(like));
         }
 
         long likesCount = commentLikeRepository.countByComment_CommentId(commentId);
@@ -383,9 +376,8 @@ public class PostService {
 
     @Transactional
     public CommentLikeResponseDTO unlikeComment(Long userId, UUID commentId) {
-        User user = getUserOrThrow(userId);
-        PostComment comment = getCommentOrThrow(commentId);
-        requireVisibleToUser(comment.getPost(), user);
+        getUserOrThrow(userId);
+        getCommentOrThrow(commentId);
 
         commentLikeRepository.deleteByComment_CommentIdAndUser_Id(commentId, userId);
 
@@ -417,57 +409,169 @@ public class PostService {
             Pageable pageable
     ) {
         String normalized = PostMapper.normalizeHashtag(hashtagName);
-        User currentUser = getUserOrThrow(currentUserId);
+        getUserOrThrow(currentUserId);
 
         Page<Post> hashtagPosts = postHashtagRepository.findPostsByHashtagName(normalized, pageable);
-        List<PostResponseDTO> visiblePosts = hashtagPosts.getContent().stream()
-                .filter(post -> isVisibleToUser(post, currentUser))
-                .map(post -> buildPostResponse(post, currentUserId))
-                .toList();
-
-        return new PageImpl<>(visiblePosts, pageable, visiblePosts.size());
+        return buildPostResponsePage(hashtagPosts, currentUserId);
     }
 
     @Transactional(readOnly = true)
     public Page<HashtagResponseDTO> getTrendingHashtags(Pageable pageable) {
         return hashtagRepository
-                .findTrendingHashtags(PostVisibility.PUBLIC, pageable)
+                .findTrendingHashtags(pageable)
                 .map(hashtag -> PostMapper.toHashtagResponseDTO(
                         hashtag,
-                        hashtagRepository.countPostsByHashtagIdAndVisibility(
-                                hashtag.getHashtagId(),
-                                PostVisibility.PUBLIC
-                        )
+                        hashtagRepository.countPostsByHashtagId(hashtag.getHashtagId())
                 ));
     }
 
+    @Transactional
+    public void markPostSeen(Long userId, UUID postId) {
+        User user = getUserOrThrow(userId);
+        Post post = getPostOrThrow(postId);
+
+        if (!postImpressionRepository.existsByPost_PostIdAndUser_Id(postId, userId)) {
+            PostImpression impression = new PostImpression();
+            impression.setUser(user);
+            impression.setPost(post);
+            saveIgnoringDuplicate(() -> postImpressionRepository.saveAndFlush(impression));
+        }
+    }
+
+    @Transactional
+    public PostMediaUploadResponseDTO uploadPostMedia(
+            byte[] fileBytes,
+            String filename,
+            String contentType,
+            String attachmentType
+    ) {
+        try {
+            MediaUploadResult upload = mediaUploadService.upload(new MediaUploadRequest(
+                    fileBytes,
+                    filename,
+                    contentType,
+                    ImageVariant.POST
+            ));
+
+            return new PostMediaUploadResponseDTO(
+                    normalizeAttachmentType(attachmentType, upload.contentType()),
+                    upload.url(),
+                    upload.filename(),
+                    upload.contentType()
+            );
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Attachment upload was interrupted", e);
+        } catch (IOException e) {
+            throw new RuntimeException("Attachment upload failed", e);
+        }
+    }
+
     private PostResponseDTO buildPostResponse(Post post, Long currentUserId) {
-        UUID postId = post.getPostId();
+        return buildPostResponses(List.of(post), currentUserId).get(0);
+    }
 
-        List<PostAttachment> attachments =
-                postAttachmentRepository.findByPost_PostId(postId);
-
-        List<String> hashtags =
-                postHashtagRepository.findHashtagNamesByPostId(postId);
-
-        long likesCount =
-                postLikeRepository.countByPost_PostId(postId);
-
-        long commentsCount =
-                postCommentRepository.countByPost_PostId(postId);
-
-        boolean likedByCurrentUser =
-                currentUserId != null &&
-                        postLikeRepository.existsByPost_PostIdAndUser_Id(postId, currentUserId);
-
-        return PostMapper.toPostResponseDTO(
-                post,
-                attachments,
-                hashtags,
-                likesCount,
-                commentsCount,
-                likedByCurrentUser
+    private Page<PostResponseDTO> buildPostResponsePage(Page<Post> posts, Long currentUserId) {
+        return new PageImpl<>(
+                buildPostResponses(posts.getContent(), currentUserId),
+                posts.getPageable(),
+                posts.getTotalElements()
         );
+    }
+
+    private List<PostResponseDTO> buildPostResponses(List<Post> posts, Long currentUserId) {
+        if (posts == null || posts.isEmpty()) {
+            return List.of();
+        }
+
+        List<UUID> postIds = posts.stream()
+                .map(Post::getPostId)
+                .toList();
+
+        Map<UUID, List<PostAttachment>> attachmentsByPostId = postAttachmentRepository
+                .findByPost_PostIdIn(postIds)
+                .stream()
+                .collect(Collectors.groupingBy(attachment -> attachment.getPost().getPostId()));
+
+        Map<UUID, List<String>> hashtagsByPostId = postHashtagRepository
+                .findByPost_PostIdIn(postIds)
+                .stream()
+                .collect(Collectors.groupingBy(
+                        postHashtag -> postHashtag.getPost().getPostId(),
+                        Collectors.mapping(postHashtag -> postHashtag.getHashtag().getName(), Collectors.toList())
+                ));
+
+        Map<UUID, Long> likesByPostId = countsByPostId(postLikeRepository.countByPostIds(postIds));
+        Map<UUID, Long> commentsByPostId = countsByPostId(postCommentRepository.countByPostIds(postIds));
+
+        Set<UUID> likedPostIds = currentUserId == null
+                ? Set.of()
+                : new HashSet<>(postLikeRepository.findLikedPostIdsByUserIdAndPostIds(currentUserId, postIds));
+        Set<UUID> favoritedPostIds = currentUserId == null
+                ? Set.of()
+                : new HashSet<>(postFavoriteRepository.findFavoritedPostIdsByUserIdAndPostIds(currentUserId, postIds));
+        Set<UUID> seenPostIds = currentUserId == null
+                ? Set.of()
+                : new HashSet<>(postImpressionRepository.findSeenPostIdsByUserIdAndPostIds(currentUserId, postIds));
+
+        return posts.stream()
+                .map(post -> {
+                    UUID postId = post.getPostId();
+                    return PostMapper.toPostResponseDTO(
+                            post,
+                            attachmentsByPostId.getOrDefault(postId, List.of()),
+                            hashtagsByPostId.getOrDefault(postId, List.of()),
+                            likesByPostId.getOrDefault(postId, 0L),
+                            commentsByPostId.getOrDefault(postId, 0L),
+                            likedPostIds.contains(postId),
+                            favoritedPostIds.contains(postId),
+                            seenPostIds.contains(postId)
+                    );
+                })
+                .toList();
+    }
+
+    private Map<UUID, Long> countsByPostId(List<PostCountView> counts) {
+        return counts.stream()
+                .collect(Collectors.toMap(PostCountView::getId, PostCountView::getCount));
+    }
+
+    private Page<PostResponseDTO> pageFromRankedPosts(List<Post> rankedPosts, Pageable pageable, Long currentUserId) {
+        int start = Math.min((int) pageable.getOffset(), rankedPosts.size());
+        int end = Math.min(start + pageable.getPageSize(), rankedPosts.size());
+        List<Post> pageContent = rankedPosts.subList(start, end);
+
+        return new PageImpl<>(
+                buildPostResponses(pageContent, currentUserId),
+                pageable,
+                rankedPosts.size()
+        );
+    }
+
+    private double feedScore(Post post, User currentUser, Set<String> followingUsernames, Set<UUID> seenPostIds) {
+        double sameSchoolScore = Objects.equals(post.getOwner().getCollege(), currentUser.getCollege()) ? 40.0 : 0.0;
+        double followingScore = followingUsernames.contains(post.getOwner().getUsername()) ? 20.0 : 0.0;
+        double recencyScore = recencyScore(post.getCreatedAt()) * 20.0;
+        double seenPenalty = seenPostIds.contains(post.getPostId()) ? 15.0 : 0.0;
+
+        return sameSchoolScore + followingScore + recencyScore - seenPenalty;
+    }
+
+    private Set<String> followingUsernamesFor(User currentUser) {
+        try {
+            return new HashSet<>(followService.getFollowingUsernames(currentUser.getUsername()));
+        } catch (RuntimeException ignored) {
+            return Set.of();
+        }
+    }
+
+    private double recencyScore(LocalDateTime createdAt) {
+        if (createdAt == null) {
+            return 0.0;
+        }
+
+        long hours = Math.max(0, ChronoUnit.HOURS.between(createdAt, LocalDateTime.now()));
+        return Math.exp(-hours / 72.0);
     }
 
     private CommentResponseDTO buildCommentResponse(PostComment comment, Long currentUserId) {
@@ -539,17 +643,25 @@ public class PostService {
         for (String name : hashtagNames) {
             Hashtag hashtag = hashtagRepository
                     .findByName(name)
-                    .orElseGet(() -> {
-                        Hashtag newHashtag = new Hashtag();
-                        newHashtag.setName(name);
-                        return hashtagRepository.save(newHashtag);
-                    });
+                    .orElseGet(() -> getOrCreateHashtag(name));
 
             PostHashtag postHashtag = new PostHashtag();
             postHashtag.setPost(post);
             postHashtag.setHashtag(hashtag);
 
-            postHashtagRepository.save(postHashtag);
+            saveIgnoringDuplicate(() -> postHashtagRepository.saveAndFlush(postHashtag));
+        }
+    }
+
+    private Hashtag getOrCreateHashtag(String name) {
+        Hashtag newHashtag = new Hashtag();
+        newHashtag.setName(name);
+
+        try {
+            return hashtagRepository.saveAndFlush(newHashtag);
+        } catch (DataIntegrityViolationException ignored) {
+            return hashtagRepository.findByName(name)
+                    .orElseThrow(() -> new IllegalStateException("Hashtag was created concurrently but could not be loaded"));
         }
     }
 
@@ -593,34 +705,26 @@ public class PostService {
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found with id: " + commentId));
     }
 
-    private Collection<PostVisibility> visibleVisibilities(User currentUser, User owner) {
-        if (currentUser.getId().equals(owner.getId())) {
-            return EnumSet.allOf(PostVisibility.class);
-        }
-
-        if (followService.isFollowing(currentUser.getUsername(), owner.getUsername())) {
-            return EnumSet.of(PostVisibility.PUBLIC, PostVisibility.FOLLOWERS_ONLY);
-        }
-
-        return EnumSet.of(PostVisibility.PUBLIC);
-    }
-
-    private void requireVisibleToUser(Post post, User currentUser) {
-        if (!isVisibleToUser(post, currentUser)) {
-            throw new SecurityException("You are not allowed to view this post");
+    private void saveIgnoringDuplicate(Runnable save) {
+        try {
+            save.run();
+        } catch (DataIntegrityViolationException ignored) {
+            // A concurrent request already created the same unique relationship.
         }
     }
 
-    private boolean isVisibleToUser(Post post, User currentUser) {
-        if (post.getVisibility() == PostVisibility.PUBLIC) {
-            return true;
+    private String normalizeAttachmentType(String requestedType, String contentType) {
+        if (requestedType != null && !requestedType.isBlank()) {
+            PostMapper.parseAttachmentType(requestedType);
+            return requestedType.trim().toUpperCase();
         }
 
-        if (currentUser.getId().equals(post.getOwner().getId())) {
-            return true;
+        if (mediaUploadService.isImage(contentType)) {
+            return AttachmentType.IMAGE.name();
         }
-
-        return post.getVisibility() == PostVisibility.FOLLOWERS_ONLY
-                && followService.isFollowing(currentUser.getUsername(), post.getOwner().getUsername());
+        if (mediaUploadService.isVideo(contentType)) {
+            return AttachmentType.VIDEO.name();
+        }
+        return AttachmentType.FILE.name();
     }
 }

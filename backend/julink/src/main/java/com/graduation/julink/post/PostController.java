@@ -8,8 +8,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -70,14 +74,6 @@ public class PostController {
         return postService.getHomeFeed(currentUser(principal).getId(), pageable);
     }
 
-    @GetMapping("/recommended")
-    public Page<PostResponseDTO> getRecommendedPosts(
-            Principal principal,
-            Pageable pageable
-    ) {
-        return postService.getRecommendedPosts(currentUser(principal).getId(), pageable);
-    }
-
     @GetMapping("/favorites")
     public Page<PostResponseDTO> getFavoritePosts(
             Principal principal,
@@ -94,21 +90,21 @@ public class PostController {
         return postService.toggleLike(currentUser(principal).getId(), postId);
     }
 
-    @PostMapping("/{postId}/like")
-    public LikeResponseDTO likePost(
-            Principal principal,
-            @PathVariable UUID postId
-    ) {
-        return postService.likePost(currentUser(principal).getId(), postId);
-    }
-
-    @DeleteMapping("/{postId}/like")
-    public LikeResponseDTO unlikePost(
-            Principal principal,
-            @PathVariable UUID postId
-    ) {
-        return postService.unlikePost(currentUser(principal).getId(), postId);
-    }
+//    @PostMapping("/{postId}/like")
+//    public LikeResponseDTO likePost(
+//            Principal principal,
+//            @PathVariable UUID postId
+//    ) {
+//        return postService.likePost(currentUser(principal).getId(), postId);
+//    }
+//
+//    @DeleteMapping("/{postId}/like")
+//    public LikeResponseDTO unlikePost(
+//            Principal principal,
+//            @PathVariable UUID postId
+//    ) {
+//        return postService.unlikePost(currentUser(principal).getId(), postId);
+//    }
 
     @PostMapping("/{postId}/toggle-favorite")
     public FavoriteResponseDTO toggleFavorite(
@@ -216,6 +212,50 @@ public class PostController {
             Pageable pageable
     ) {
         return postService.getTrendingHashtags(pageable);
+    }
+
+    @PostMapping("/{postId}/impression")
+    public void markPostSeen(
+            Principal principal,
+            @PathVariable UUID postId
+    ) {
+        postService.markPostSeen(currentUser(principal).getId(), postId);
+    }
+
+    @PostMapping("/media")
+    public List<PostMediaUploadResponseDTO> uploadPostMedia(
+            Principal principal,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "attachmentType", required = false) String attachmentType
+    ) throws IOException {
+        currentUser(principal);
+
+        List<MultipartFile> uploadFiles = new ArrayList<>();
+        if (files != null) {
+            uploadFiles.addAll(files);
+        }
+        if (file != null) {
+            uploadFiles.add(file);
+        }
+        if (uploadFiles.isEmpty()) {
+            throw new IllegalArgumentException("At least one file is required");
+        }
+        if (uploadFiles.size() > 10) {
+            throw new IllegalArgumentException("A post can include at most 10 attachments");
+        }
+
+        List<PostMediaUploadResponseDTO> uploads = new ArrayList<>();
+        for (MultipartFile uploadFile : uploadFiles) {
+            uploads.add(postService.uploadPostMedia(
+                    uploadFile.getBytes(),
+                    uploadFile.getOriginalFilename(),
+                    uploadFile.getContentType(),
+                    attachmentType
+            ));
+        }
+
+        return uploads;
     }
 
     private User currentUser(Principal principal) {

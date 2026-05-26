@@ -36,6 +36,7 @@ class PostServiceTest {
     @Mock private PostFavoriteRepository postFavoriteRepository;
     @Mock private PostCommentRepository postCommentRepository;
     @Mock private CommentLikeRepository commentLikeRepository;
+    @Mock private PostImpressionRepository postImpressionRepository;
     @Mock private FollowService followService;
     @Mock private MediaUploadService mediaUploadService;
     @Mock private EntityManager entityManager;
@@ -61,13 +62,23 @@ class PostServiceTest {
         post = new Post();
         post.setPostId(postId);
         post.setOwner(user);
-        post.setVisibility(PostVisibility.PUBLIC);
         post.setDescription("Test description #cool");
+
+        lenient().when(postAttachmentRepository.findByPost_PostIdIn(anyCollection())).thenReturn(Collections.emptyList());
+        lenient().when(postHashtagRepository.findByPost_PostIdIn(anyCollection())).thenReturn(Collections.emptyList());
+        lenient().when(postLikeRepository.countByPostIds(anyCollection())).thenReturn(Collections.emptyList());
+        lenient().when(postCommentRepository.countByPostIds(anyCollection())).thenReturn(Collections.emptyList());
+        lenient().when(postLikeRepository.findLikedPostIdsByUserIdAndPostIds(anyLong(), anyCollection())).thenReturn(Collections.emptyList());
+        lenient().when(postFavoriteRepository.findFavoritedPostIdsByUserIdAndPostIds(anyLong(), anyCollection())).thenReturn(Collections.emptyList());
+        lenient().when(postImpressionRepository.findSeenPostIdsByUserIdAndPostIds(anyLong(), anyCollection())).thenReturn(Collections.emptyList());
+        lenient().when(hashtagRepository.findByName(anyString())).thenReturn(Optional.empty());
+        lenient().when(hashtagRepository.saveAndFlush(any(Hashtag.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().when(postHashtagRepository.saveAndFlush(any(PostHashtag.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test
     void createPost_Success() {
-        CreatePostDTO req = new CreatePostDTO("Test description #cool", "PUBLIC", Collections.emptyList());
+        CreatePostDTO req = new CreatePostDTO("Test description #cool", Collections.emptyList());
 
         when(entityManager.find(User.class, 101L)).thenReturn(user);
         when(postRepository.save(any(Post.class))).thenReturn(post);
@@ -81,7 +92,6 @@ class PostServiceTest {
 
     @Test
     void getPostById_Success() {
-        when(entityManager.find(User.class, 101L)).thenReturn(user);
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
         PostResponseDTO response = postService.getPostById(101L, postId);
@@ -91,20 +101,26 @@ class PostServiceTest {
     }
 
     @Test
-    void getPostById_Unauthorized_ThrowsException() {
-        User otherUser = new User();
-        otherUser.setId(102L);
-        otherUser.setUsername("user2");
-
-        post.setVisibility(PostVisibility.FOLLOWERS_ONLY);
-
-        when(entityManager.find(User.class, 102L)).thenReturn(otherUser);
+    void getPostById_PublicPostsAreVisible() {
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
-        when(followService.isFollowing("user2", "user1")).thenReturn(false);
 
-        SecurityException exception = assertThrows(SecurityException.class, 
-                () -> postService.getPostById(102L, postId));
-        assertEquals("You are not allowed to view this post", exception.getMessage());
+        PostResponseDTO response = postService.getPostById(102L, postId);
+
+        assertEquals(postId, response.postId());
+    }
+
+    @Test
+    void updatePost_SameHashtag_ReplacesExistingHashtagsBeforeSaving() {
+        UpdatePostDTO req = new UpdatePostDTO("Test description #cool", null);
+
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(postRepository.save(post)).thenReturn(post);
+
+        PostResponseDTO response = postService.updatePost(101L, postId, req);
+
+        assertEquals(postId, response.postId());
+        verify(postHashtagRepository).deleteByPost_PostId(postId);
+        verify(postHashtagRepository).saveAndFlush(any(PostHashtag.class));
     }
 
     @Test
@@ -127,7 +143,7 @@ class PostServiceTest {
 
         assertTrue(response.liked());
         assertEquals(1L, response.likesCount());
-        verify(postLikeRepository, times(1)).save(any(PostLike.class));
+        verify(postLikeRepository, times(1)).saveAndFlush(any(PostLike.class));
     }
 
     @Test
@@ -141,7 +157,7 @@ class PostServiceTest {
 
         assertTrue(response.favorited());
         assertEquals(1L, response.favoritesCount());
-        verify(postFavoriteRepository, times(1)).save(any(PostFavorite.class));
+        verify(postFavoriteRepository, times(1)).saveAndFlush(any(PostFavorite.class));
     }
 
     @Test

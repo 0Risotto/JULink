@@ -1,4 +1,4 @@
-package com.graduation.julink.items;
+package com.graduation.julink.lostandfound;
 
 import com.graduation.julink.auth.CollegeEnum;
 import jakarta.validation.constraints.NotBlank;
@@ -6,9 +6,9 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public class ItemsDto {
+public class LostAndFoundDto {
 
-    public record CreateItem(
+    public record CreateLostAndFound(
             @NotBlank String description,
             @NotNull CollegeEnum college,
             @NotBlank String imageURL,
@@ -29,7 +29,7 @@ public class ItemsDto {
 
     public record Request(
             UUID requestId,
-            UUID itemId,
+            UUID lostAndFoundId,
             Long senderId,
             String message,
             LocalDateTime sentAt

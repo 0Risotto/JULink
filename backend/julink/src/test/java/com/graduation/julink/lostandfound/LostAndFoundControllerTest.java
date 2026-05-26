@@ -1,4 +1,4 @@
-package com.graduation.julink.items;
+package com.graduation.julink.lostandfound;
 
 import com.graduation.julink.auth.AuthEntities;
 import com.graduation.julink.auth.CollegeEnum;
@@ -25,10 +25,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ItemsControllerTest {
+class LostAndFoundControllerTest {
 
     @Mock
-    private ItemsService itemsService;
+    private LostAndFoundService lostAndFoundService;
 
     @Mock
     private AuthRepository authRepository;
@@ -37,7 +37,7 @@ class ItemsControllerTest {
     private Principal principal;
 
     @InjectMocks
-    private ItemsController itemsController;
+    private LostAndFoundController lostAndFoundController;
 
     private AuthEntities.User user;
     private String email = "test@ju.edu.jo";
@@ -55,39 +55,39 @@ class ItemsControllerTest {
     }
 
     @Test
-    void createItem_Success() {
+    void createLostAndFound_Success() {
         mockPrincipal();
-        ItemsDto.CreateItem req = new ItemsDto.CreateItem("description", CollegeEnum.KING_ABDULLAH_II_IT, "url", "123", false);
-        ItemsDto.Response resp = new ItemsDto.Response(UUID.randomUUID(), 101L, "desc", CollegeEnum.KING_ABDULLAH_II_IT, "url", "123", false, null);
+        LostAndFoundDto.CreateLostAndFound req = new LostAndFoundDto.CreateLostAndFound("description", CollegeEnum.KING_ABDULLAH_II_IT, "url", "123", false);
+        LostAndFoundDto.Response resp = new LostAndFoundDto.Response(UUID.randomUUID(), 101L, "desc", CollegeEnum.KING_ABDULLAH_II_IT, "url", "123", false, null);
         
-        when(itemsService.addItem(req, 101L)).thenReturn(resp);
+        when(lostAndFoundService.addLostAndFound(req, 101L)).thenReturn(resp);
 
-        ResponseEntity<ItemsDto.Response> response = itemsController.createItem(req, principal);
+        ResponseEntity<LostAndFoundDto.Response> response = lostAndFoundController.createLostAndFound(req, principal);
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(resp, response.getBody());
     }
 
     @Test
-    void markItemAsFound_Success() {
+    void markLostAndFoundAsFound_Success() {
         mockPrincipal();
-        UUID itemId = UUID.randomUUID();
-        ItemsDto.Response resp = new ItemsDto.Response(itemId, 101L, "desc", CollegeEnum.KING_ABDULLAH_II_IT, "url", "123", true, null);
+        UUID lostAndFoundId = UUID.randomUUID();
+        LostAndFoundDto.Response resp = new LostAndFoundDto.Response(lostAndFoundId, 101L, "desc", CollegeEnum.KING_ABDULLAH_II_IT, "url", "123", true, null);
         
-        when(itemsService.markAsFound(itemId, 101L)).thenReturn(resp);
+        when(lostAndFoundService.markAsFound(lostAndFoundId, 101L)).thenReturn(resp);
 
-        ResponseEntity<ItemsDto.Response> response = itemsController.markItemAsFound(itemId, principal);
+        ResponseEntity<LostAndFoundDto.Response> response = lostAndFoundController.markLostAndFoundAsFound(lostAndFoundId, principal);
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(resp, response.getBody());
     }
 
     @Test
-    void getAllItems_Success() {
-        Page<ItemsDto.Response> page = new PageImpl<>(Collections.emptyList());
-        when(itemsService.getItems(eq(CollegeEnum.KING_ABDULLAH_II_IT), eq(false), any(Pageable.class))).thenReturn(page);
+    void getAllLostAndFounds_Success() {
+        Page<LostAndFoundDto.Response> page = new PageImpl<>(Collections.emptyList());
+        when(lostAndFoundService.getLostAndFounds(eq(CollegeEnum.KING_ABDULLAH_II_IT), eq(false), any(Pageable.class))).thenReturn(page);
 
-        ResponseEntity<Page<ItemsDto.Response>> response = itemsController.getAllItems(CollegeEnum.KING_ABDULLAH_II_IT, false, Pageable.unpaged());
+        ResponseEntity<Page<LostAndFoundDto.Response>> response = lostAndFoundController.getAllLostAndFounds(CollegeEnum.KING_ABDULLAH_II_IT, false, Pageable.unpaged());
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(page, response.getBody());

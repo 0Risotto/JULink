@@ -108,6 +108,10 @@ public class FollowService {
         return followRepository.isFollowing(followerUsername, followeeUsername);
     }
 
+    public Collection<String> getFollowingUsernames(String username) {
+        return followRepository.getFollowingUsernames(username);
+    }
+
     public boolean isMutual(String username1, String username2) {
         return followRepository.isMutual(username1, username2);
     }

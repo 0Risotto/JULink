@@ -16,7 +16,9 @@ public final class PostMapper {
             List<String> hashtags,
             long likesCount,
             long commentsCount,
-            boolean likedByCurrentUser
+            boolean likedByCurrentUser,
+            boolean favoritedByCurrentUser,
+            boolean seenByCurrentUser
     ) {
         User owner = post.getOwner();
 
@@ -36,7 +38,6 @@ public final class PostMapper {
                 owner.getProfilePictureUrl(),
 
                 post.getDescription(),
-                post.getVisibility().name(),
 
                 attachmentDTOs,
                 hashtags == null ? List.of() : hashtags,
@@ -44,6 +45,8 @@ public final class PostMapper {
                 likesCount,
                 commentsCount,
                 likedByCurrentUser,
+                favoritedByCurrentUser,
+                seenByCurrentUser,
 
                 post.getCreatedAt(),
                 post.getUpdatedAt()
@@ -112,14 +115,6 @@ public final class PostMapper {
     }
 
 
-
-    public static PostVisibility parsePostVisibility(String visibility) {
-        if (visibility == null || visibility.isBlank()) {
-            return PostVisibility.PUBLIC;
-        }
-
-        return PostVisibility.valueOf(visibility.trim().toUpperCase());
-    }
 
     public static AttachmentType parseAttachmentType(String attachmentType) {
         if (attachmentType == null || attachmentType.isBlank()) {

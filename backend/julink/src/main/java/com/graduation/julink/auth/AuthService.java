@@ -105,7 +105,7 @@ class AuthServiceImplementation implements AuthService {
 
         deleteUserChatData(userId);
         deleteUserPostData(userId);
-        deleteUserItems(userId);
+        deleteUserLostAndFounds(userId);
         deleteExistingOTP(email);
         followRepository.deleteUser(username);
         userRepository.delete(user);
@@ -392,9 +392,9 @@ class AuthServiceImplementation implements AuthService {
                 """, userId);
     }
 
-    private void deleteUserItems(Long userId) {
+    private void deleteUserLostAndFounds(Long userId) {
         executeUpdate("""
-                DELETE FROM items
+                DELETE FROM lost_and_founds
                 WHERE owner_id = :userId
                 """, userId);
     }

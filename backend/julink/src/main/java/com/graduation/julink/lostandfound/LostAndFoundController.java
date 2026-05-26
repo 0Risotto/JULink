@@ -1,4 +1,4 @@
-package com.graduation.julink.items;
+package com.graduation.julink.lostandfound;
 
 import com.graduation.julink.auth.AuthEntities;
 import com.graduation.julink.auth.CollegeEnum;
@@ -16,39 +16,39 @@ import java.security.Principal;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/items")
+@RequestMapping("/lost-and-founds")
 @RequiredArgsConstructor
-public class ItemsController {
+public class LostAndFoundController {
 
-    private final ItemsService itemsService;
+    private final LostAndFoundService lostAndFoundService;
     private final AuthRepository authRepository;
 
     @PostMapping
-    public ResponseEntity<ItemsDto.Response> createItem(
-            @Valid @RequestBody ItemsDto.CreateItem dto,
+    public ResponseEntity<LostAndFoundDto.Response> createLostAndFound(
+            @Valid @RequestBody LostAndFoundDto.CreateLostAndFound dto,
             Principal principal
     ) {
         AuthEntities.User user = authRepository.findByEmail(principal.getName()).orElseThrow();
-        return ResponseEntity.ok(itemsService.addItem(dto, user.getId()));
+        return ResponseEntity.ok(lostAndFoundService.addLostAndFound(dto, user.getId()));
     }
-    @PatchMapping("/{itemId}/found")
-    public ResponseEntity<ItemsDto.Response> markItemAsFound(
-            @PathVariable UUID itemId,
+    @PatchMapping("/{lostAndFoundId}/found")
+    public ResponseEntity<LostAndFoundDto.Response> markLostAndFoundAsFound(
+            @PathVariable UUID lostAndFoundId,
             Principal principal
     ) {
         AuthEntities.User user = authRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return ResponseEntity.ok(itemsService.markAsFound(itemId, user.getId()));
+        return ResponseEntity.ok(lostAndFoundService.markAsFound(lostAndFoundId, user.getId()));
     }
 
     @GetMapping
-    public ResponseEntity<Page<ItemsDto.Response>> getAllItems(
+    public ResponseEntity<Page<LostAndFoundDto.Response>> getAllLostAndFounds(
             @RequestParam(required = false) CollegeEnum college,
             @RequestParam(defaultValue = "false") boolean isResolved,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
 
-        return ResponseEntity.ok(itemsService.getItems(college, isResolved, pageable));
+        return ResponseEntity.ok(lostAndFoundService.getLostAndFounds(college, isResolved, pageable));
     }
 }

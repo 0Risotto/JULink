@@ -23,7 +23,6 @@ public final class SearchDTOs {
             String ownerLastName,
             String ownerProfilePictureUrl,
             String description,
-            String visibility,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {}

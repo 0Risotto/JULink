@@ -2,6 +2,7 @@ package com.graduation.julink.post;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,24 +13,25 @@ public final class PostDTOs {
 
     // Used when creating a new post
     public record CreatePostDTO(
-            @NotBlank String description,
-            String visibility,
-            List<@Valid AttachmentDTO> attachments
+            @NotBlank @Size(max = 2_000) String description,
+            @Size(max = 10) List<@Valid AttachmentDTO> attachments
     ) {}
 
     // Used when editing an existing post
     public record UpdatePostDTO(
-            @NotBlank String description,
-            String visibility,
-            List<@Valid AttachmentDTO> attachments
+            @NotBlank @Size(max = 2_000) String description,
+            @Size(max = 10) List<@Valid AttachmentDTO> attachments
     ) {}
 
     // Used inside create/update requests
     public record AttachmentDTO(
             @NotBlank String attachmentType,
+            @Size(max = 2_000)
             String attachmentUrl,
             byte[] fileBytes,
+            @Size(max = 255)
             String filename,
+            @Size(max = 100)
             String contentType
     ) {
         public AttachmentDTO(String attachmentType, String attachmentUrl) {
@@ -56,7 +58,6 @@ public final class PostDTOs {
             String ownerProfilePictureUrl,
 
             String description,
-            String visibility,
 
             List<AttachmentResponseDTO> attachments,
             List<String> hashtags,
@@ -64,6 +65,8 @@ public final class PostDTOs {
             long likesCount,
             long commentsCount,
             boolean likedByCurrentUser,
+            boolean favoritedByCurrentUser,
+            boolean seenByCurrentUser,
 
             LocalDateTime createdAt,
             LocalDateTime updatedAt
@@ -91,13 +94,20 @@ public final class PostDTOs {
 
     // Used when creating a comment or reply
     public record CreateCommentDTO(
-            @NotBlank String content,
+            @NotBlank @Size(max = 1_000) String content,
             UUID parentCommentId
     ) {}
 
     // Used when editing a comment
     public record UpdateCommentDTO(
-            @NotBlank String content
+            @NotBlank @Size(max = 1_000) String content
+    ) {}
+
+    public record PostMediaUploadResponseDTO(
+            String attachmentType,
+            String attachmentUrl,
+            String filename,
+            String contentType
     ) {}
 
     // Used when returning comments to frontend

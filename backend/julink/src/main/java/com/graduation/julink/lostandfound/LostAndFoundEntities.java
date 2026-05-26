@@ -1,4 +1,4 @@
-package com.graduation.julink.items;
+package com.graduation.julink.lostandfound;
 
 
 import com.graduation.julink.auth.CollegeEnum;
@@ -9,13 +9,13 @@ import lombok.Setter;
 import java.util.UUID;
 
 
-public final class ItemEntities {
+public final class LostAndFoundEntities {
 
     @Entity
     @Setter
     @Getter
-    @Table(name = "items")
-    public static class ItemEntity {
+    @Table(name = "lost_and_founds")
+    public static class LostAndFound {
 
         @Id
         @GeneratedValue(strategy = GenerationType.UUID)

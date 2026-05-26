@@ -45,7 +45,7 @@ public class SearchService {
         Long currentUserId = currentUserId(principal);
 
         return postRepository
-                .searchPosts(query, PostVisibility.PUBLIC.name(), currentUserId, pageable)
+                .searchPosts(query, currentUserId, pageable)
                 .map(this::toPostSearchResult);
     }
 
@@ -59,7 +59,7 @@ public class SearchService {
         Long currentUserId = currentUserId(principal);
 
         return hashtagRepository
-                .searchHashtags(query, PostVisibility.PUBLIC.name(), currentUserId, pageable)
+                .searchHashtags(query, currentUserId, pageable)
                 .map(this::toHashtagSearchResult);
     }
 
@@ -104,7 +104,6 @@ public class SearchService {
                 owner.getLastName(),
                 owner.getProfilePictureUrl(),
                 post.getDescription(),
-                post.getVisibility().name(),
                 post.getCreatedAt(),
                 post.getUpdatedAt()
         );

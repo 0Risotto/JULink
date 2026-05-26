@@ -4,6 +4,7 @@ import com.graduation.julink.post.PostEntities.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -17,11 +18,7 @@ PostRepository extends JpaRepository<Post, UUID> {
 
     Page<Post> findByOwner_IdOrderByCreatedAtDesc(Long ownerId, Pageable pageable);
 
-    Page<Post> findByOwner_IdAndVisibilityInOrderByCreatedAtDesc(
-            Long ownerId,
-            Collection<PostVisibility> visibilities,
-            Pageable pageable
-    );
+    Page<Post> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     Page<Post> findByOwner_IdInOrderByCreatedAtDesc(Collection<Long> ownerIds, Pageable pageable);
 
@@ -48,6 +45,11 @@ interface PostAttachmentRepository extends JpaRepository<PostAttachment, UUID> {
     void deleteByPost_PostId(UUID postId);
 }
 
+interface PostCountView {
+    UUID getId();
+    long getCount();
+}
+
 interface HashtagRepository extends JpaRepository<Hashtag, UUID> {
 
     Optional<Hashtag> findByName(String name);
@@ -58,32 +60,31 @@ interface HashtagRepository extends JpaRepository<Hashtag, UUID> {
             SELECT h
             FROM Hashtag h
             JOIN PostHashtag ph ON ph.hashtag = h
-            WHERE ph.post.visibility = :visibility
             GROUP BY h
             ORDER BY COUNT(ph.id) DESC
             """)
-    Page<Hashtag> findTrendingHashtags(
-            @Param("visibility") PostVisibility visibility,
-            Pageable pageable
-    );
+    Page<Hashtag> findTrendingHashtags(Pageable pageable);
 
     @Query("""
             SELECT COUNT(ph.id)
             FROM PostHashtag ph
             WHERE ph.hashtag.hashtagId = :hashtagId
-            AND ph.post.visibility = :visibility
             """)
-    long countPostsByHashtagIdAndVisibility(
-            @Param("hashtagId") UUID hashtagId,
-            @Param("visibility") PostVisibility visibility
-    );
+    long countPostsByHashtagId(@Param("hashtagId") UUID hashtagId);
 }
 
 interface PostHashtagRepository extends JpaRepository<PostHashtag, UUID> {
 
     List<PostHashtag> findByPost_PostId(UUID postId);
 
-    void deleteByPost_PostId(UUID postId);
+    List<PostHashtag> findByPost_PostIdIn(Collection<UUID> postIds);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+            DELETE FROM PostHashtag ph
+            WHERE ph.post.postId = :postId
+            """)
+    void deleteByPost_PostId(@Param("postId") UUID postId);
 
     @Query("""
             SELECT ph.hashtag.name
@@ -115,6 +116,25 @@ interface PostLikeRepository extends JpaRepository<PostLike, UUID> {
     void deleteByPost_PostIdAndUser_Id(UUID postId, Long userId);
 
     void deleteByPost_PostId(UUID postId);
+
+    @Query("""
+            SELECT l.post.postId AS id, COUNT(l.likeId) AS count
+            FROM PostLike l
+            WHERE l.post.postId IN :postIds
+            GROUP BY l.post.postId
+            """)
+    List<PostCountView> countByPostIds(@Param("postIds") Collection<UUID> postIds);
+
+    @Query("""
+            SELECT l.post.postId
+            FROM PostLike l
+            WHERE l.user.id = :userId
+            AND l.post.postId IN :postIds
+            """)
+    List<UUID> findLikedPostIdsByUserIdAndPostIds(
+            @Param("userId") Long userId,
+            @Param("postIds") Collection<UUID> postIds
+    );
 }
 
 interface PostFavoriteRepository extends JpaRepository<PostFavorite, UUID> {
@@ -136,6 +156,17 @@ interface PostFavoriteRepository extends JpaRepository<PostFavorite, UUID> {
             ORDER BY f.createdAt DESC
             """)
     Page<Post> findFavoritePostsByUserId(@Param("userId") Long userId, Pageable pageable);
+
+    @Query("""
+            SELECT f.post.postId
+            FROM PostFavorite f
+            WHERE f.user.id = :userId
+            AND f.post.postId IN :postIds
+            """)
+    List<UUID> findFavoritedPostIdsByUserIdAndPostIds(
+            @Param("userId") Long userId,
+            @Param("postIds") Collection<UUID> postIds
+    );
 }
 
 interface PostCommentRepository extends JpaRepository<PostComment, UUID> {
@@ -156,6 +187,14 @@ interface PostCommentRepository extends JpaRepository<PostComment, UUID> {
     );
 
     long countByPost_PostId(UUID postId);
+
+    @Query("""
+            SELECT c.post.postId AS id, COUNT(c.commentId) AS count
+            FROM PostComment c
+            WHERE c.post.postId IN :postIds
+            GROUP BY c.post.postId
+            """)
+    List<PostCountView> countByPostIds(@Param("postIds") Collection<UUID> postIds);
 
     void deleteByPost_PostId(UUID postId);
 
@@ -185,4 +224,20 @@ interface CommentLikeRepository extends JpaRepository<CommentLike, UUID> {
     void deleteByComment_CommentIdAndUser_Id(UUID commentId, Long userId);
 
     void deleteByComment_CommentId(UUID commentId);
+}
+
+interface PostImpressionRepository extends JpaRepository<PostImpression, UUID> {
+
+    boolean existsByPost_PostIdAndUser_Id(UUID postId, Long userId);
+
+    @Query("""
+            SELECT i.post.postId
+            FROM PostImpression i
+            WHERE i.user.id = :userId
+            AND i.post.postId IN :postIds
+            """)
+    List<UUID> findSeenPostIdsByUserIdAndPostIds(
+            @Param("userId") Long userId,
+            @Param("postIds") Collection<UUID> postIds
+    );
 }

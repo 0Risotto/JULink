@@ -124,11 +124,10 @@ class SearchServiceTest {
         post.setPostId(postId);
         post.setOwner(owner);
         post.setDescription("computer science event");
-        post.setVisibility(PostVisibility.PUBLIC);
         post.setCreatedAt(createdAt);
         post.setUpdatedAt(updatedAt);
 
-        when(postRepository.searchPosts("science", "PUBLIC", 101L, pageable))
+        when(postRepository.searchPosts("science", 101L, pageable))
                 .thenReturn(new PageImpl<>(List.of(post), pageable, 1));
 
         Page<PostSearchResultDTO> result = searchService.searchPosts("science", pageable, principal);
@@ -139,10 +138,9 @@ class SearchServiceTest {
         assertEquals(202L, dto.ownerId());
         assertEquals("owner", dto.ownerUsername());
         assertEquals("computer science event", dto.description());
-        assertEquals("PUBLIC", dto.visibility());
         assertEquals(createdAt, dto.createdAt());
         assertEquals(updatedAt, dto.updatedAt());
-        verify(postRepository).searchPosts("science", "PUBLIC", 101L, pageable);
+        verify(postRepository).searchPosts("science", 101L, pageable);
     }
 
     @Test
@@ -153,7 +151,7 @@ class SearchServiceTest {
         hashtag.setHashtagId(hashtagId);
         hashtag.setName("ai");
 
-        when(hashtagRepository.searchHashtags("ai", "PUBLIC", 101L, pageable))
+        when(hashtagRepository.searchHashtags("ai", 101L, pageable))
                 .thenReturn(new PageImpl<>(List.of(hashtag), pageable, 1));
 
         Page<HashtagSearchResultDTO> result = searchService.searchHashtags("ai", pageable, principal);
@@ -162,6 +160,6 @@ class SearchServiceTest {
         HashtagSearchResultDTO dto = result.getContent().get(0);
         assertEquals(hashtagId, dto.hashtagId());
         assertEquals("ai", dto.name());
-        verify(hashtagRepository).searchHashtags("ai", "PUBLIC", 101L, pageable);
+        verify(hashtagRepository).searchHashtags("ai", 101L, pageable);
     }
 }

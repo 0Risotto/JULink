@@ -69,8 +69,7 @@ interface SearchPostRepository extends JpaRepository<Post, UUID> {
             value = """
             SELECT *
             FROM posts p
-            WHERE p.visibility = :visibility
-            AND (:currentUserId IS NULL OR p.owner_id <> :currentUserId)
+            WHERE (:currentUserId IS NULL OR p.owner_id <> :currentUserId)
             AND (
                 LOWER(p.description) LIKE LOWER(CONCAT('%', :q, '%'))
                 OR p.description % :q
@@ -80,8 +79,7 @@ interface SearchPostRepository extends JpaRepository<Post, UUID> {
             countQuery = """
             SELECT COUNT(*)
             FROM posts p
-            WHERE p.visibility = :visibility
-            AND (:currentUserId IS NULL OR p.owner_id <> :currentUserId)
+            WHERE (:currentUserId IS NULL OR p.owner_id <> :currentUserId)
             AND (
                 LOWER(p.description) LIKE LOWER(CONCAT('%', :q, '%'))
                 OR p.description % :q
@@ -91,7 +89,6 @@ interface SearchPostRepository extends JpaRepository<Post, UUID> {
     )
     Page<Post> searchPosts(
             @Param("q") String q,
-            @Param("visibility") String visibility,
             @Param("currentUserId") Long currentUserId,
             Pageable pageable
     );
@@ -105,8 +102,7 @@ interface SearchHashtagRepository extends JpaRepository<Hashtag, UUID> {
             FROM hashtags h
             JOIN post_hashtags ph ON ph.hashtag_id = h.hashtag_id
             JOIN posts p ON p.post_id = ph.post_id
-            WHERE p.visibility = :visibility
-            AND (:currentUserId IS NULL OR p.owner_id <> :currentUserId)
+            WHERE (:currentUserId IS NULL OR p.owner_id <> :currentUserId)
             AND (
                 LOWER(h.name) LIKE LOWER(CONCAT('%', :q, '%'))
                 OR h.name % :q
@@ -119,8 +115,7 @@ interface SearchHashtagRepository extends JpaRepository<Hashtag, UUID> {
             FROM hashtags h
             JOIN post_hashtags ph ON ph.hashtag_id = h.hashtag_id
             JOIN posts p ON p.post_id = ph.post_id
-            WHERE p.visibility = :visibility
-            AND (:currentUserId IS NULL OR p.owner_id <> :currentUserId)
+            WHERE (:currentUserId IS NULL OR p.owner_id <> :currentUserId)
             AND (
                 LOWER(h.name) LIKE LOWER(CONCAT('%', :q, '%'))
                 OR h.name % :q
@@ -130,7 +125,6 @@ interface SearchHashtagRepository extends JpaRepository<Hashtag, UUID> {
     )
     Page<Hashtag> searchHashtags(
             @Param("q") String q,
-            @Param("visibility") String visibility,
             @Param("currentUserId") Long currentUserId,
             Pageable pageable
     );

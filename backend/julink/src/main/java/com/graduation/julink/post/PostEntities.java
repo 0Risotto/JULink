@@ -13,12 +13,6 @@ import java.util.UUID;
 public final class PostEntities {
     private PostEntities() {} // Prevent instantiation
 
-    public enum PostVisibility {
-        PUBLIC,
-        FOLLOWERS_ONLY,
-        PRIVATE
-    }
-
     public enum AttachmentType {
         IMAGE,
         VIDEO,
@@ -40,10 +34,6 @@ public final class PostEntities {
 
         @Column(nullable = false, columnDefinition = "TEXT")
         private String description;
-
-        @Enumerated(EnumType.STRING)
-        @Column(nullable = false)
-        private PostVisibility visibility = PostVisibility.PUBLIC;
 
         @Column(nullable = false, updatable = false)
         private LocalDateTime createdAt = LocalDateTime.now();
@@ -246,5 +236,31 @@ public final class PostEntities {
 
         @Column(nullable = false, updatable = false)
         private LocalDateTime createdAt = LocalDateTime.now();
+    }
+
+    @Entity(name = "PostImpression")
+    @Setter
+    @Getter
+    @Table(
+            name = "post_impressions",
+            uniqueConstraints = {
+                    @UniqueConstraint(columnNames = {"post_id", "user_id"})
+            }
+    )
+    public static class PostImpression {
+        @Id
+        @GeneratedValue(strategy = GenerationType.UUID)
+        private UUID impressionId;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "post_id", nullable = false)
+        private Post post;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "user_id", nullable = false)
+        private User user;
+
+        @Column(nullable = false, updatable = false)
+        private LocalDateTime seenAt = LocalDateTime.now();
     }
 }
