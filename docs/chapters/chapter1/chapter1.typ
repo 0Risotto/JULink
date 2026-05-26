@@ -21,7 +21,7 @@ Developed with the student experience in mind, JULink serves as a practical, com
 
 
 == Constraints
-- The project must be completed by May 25, 2026.
+- The project must be completed by June 1, 2026.
 
 - Data privacy and security, ensuring the privacy of student data and compliance with university and national data protection policies is a critical constraint that must be addressed throughout development.
 - permission must be obtained from the University of Jordan to access or integrate with university data. The process may be delayed depending on how long approval takes.
