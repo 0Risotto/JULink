@@ -7,6 +7,7 @@ import { UserProfileDTO } from "../types";
 import { Colleges } from "@/domain/auth/types";
 import { useFollow } from "@/domain/follower/hooks/useFollow";
 import FollowListDialog from "@/domain/follower/components/FollowListDialog";
+import EditProfileDialog from "./EditProfileDialog";
 
 interface OwnUserCardProps {
   user: UserProfileDTO;
@@ -51,9 +52,11 @@ export default function OwnUserCard({ user }: OwnUserCardProps) {
           {/* Username + Edit */}
           <div className="flex items-center gap-4">
             <h1 className="text-xl font-semibold">{user.username}</h1>
-            <Button variant="outline" onClick={() => {/* Open edit modal */}}>
-              Edit Profile
-            </Button>
+            <EditProfileDialog user={user}>
+              <Button variant="outline">
+                Edit Profile
+              </Button>
+            </EditProfileDialog>
           </div>
 
           {/* Stats */}
