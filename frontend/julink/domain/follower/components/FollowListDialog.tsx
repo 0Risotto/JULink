@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Spinner } from "@/components/ui/spinner";
 import { FollowerUser } from "../types";
+import Link from "next/link";
 import FollowButton from "./FollowButton";
 import { useUser } from "@/domain/profile/hooks/useUser";
 import * as FollowerServices from "../services/followerServices";
@@ -78,10 +79,12 @@ export default function FollowListDialog({ title, trigger, username, type, onFol
               {filtered.map((u) => (
                 <div key={u.username} className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarImage src={u.profilePictureUrl || undefined} />
-                      <AvatarFallback>{u.fullName[0]}</AvatarFallback>
-                    </Avatar>
+                    <Link href={`/${u.username}`}>
+                      <Avatar className="hover:opacity-80 transition-opacity cursor-pointer">
+                        <AvatarImage src={u.profilePictureUrl || undefined} />
+                        <AvatarFallback>{u.fullName[0]}</AvatarFallback>
+                      </Avatar>
+                    </Link>
 
                     <div className="flex flex-col">
                       <p className="font-medium">{u.fullName}</p>

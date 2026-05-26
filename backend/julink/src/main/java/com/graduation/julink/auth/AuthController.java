@@ -3,8 +3,10 @@ import com.graduation.julink.auth.Repository.AuthRepository;
 import com.graduation.julink.common.TokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.Map;
 
 @RestController
@@ -104,7 +106,7 @@ public class AuthController {
         } catch (RuntimeException e) {
             return Map.of(
                     "status", "error",
-                    "message", "Login failed : incorrect email or password."
+                    "message", "Login failed : incorrect email, username, or password."
             );
         } catch (Exception e) {
             return Map.of(
@@ -113,6 +115,16 @@ public class AuthController {
             );
         }
     }
+
+    @DeleteMapping("/kill")
+    public ResponseEntity<Map<String, String>> kill(Principal principal) {
+        authService.kill(principal);
+        return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "message", "Account deleted successfully"
+        ));
+    }
+
 
     @GetMapping("/health")
     public Map<String, String> healthCheck() {

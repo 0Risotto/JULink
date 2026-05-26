@@ -1,6 +1,7 @@
 package com.graduation.julink.auth;
 
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -26,8 +27,9 @@ public final class AuthDTOs {
     }
 
     public record LoginUserDTO(
-            @NotBlank @Email
-            String email,
+            @JsonAlias({"email", "username"})
+            @NotBlank
+            String identifier,
             @NotBlank
             String password
     ) {}

@@ -6,7 +6,7 @@ import { VideoMessage } from "./VideoMessage";
 import { AudioMessage } from "./AudioMessage";
 import { FileMessage } from "./FileMessage";
 
-export default function MessageMedia({ msg }: { msg: MessageResponse }) {
+export default function MessageMedia({ msg, isMe }: { msg: MessageResponse, isMe?: boolean }) {
   if (!msg.mediaUrl) return null;
 
   const url = msg.mediaUrl;
@@ -28,9 +28,9 @@ export default function MessageMedia({ msg }: { msg: MessageResponse }) {
     case "VIDEO":
       return <VideoMessage url={url} />;
     case "AUDIO":
-      return <AudioMessage url={url} />;
+      return <AudioMessage url={url} isMe={isMe} />;
     case "FILE":
     default:
-      return <FileMessage url={url} filename={filename} sizeStr={sizeStr} />;
+      return <FileMessage url={url} filename={filename} sizeStr={sizeStr} isMe={isMe} />;
   }
 }

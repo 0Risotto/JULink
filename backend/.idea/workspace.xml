@@ -6,9 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="117066b8-ebdd-4a16-a3fb-78a201ba350d" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/julink/domain/sidebar/components/SidebarLayout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/julink/domain/sidebar/components/SidebarLayout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/julink/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/julink/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/julink/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/julink/pnpm-lock.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -150,10 +147,22 @@
       <workItem from="1777130775626" duration="8420000" />
       <workItem from="1777154839332" duration="1745000" />
       <workItem from="1777733220844" duration="90000" />
+      <workItem from="1779538429884" duration="167000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/julink/src/main/java/com/graduation/julink/auth/AuthService.java</url>
+          <line>110</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

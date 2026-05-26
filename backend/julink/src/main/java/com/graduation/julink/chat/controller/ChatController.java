@@ -95,9 +95,18 @@ public class ChatController {
     public ResponseEntity<MessageResponse> sendMediaMessage(
             Principal principal,
             @PathVariable Long conversationId,
-            @RequestParam("file") MultipartFile file) throws IOException {
+            @RequestParam("file") MultipartFile file) throws IOException, InterruptedException {
         String username = getUsernameFromPrincipal(principal);
         return ResponseEntity.ok(chatService.sendMediaMessage(conversationId, username, file));
+    }
+
+    @PostMapping("/conversations/{conversationId}/messages/media-bytes")
+    public ResponseEntity<MessageResponse> sendMediaBytesMessage(
+            Principal principal,
+            @PathVariable Long conversationId,
+            @RequestBody MediaBytesRequest req) throws IOException, InterruptedException {
+        String username = getUsernameFromPrincipal(principal);
+        return ResponseEntity.ok(chatService.sendMediaMessage(conversationId, username, req));
     }
 
     @PatchMapping("/messages/{messageId}")

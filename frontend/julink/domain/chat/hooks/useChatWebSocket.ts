@@ -114,10 +114,20 @@ export const useChatWebSocket = (myUsername: string | null) => {
     }
   };
 
+  const initiateCall = (friendUsername: string) => {
+    if (clientRef.current && clientRef.current.connected && myUsername) {
+      clientRef.current.publish({
+        destination: "/app/video/initiate",
+        body: JSON.stringify({ username: friendUsername, caller: myUsername }),
+      });
+    }
+  };
+
   return {
     connected,
     sendMessage,
     sendTyping,
     markRead,
+    initiateCall,
   };
 };

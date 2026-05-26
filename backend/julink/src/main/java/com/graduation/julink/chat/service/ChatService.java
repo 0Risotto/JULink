@@ -164,14 +164,28 @@ public class ChatService {
      */
     public MessageResponse sendMediaMessage(Long conversationId,
                                             String senderUsername,
-                                            MultipartFile file) throws IOException {
+                                            MultipartFile file) throws IOException, InterruptedException {
+        return sendUploadedMediaMessage(conversationId, senderUsername, fileStorageService.store(file));
+    }
+
+    public MessageResponse sendMediaMessage(Long conversationId,
+                                            String senderUsername,
+                                            MediaBytesRequest req) throws IOException, InterruptedException {
+        return sendUploadedMediaMessage(
+                conversationId,
+                senderUsername,
+                fileStorageService.store(req.getFileBytes(), req.getFilename(), req.getContentType())
+        );
+    }
+
+    private MessageResponse sendUploadedMediaMessage(Long conversationId,
+                                                     String senderUsername,
+                                                     FileUploadResponse upload) {
         User sender = loadUser(senderUsername);
         Conversation conv = loadConversation(conversationId);
 
         assertMember(conv, sender);
         assertFriendshipForConversation(conv, sender);
-
-        FileUploadResponse upload = fileStorageService.store(file);
 
         Message message = new Message();
         message.setConversation(conv);

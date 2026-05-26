@@ -46,6 +46,13 @@ public final class ChatDTOs {
         private String content;
     }
 
+    @Data
+    public static class MediaBytesRequest {
+        private byte[] fileBytes;
+        private String filename;
+        private String contentType;
+    }
+
     // ─────────────────────────────────────────────────────────────
     // Inbound WebSocket payloads  (sent by the client over STOMP)
     // ─────────────────────────────────────────────────────────────

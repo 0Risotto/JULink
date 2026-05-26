@@ -6,7 +6,7 @@ interface VideoMessageProps {
 
 export function VideoMessage({ url }: VideoMessageProps) {
   return (
-    <div className="mb-2 max-w-[250px] sm:max-w-[300px] overflow-hidden rounded-md bg-black">
+    <div className="max-w-[250px] sm:max-w-[300px] overflow-hidden rounded-md bg-black">
       <video
         src={url}
         controls
