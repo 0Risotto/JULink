@@ -1,32 +1,32 @@
-== Feasibility study
-=== Technical feasibility
+== Feasibility Study
+=== Technical Feasibility
 ==== Overview
-  The technical feasibility assesses the technological components necessary 
-  to develop and operate the JULink platform. This includes 
-  evaluating the required hardware, software tools, and the technical skills 
-  essential for building and maintaining the system.
+The technical feasibility assessment evaluates the technological components necessary to develop, deploy, and operate the JU Link platform. This encompasses a thorough evaluation of the required software frameworks, infrastructure, and the technical proficiencies essential for successfully building and maintaining the system.
 
-==== Technology 
-  The JULink website is built using state of the art
-  front-end tools like React, Redux, Apollo and CSS. These  
-  Tools help  create a clean and responsive design that works well on Different devices, Also for our back-end we will be using Spring Boot (Java) and FastAPI (Python)
-  which are the leading standard tools in the industry.
-==== Version Control  
-  We are using GitHub to store and manage the project online. 
-  It helps us work together, keep track of changes, and easily share the project with others.
-====  Project Readiness
-- All the required resources including hardware, software tools, and hosting services are already available and accessible, ensuring smooth development and operation of the SALLEHA platform.
 
--  Since most these technologies are part of what we have learned at university and
-  practiced in various projects,
-  we are fully capable of developing
-  and maintaining the JULink platform
-  using them. Our academic background
-  and hands-on personal experience give us the technical foundation and confidence to build this system successfully.
+==== System Architecture and Technology Stack
+The technical viability of JU Link is grounded in the adoption of a highly scalable architecture adhering to Domain-Driven Design (DDD) principles. By leveraging a polyglot persistence strategy and modern industry-standard tools, the system can reliably handle the diverse data and performance requirements of an academic network.
+
+- *Frontend Framework & State Management:* The platform utilizes Next.js, built on top of React.js, to provide server-side rendering (SSR) and deliver a highly performant user interface. The entire frontend codebase is developed using TypeScript to ensure strict type safety, scalability, and maintainability. Redux is implemented for predictable state management across complex user interfaces, while Zod guarantees robust schema-based data validation before any backend processing.
+
+- *Backend & Communication Protocols:* Standard client-server communications are handled via RESTful APIs. Furthermore, the feasibility of real-time features is secured through the integration of low-latency WebSockets for live instant messaging, alongside the open-source Jitsi platform, which is utilized to power secure, scalable peer-to-peer video conferencing.
+
+- *Polyglot Persistence & Data Storage:* Relational domain entities are managed by PostgreSQL, leveraging the `pg_trgm` extension for efficient fuzzy search capabilities. To feasibly map and traverse the complex university social graph, Neo4j is employed as a NoSQL graph database using the Cypher query language. 
+
+- *Cloud Infrastructure & Media Management:* - *Cloudinary*: Utilized as a dedicated cloud-based media management service. User media and images are uploaded directly to the Cloudinary vault, which returns optimized URLs to the backend. This securely offloads media storage and minimizes server payload bottlenecks.
+
+- *Algorithms and Security:* The system leverages the Jaccard Similarity Coefficient to calculate structural overlaps within the social graph, ensuring the programmatic viability of highly accurate user follow recommendations. To maintain robust data protection, asymmetric RSA encryption is utilized specifically to cryptographically sign JSON Web Tokens (JWT), guaranteeing stateless, tamper-proof authentication and secure session management across the platform.
+
+==== Version Control and Collaboration
+Git, hosted via GitHub, is utilized for distributed version control. This infrastructure guarantees technical feasibility in team collaboration by providing robust tracking of codebase changes, branch management, and continuous integration capabilities, mitigating the risk of code conflicts during concurrent development.
+
+==== Technical Readiness and Competency
+All required resources, including software tools and cloud infrastructure, are readily available and accessible. Furthermore, the development team possesses the requisite competency to implement this architecture. The foundational knowledge of these technologies was acquired through the university curriculum and heavily reinforced via practical, hands-on projects. This combination of academic background and applied experience provides the team with the necessary technical foundation to successfully build and deploy the JU Link platform.
 
 === operational feasibility
-JULink is operationally feasible, as similar projects have gained approval by university students and some have even extended to a larger scope. Since most university students are not from a technical background, our project will highly focus on achieving user-experience. JU assumes most students have access to the internet most of the time and a smart device hence students will be able to use it.
+JULink is operationally feasible, as similar projects have gained approval by university students and some have even extended to a larger scope. Since most university students are not from a technical background, our project will highly focus on achieving user-experience. JU assumes the students have access to the internet most of the time and a smart device hence students will be able to use it.
 
+#pagebreak()
 === Economic Feasibility
 
 #let chapter-number = 2

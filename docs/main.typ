@@ -60,7 +60,7 @@
 
 #v(4cm)
 #align(center)[ #image(
-    "assets/logo/JULink.svg",
+    "assets/logo/JULink logo.svg",
     fit: "contain",
     height: 4cm,
   )
@@ -71,7 +71,7 @@
   ]
 
   #table(
-    fill: (coloum, row) => if row == 0 { rgb("#026b3b") } else if coloum == 0 { rgb(white) },
+    fill: (coloum, row) => if row == 0 { rgb("#0657B5") } else if coloum == 0 { rgb(white) },
     columns: 2,
     stroke: black,
     [Student Name], [Student ID],
