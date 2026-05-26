@@ -6,7 +6,7 @@ import { AppSidebar } from "./AppSidebar"
 import { AuthGuard } from "@/domain/auth/components/AuthGuard"
 import { useAppSelector, useAppDispatch } from "@/store/hooks"
 import { setSidebarOpen } from "../store/sidebarSlice"
-import { GlobalCallListener } from "@/domain/temp/call/components/GlobalCallListener"
+import { GlobalCallListener } from "@/domain/call/components/GlobalCallListener"
 
 export function SidebarLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()

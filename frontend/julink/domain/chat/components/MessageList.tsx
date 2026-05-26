@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Check, CheckCheck, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import MessageMedia from "./media";
+import Link from "next/link";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,10 +49,12 @@ export default function MessageList({ messages, myUsername, typingUsers, onEditM
             {!isMe && (
               <div className="w-8 shrink-0">
                 {showAvatar && (
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={msg.sender.profilePictureUrl || undefined} />
-                    <AvatarFallback>{msg.sender.firstName?.[0] || msg.sender.username[0]}</AvatarFallback>
-                  </Avatar>
+                  <Link href={`/${msg.sender.username}`}>
+                    <Avatar className="w-8 h-8 hover:opacity-80 transition-opacity cursor-pointer">
+                      <AvatarImage src={msg.sender.profilePictureUrl || undefined} />
+                      <AvatarFallback>{msg.sender.firstName?.[0] || msg.sender.username[0]}</AvatarFallback>
+                    </Avatar>
+                  </Link>
                 )}
               </div>
             )}
@@ -63,16 +66,20 @@ export default function MessageList({ messages, myUsername, typingUsers, onEditM
               
               <div className={`flex items-center gap-2 group/msg ${isMe ? "flex-row-reverse" : "flex-row"}`}>
                 <div
-                  className={`p-3 rounded-2xl text-sm ${
+                  className={`rounded-2xl text-sm ${
+                    msg.mediaUrl ? "p-[1px]" : "p-3"
+                  } ${
                     isMe ? "bg-primary text-primary-foreground rounded-tr-sm" : "bg-muted rounded-tl-sm"
                   }`}
                 >
-                  <MessageMedia msg={msg} />
+                  <MessageMedia msg={msg} isMe={isMe} />
                   {msg.deleted ? (
                     <span className="italic opacity-70">This message was deleted</span>
-                  ) : (
-                    <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                  )}
+                  ) : msg.content ? (
+                    <p className={`whitespace-pre-wrap break-words ${msg.mediaUrl ? "px-2 pb-2" : ""}`}>
+                      {msg.content}
+                    </p>
+                  ) : null}
                 </div>
 
                 {isMe && !msg.deleted && (

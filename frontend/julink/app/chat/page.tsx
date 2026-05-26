@@ -7,13 +7,11 @@ import { useUser } from "@/domain/profile/hooks/useUser";
 import { useChatWebSocket } from "@/domain/chat/hooks/useChatWebSocket";
 import ChatSidebar from "@/domain/chat/components/ChatSidebar";
 import ChatWindow from "@/domain/chat/components/ChatWindow";
-
 export default function ChatPage() {
   const dispatch = useAppDispatch();
   const { myUsername, loadMyUsername } = useUser();
-
   // STOMP WebSocket Hook
-  const { sendMessage, sendTyping, markRead } = useChatWebSocket(myUsername);
+  const { sendMessage, sendTyping, markRead, initiateCall } = useChatWebSocket(myUsername);
 
   useEffect(() => {
     // Make sure we have the username loaded
@@ -38,6 +36,7 @@ export default function ChatPage() {
         onSendMessage={sendMessage}
         onSendTyping={sendTyping}
         onMarkRead={markRead}
+        onInitiateCall={initiateCall}
       />
     </div>
   );

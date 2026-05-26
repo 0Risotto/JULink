@@ -7,6 +7,7 @@ import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
+import Link from "next/link";
 import { useUser } from "@/domain/profile/hooks/useUser";
 import { Phone, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,9 +18,10 @@ interface ChatWindowProps {
   onSendMessage: (conversationId: number, content: string) => void;
   onSendTyping: (conversationId: number, isTyping: boolean) => void;
   onMarkRead: (conversationId: number, lastMessageId: number) => void;
+  onInitiateCall: (friendUsername: string) => void;
 }
 
-export default function ChatWindow({ onSendMessage, onSendTyping, onMarkRead }: ChatWindowProps) {
+export default function ChatWindow({ onSendMessage, onSendTyping, onMarkRead, onInitiateCall }: ChatWindowProps) {
   const dispatch = useAppDispatch();
   const { myUsername } = useUser();
   const { activeConversationId, conversations, messagesByConvId, typingState, loadingMessages } = useAppSelector((state) => state.chat);
@@ -68,22 +70,48 @@ export default function ChatWindow({ onSendMessage, onSendTyping, onMarkRead }: 
   let image = activeConv.groupPictureUrl;
   let subtitle = `${activeConv.members.length} members`;
 
-  if (!activeConv.group) {
-    const otherUser = activeConv.members.find((m) => m.username !== myUsername) || activeConv.members[0];
-    title = otherUser?.firstName ? `${otherUser.firstName} ${otherUser.lastName}` : otherUser?.username;
-    image = otherUser?.profilePictureUrl || null;
+  const otherUser = !activeConv.group 
+    ? (activeConv.members.find((m) => m.username !== myUsername) || activeConv.members[0])
+    : null;
+
+  if (!activeConv.group && otherUser) {
+    title = otherUser.firstName ? `${otherUser.firstName} ${otherUser.lastName}` : otherUser.username;
+    image = otherUser.profilePictureUrl || null;
     subtitle = `@${otherUser.username}`;
   }
+
+  const handleAudioCall = () => {
+    if (otherUser) {
+      sessionStorage.setItem("callType", "audio");
+      onInitiateCall(otherUser.username);
+    }
+  };
+
+  const handleVideoCall = () => {
+    if (otherUser) {
+      sessionStorage.setItem("callType", "video");
+      onInitiateCall(otherUser.username);
+    }
+  };
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background">
       {/* Header */}
       <div className="p-4 border-b flex items-center justify-between bg-card">
         <div className="flex items-center gap-3">
-          <Avatar>
-            <AvatarImage src={image || undefined} />
-            <AvatarFallback>{title ? title[0].toUpperCase() : "?"}</AvatarFallback>
-          </Avatar>
+          {(!activeConv.group && otherUser) ? (
+            <Link href={`/${otherUser.username}`}>
+              <Avatar className="hover:opacity-80 transition-opacity cursor-pointer">
+                <AvatarImage src={image || undefined} />
+                <AvatarFallback>{title ? title[0].toUpperCase() : "?"}</AvatarFallback>
+              </Avatar>
+            </Link>
+          ) : (
+            <Avatar>
+              <AvatarImage src={image || undefined} />
+              <AvatarFallback>{title ? title[0].toUpperCase() : "?"}</AvatarFallback>
+            </Avatar>
+          )}
           <div className="flex flex-col">
             <h2 className="font-bold">{title}</h2>
             <span className="text-xs text-muted-foreground">{subtitle}</span>
@@ -93,10 +121,10 @@ export default function ChatWindow({ onSendMessage, onSendTyping, onMarkRead }: 
         <div className="flex gap-2">
           {!activeConv.group && (
             <>
-              <Button variant="ghost" size="icon" title="Audio Call">
+              <Button variant="ghost" size="icon" title="Audio Call" onClick={handleAudioCall}>
                 <Phone className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="icon" title="Video Call">
+              <Button variant="ghost" size="icon" title="Video Call" onClick={handleVideoCall}>
                 <Video className="w-5 h-5" />
               </Button>
             </>

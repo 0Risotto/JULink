@@ -8,21 +8,22 @@ import { Spinner } from "@/components/ui/spinner";
 
 interface JitsiMeetingComponentProps {
   roomName: string;
+  isVideoCall?: boolean;
+  autoEndCall?: boolean;
+  onClose: () => void;
 }
 
-export function JitsiMeetingComponent({ roomName }: JitsiMeetingComponentProps) {
+export function JitsiMeetingComponent({ roomName, isVideoCall = true, autoEndCall = false, onClose }: JitsiMeetingComponentProps) {
   const { myUsername } = useAppSelector((state) => state.user);
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
 
   const handleReadyToClose = () => {
-    // Navigate back to home or close the call
-    router.push("/home");
+    onClose();
   };
 
   return (
-    <div className="relative w-full h-[600px] bg-black rounded-lg overflow-hidden border">
-      {loading && (
+    <div className={`relative w-full h-full bg-black rounded-b-lg overflow-hidden ${autoEndCall ? 'hidden' : ''}`}>
+      {loading && !autoEndCall && (
         <div className="absolute inset-0 flex items-center justify-center bg-zinc-900 z-10">
           <div className="flex flex-col items-center gap-4 text-white">
             <Spinner className="size-8" />
@@ -44,9 +45,8 @@ export function JitsiMeetingComponent({ roomName }: JitsiMeetingComponentProps) 
         configOverwrite={{
           prejoinPageEnabled: false,
           disableLobby: true,
-          // FORCE CAMERA ON
           startWithAudioMuted: false,
-          startWithVideoMuted: false,
+          startWithVideoMuted: !isVideoCall,
           defaultRole: "moderator",
         }}
         interfaceConfigOverwrite={{
@@ -55,10 +55,16 @@ export function JitsiMeetingComponent({ roomName }: JitsiMeetingComponentProps) 
         }}
         onApiReady={(externalApi) => {
           setLoading(false);
-          // Handle when the user leaves the call
-          externalApi.addListener("videoConferenceLeft", () => {
+          if (autoEndCall) {
+            // End the call for everyone immediately
+            externalApi.executeCommand('endConference');
             handleReadyToClose();
-          });
+          } else {
+            // Handle when the user leaves the call
+            externalApi.addListener("videoConferenceLeft", () => {
+              handleReadyToClose();
+            });
+          }
         }}
       />
     </div>
