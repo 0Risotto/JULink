@@ -11,6 +11,7 @@ import CommentList from "./CommentList";
 import CommentInput from "./CommentInput";
 import Link from "next/link";
 import MediaRenderer from "./MediaRenderer";
+import DoubleTapToLike from "./DoubleTapToLike";
 
 interface PostDetailsModalProps {
   post: PostResponseDTO;
@@ -56,25 +57,31 @@ export default function PostDetailsModal({ post, onPostUpdated }: PostDetailsMod
     ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })
     : "";
 
+  const handleDoubleTap = () => {
+    if (!liked) handleLike();
+  };
+
   const hasAttachments = post.attachments && post.attachments.length > 0;
 
   return (
     <div className="flex flex-col md:flex-row w-full h-[85vh] md:h-[600px] lg:h-[700px] bg-white dark:bg-zinc-950 overflow-hidden rounded-[var(--radius)]">
       {/* Left side: Media */}
       <div className={`w-full md:w-[60%] lg:w-[65%] bg-black flex items-center justify-center ${hasAttachments ? '' : 'bg-gray-100 dark:bg-zinc-900'}`}>
-        {hasAttachments ? (
-          <MediaRenderer 
-            attachmentUrl={post.attachments[0].attachmentUrl} 
-            attachmentType={post.attachments[0].attachmentType}
-            className="max-w-full max-h-full object-contain"
-          />
-        ) : (
-          <div className="p-8 text-center w-full max-w-lg">
-             <p className="text-xl md:text-2xl font-medium text-gray-800 dark:text-gray-200 break-words">
-                {post.description}
-             </p>
-          </div>
-        )}
+        <DoubleTapToLike onDoubleTap={handleDoubleTap} className="w-full h-full flex items-center justify-center">
+          {hasAttachments ? (
+            <MediaRenderer 
+              attachmentUrl={post.attachments[0].attachmentUrl} 
+              attachmentType={post.attachments[0].attachmentType}
+              className="max-w-full max-h-full object-contain"
+            />
+          ) : (
+            <div className="p-8 text-center w-full max-w-lg">
+               <p className="text-xl md:text-2xl font-medium text-gray-800 dark:text-gray-200 break-words">
+                  {post.description}
+               </p>
+            </div>
+          )}
+        </DoubleTapToLike>
       </div>
 
       {/* Right side: Info Panel */}

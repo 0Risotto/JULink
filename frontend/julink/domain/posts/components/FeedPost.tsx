@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import PostDetailsModal from "./PostDetailsModal";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import MediaRenderer from "./MediaRenderer";
+import DoubleTapToLike from "./DoubleTapToLike";
 
 interface FeedPostProps {
   post: PostResponseDTO;
@@ -22,6 +23,7 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
   const [likesCount, setLikesCount] = useState(post.likesCount);
   const [favorited, setFavorited] = useState(post.favoritedByCurrentUser);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleLike = async () => {
     setLiked(!liked);
@@ -59,10 +61,8 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
     }
   };
 
-  const handleDoubleTap = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleDoubleTap = () => {
     if (!liked) handleLike();
-    // In a full implementation, you'd add a heart burst animation here
   };
 
   const formattedDate = post.createdAt 
@@ -79,7 +79,7 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
     : post.description;
 
   return (
-    <Dialog>
+    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
       <Card className="w-full max-w-[470px] md:max-w-[540px] mx-auto mb-8 border-none shadow-none bg-transparent">
         
         {/* POST HEADER */}
@@ -106,23 +106,23 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
 
         {/* POST MEDIA */}
         <CardContent className="p-0">
-          <div 
-            className="w-full relative rounded-sm md:rounded-[10px] overflow-hidden bg-muted border border-border"
-          >
-            {hasAttachments ? (
-              <MediaRenderer 
-                attachmentUrl={post.attachments[0].attachmentUrl} 
-                attachmentType={post.attachments[0].attachmentType}
-                className="w-full h-auto max-h-[650px] object-cover"
-                onDoubleClick={handleDoubleTap}
-              />
-            ) : (
-               <div className="w-full aspect-[4/5] flex items-center justify-center p-8 text-center bg-muted" onDoubleClick={handleDoubleTap}>
-                 <p className="text-xl md:text-2xl font-medium break-words">
-                    {post.description}
-                 </p>
-               </div>
-            )}
+          <div className="w-full relative rounded-sm md:rounded-[10px] overflow-hidden bg-muted border border-border">
+            <DoubleTapToLike onDoubleTap={handleDoubleTap} className="w-full h-full">
+              {hasAttachments ? (
+                <MediaRenderer 
+                  attachmentUrl={post.attachments[0].attachmentUrl} 
+                  attachmentType={post.attachments[0].attachmentType}
+                  className="w-full h-auto max-h-[650px] object-cover"
+                  isModalOpen={isModalOpen}
+                />
+              ) : (
+                 <div className="w-full aspect-[4/5] flex items-center justify-center p-8 text-center bg-muted">
+                   <p className="text-xl md:text-2xl font-medium break-words">
+                      {post.description}
+                   </p>
+                 </div>
+              )}
+            </DoubleTapToLike>
           </div>
         </CardContent>
 
@@ -131,17 +131,29 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
           {/* ACTION BAR */}
           <div className="flex items-center justify-between w-full pb-2">
             <div className="flex items-center gap-4">
-              <button 
-                onClick={handleLike}
-                className="hover:opacity-60 transition-opacity"
-              >
-                <Heart size={26} className={liked ? "fill-pink-500 text-pink-500" : ""} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={handleLike}
+                  className="hover:opacity-60 transition-opacity"
+                >
+                  <Heart size={26} className={liked ? "fill-pink-500 text-pink-500" : ""} />
+                </button>
+                {likesCount > 0 && (
+                  <span className="font-semibold text-[14px]">
+                    {likesCount}
+                  </span>
+                )}
+              </div>
               
               <DialogTrigger asChild>
-                <button className="hover:opacity-60 transition-opacity">
+                <div className="flex items-center gap-2 cursor-pointer hover:opacity-60 transition-opacity">
                   <MessageCircle size={26} className="-scale-x-100" />
-                </button>
+                  {post.commentsCount > 0 && (
+                    <span className="font-semibold text-[14px]">
+                      {post.commentsCount}
+                    </span>
+                  )}
+                </div>
               </DialogTrigger>
               
               <button className="hover:opacity-60 transition-opacity">
@@ -155,11 +167,6 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
             >
               <Bookmark size={26} className={favorited ? "fill-current" : ""} />
             </button>
-          </div>
-
-          {/* LIKES COUNT */}
-          <div className="font-semibold text-[14px] mb-1">
-            {likesCount} likes
           </div>
 
           {/* CAPTION */}
@@ -181,13 +188,15 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
           )}
 
           {/* VIEW COMMENTS PREVIEW */}
-          <div className="mt-1 w-full">
-            <DialogTrigger asChild>
-              <button className="text-muted-foreground text-[14px] hover:opacity-70 text-left">
-                View all {post.commentsCount} comments
-              </button>
-            </DialogTrigger>
-          </div>
+          {post.commentsCount > 0 && (
+            <div className="mt-1 w-full">
+              <DialogTrigger asChild>
+                <button className="text-muted-foreground text-[14px] hover:opacity-70 text-left">
+                  View all {post.commentsCount} comments
+                </button>
+              </DialogTrigger>
+            </div>
+          )}
 
           {/* ADD COMMENT INPUT (Fake, triggers modal) */}
           <div className="mt-2 w-full">
