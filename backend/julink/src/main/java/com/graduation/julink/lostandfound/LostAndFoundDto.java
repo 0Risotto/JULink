@@ -20,6 +20,7 @@ public class LostAndFoundDto {
             UUID id,
             Long ownerId,
             String ownerUsername,
+            String ownerProfilePicture,
             String description,
             CollegeEnum college,
             String imageURL,

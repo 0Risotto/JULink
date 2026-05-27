@@ -58,7 +58,7 @@ class LostAndFoundControllerTest {
     void createLostAndFound_Success() {
         mockPrincipal();
         LostAndFoundDto.CreateLostAndFound req = new LostAndFoundDto.CreateLostAndFound("description", CollegeEnum.KING_ABDULLAH_II_IT, "url", "123", TypeEnum.LOST);
-        LostAndFoundDto.Response resp = new LostAndFoundDto.Response(UUID.randomUUID(), 101L, "testUser", "desc", CollegeEnum.KING_ABDULLAH_II_IT, "url", "123", TypeEnum.LOST, false, null);
+        LostAndFoundDto.Response resp = new LostAndFoundDto.Response(UUID.randomUUID(), 101L, "testUser", "profile.jpg", "desc", CollegeEnum.KING_ABDULLAH_II_IT, "url", "123", TypeEnum.LOST, false, null);
         
         when(lostAndFoundService.addLostAndFound(req, 101L)).thenReturn(resp);
 
@@ -72,7 +72,7 @@ class LostAndFoundControllerTest {
     void markLostAndFoundAsResolved_Success() {
         mockPrincipal();
         UUID lostAndFoundId = UUID.randomUUID();
-        LostAndFoundDto.Response resp = new LostAndFoundDto.Response(lostAndFoundId, 101L, "testUser", "desc", CollegeEnum.KING_ABDULLAH_II_IT, "url", "123", TypeEnum.LOST, true, null);
+        LostAndFoundDto.Response resp = new LostAndFoundDto.Response(lostAndFoundId, 101L, "testUser", "profile.jpg", "desc", CollegeEnum.KING_ABDULLAH_II_IT, "url", "123", TypeEnum.LOST, true, null);
         
         when(lostAndFoundService.markAsResolved(lostAndFoundId, 101L)).thenReturn(resp);
 

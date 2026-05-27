@@ -57,6 +57,7 @@ class LostAndFoundServiceTest {
 
         assertNotNull(response);
         assertEquals(lostAndFoundId, response.id());
+        assertNull(response.ownerProfilePicture());
         verify(lostAndFoundRepository, times(1)).save(any(LostAndFoundEntities.LostAndFound.class));
     }
 

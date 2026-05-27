@@ -30,14 +30,15 @@ public class LostAndFoundService {
         entity.setOwnerId(userId);
         LostAndFoundEntities.LostAndFound savedEntity = lostAndFoundRepository.save(entity);
 
-        String ownerUsername = authRepository.findById(savedEntity.getOwnerId())
-                .map(AuthEntities.User::getUsername)
-                .orElse("Unknown");
+        AuthEntities.User owner = authRepository.findById(savedEntity.getOwnerId()).orElse(null);
+        String ownerUsername = owner != null ? owner.getUsername() : "Unknown";
+        String ownerProfilePicture = owner != null ? owner.getProfilePictureUrl() : null;
 
         return new LostAndFoundDto.Response(
                 savedEntity.getId(),
                 savedEntity.getOwnerId(),
                 ownerUsername,
+                ownerProfilePicture,
                 savedEntity.getDescription(),
                 savedEntity.getCollege(),
                 savedEntity.getImageURL(),
@@ -60,14 +61,15 @@ public class LostAndFoundService {
         lostAndFound.setResolved(true);
         LostAndFoundEntities.LostAndFound updatedLostAndFound = lostAndFoundRepository.save(lostAndFound);
 
-        String ownerUsername = authRepository.findById(updatedLostAndFound.getOwnerId())
-                .map(AuthEntities.User::getUsername)
-                .orElse("Unknown");
+        AuthEntities.User owner = authRepository.findById(updatedLostAndFound.getOwnerId()).orElse(null);
+        String ownerUsername = owner != null ? owner.getUsername() : "Unknown";
+        String ownerProfilePicture = owner != null ? owner.getProfilePictureUrl() : null;
 
         return new LostAndFoundDto.Response(
                 updatedLostAndFound.getId(),
                 updatedLostAndFound.getOwnerId(),
                 ownerUsername,
+                ownerProfilePicture,
                 updatedLostAndFound.getDescription(),
                 updatedLostAndFound.getCollege(),
                 updatedLostAndFound.getImageURL(),
@@ -79,14 +81,15 @@ public class LostAndFoundService {
     }
 
     private LostAndFoundDto.Response mapToResponse(LostAndFoundEntities.LostAndFound entity) {
-        String ownerUsername = authRepository.findById(entity.getOwnerId())
-                .map(AuthEntities.User::getUsername)
-                .orElse("Unknown");
+        AuthEntities.User owner = authRepository.findById(entity.getOwnerId()).orElse(null);
+        String ownerUsername = owner != null ? owner.getUsername() : "Unknown";
+        String ownerProfilePicture = owner != null ? owner.getProfilePictureUrl() : null;
 
         return new LostAndFoundDto.Response(
                 entity.getId(),
                 entity.getOwnerId(),
                 ownerUsername,
+                ownerProfilePicture,
                 entity.getDescription(),
                 entity.getCollege(),
                 entity.getImageURL(),
