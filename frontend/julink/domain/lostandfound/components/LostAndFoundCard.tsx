@@ -5,12 +5,14 @@ import { useUser } from "@/domain/profile/hooks/useUser";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Phone, CheckCircle, Clock, MessageSquare } from "lucide-react";
+import { MapPin, Phone, CheckCircle, Clock, MessageSquare, UserCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { createDM } from "@/domain/chat/api/chatApi";
 import { useAppDispatch } from "@/store/hooks";
 import { setActiveConversation, fetchConversations } from "@/domain/chat/store/chatSlice";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Props {
   item: LostAndFoundResponse;
@@ -20,9 +22,6 @@ interface Props {
 const formatCollegeName = (college: CollegeEnum) => {
   return college.split("_").map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(" ");
 };
-
-import Link from "next/link";
-import { UserCircle } from "lucide-react";
 
 export default function LostAndFoundCard({ item, onUpdate }: Props) {
   const { myUsername } = useUser();
@@ -63,7 +62,27 @@ export default function LostAndFoundCard({ item, onUpdate }: Props) {
   return (
     <Card className="w-full mb-4 overflow-hidden">
       <CardHeader className="p-4 pb-2">
-        <div className="flex justify-between items-start">
+        <div className="flex items-center gap-3 mb-3 border-b pb-3">
+          <Link href={`/${item.ownerUsername}`}>
+            <Avatar className="w-10 h-10 border">
+              <AvatarImage src={item.ownerProfilePicture || undefined} />
+              <AvatarFallback>
+                {item.ownerUsername.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </Link>
+          <div className="flex flex-col">
+            <Link href={`/${item.ownerUsername}`} className="font-semibold text-sm hover:underline">
+              {item.ownerUsername}
+            </Link>
+            <div className="flex items-center text-xs text-muted-foreground gap-1">
+              <Clock className="w-3 h-3" />
+              <span>{formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-between items-start mt-2">
           <div className="flex flex-col gap-1">
             <div className="flex gap-2 mb-2">
               <Badge variant={item.type === "LOST" ? "destructive" : "default"} className="w-fit">
@@ -76,18 +95,8 @@ export default function LostAndFoundCard({ item, onUpdate }: Props) {
               )}
             </div>
             <div className="flex items-center text-sm text-muted-foreground gap-1">
-              <Clock className="w-4 h-4" />
-              <span>{formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}</span>
-            </div>
-            <div className="flex items-center text-sm text-muted-foreground gap-1">
               <MapPin className="w-4 h-4" />
               <span>{formatCollegeName(item.college)}</span>
-            </div>
-            <div className="flex items-center text-sm text-muted-foreground gap-1">
-              <UserCircle className="w-4 h-4" />
-              <Link href={`/${item.ownerUsername}`} className="hover:underline">
-                @{item.ownerUsername}
-              </Link>
             </div>
           </div>
           <div className="flex flex-col gap-2 items-end">

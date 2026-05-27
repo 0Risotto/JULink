@@ -25,6 +25,7 @@ export interface LostAndFoundResponse {
   id: string;
   ownerId: number;
   ownerUsername: string;
+  ownerProfilePicture: string | null;
   description: string;
   college: CollegeEnum;
   imageURL: string;
