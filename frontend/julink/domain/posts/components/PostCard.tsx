@@ -126,7 +126,7 @@ export default function PostCard({ post, onPostUpdated }: PostCardProps) {
 
       {showComments && (
         <div className="mt-4 pt-4 border-t border-gray-100 dark:border-zinc-800">
-          <CommentSection postId={post.postId} />
+          <CommentSection postId={post.postId} postOwnerUsername={post.ownerUsername} />
         </div>
       )}
     </div>

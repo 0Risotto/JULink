@@ -111,7 +111,7 @@ export default function PostDetailsModal({ post, onPostUpdated }: PostDetailsMod
           </div>
 
           {/* Comments List */}
-          <CommentList postId={post.postId} compact={true} refreshTrigger={refreshTrigger} />
+          <CommentList postId={post.postId} postOwnerUsername={post.ownerUsername} compact={true} refreshTrigger={refreshTrigger} />
         </div>
 
         {/* Interaction Bar & Metadata */}
