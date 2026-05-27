@@ -9,6 +9,8 @@ import { toggleLike, toggleFavorite } from "../services/postServices";
 import { formatDistanceToNow } from "date-fns";
 import CommentList from "./CommentList";
 import CommentInput from "./CommentInput";
+import Link from "next/link";
+import MediaRenderer from "./MediaRenderer";
 
 interface PostDetailsModalProps {
   post: PostResponseDTO;
@@ -61,9 +63,9 @@ export default function PostDetailsModal({ post, onPostUpdated }: PostDetailsMod
       {/* Left side: Media */}
       <div className={`w-full md:w-[60%] lg:w-[65%] bg-black flex items-center justify-center ${hasAttachments ? '' : 'bg-gray-100 dark:bg-zinc-900'}`}>
         {hasAttachments ? (
-          <img 
-            src={post.attachments[0].attachmentUrl} 
-            alt="Post attachment" 
+          <MediaRenderer 
+            attachmentUrl={post.attachments[0].attachmentUrl} 
+            attachmentType={post.attachments[0].attachmentType}
             className="max-w-full max-h-full object-contain"
           />
         ) : (
@@ -80,17 +82,17 @@ export default function PostDetailsModal({ post, onPostUpdated }: PostDetailsMod
         
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-zinc-800 shrink-0">
-          <div className="flex items-center gap-3">
-            <Avatar className="w-8 h-8 cursor-pointer">
+          <Link href={`/${post.ownerUsername}`} className="flex items-center gap-3 group">
+            <Avatar className="w-8 h-8 cursor-pointer group-hover:opacity-80 transition-opacity">
               <AvatarImage src={post.ownerProfilePictureUrl || undefined} />
               <AvatarFallback>{post.ownerFirstName?.[0]}{post.ownerLastName?.[0]}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col leading-tight">
-              <span className="font-semibold text-[14px] cursor-pointer hover:underline">
+              <span className="font-semibold text-[14px] cursor-pointer group-hover:underline">
                 {post.ownerUsername}
               </span>
             </div>
-          </div>
+          </Link>
           <Button variant="ghost" size="icon" className="h-8 w-8">
              <MoreHorizontal size={20} />
           </Button>
@@ -100,12 +102,16 @@ export default function PostDetailsModal({ post, onPostUpdated }: PostDetailsMod
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
           {/* Caption */}
           <div className="flex gap-3 mb-6">
-            <Avatar className="w-8 h-8 shrink-0 cursor-pointer">
-              <AvatarImage src={post.ownerProfilePictureUrl || undefined} />
-              <AvatarFallback>{post.ownerFirstName?.[0]}{post.ownerLastName?.[0]}</AvatarFallback>
-            </Avatar>
+            <Link href={`/${post.ownerUsername}`} className="shrink-0">
+              <Avatar className="w-8 h-8 cursor-pointer hover:opacity-80 transition-opacity">
+                <AvatarImage src={post.ownerProfilePictureUrl || undefined} />
+                <AvatarFallback>{post.ownerFirstName?.[0]}{post.ownerLastName?.[0]}</AvatarFallback>
+              </Avatar>
+            </Link>
             <div className="text-[14px] leading-relaxed break-words pt-1">
-               <span className="font-semibold mr-2 cursor-pointer hover:underline">{post.ownerUsername}</span>
+               <Link href={`/${post.ownerUsername}`}>
+                 <span className="font-semibold mr-2 cursor-pointer hover:underline">{post.ownerUsername}</span>
+               </Link>
                <span className="whitespace-pre-wrap">{post.description}</span>
             </div>
           </div>

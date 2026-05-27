@@ -4,7 +4,8 @@ import React from "react";
 import { PostResponseDTO } from "../types";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import PostDetailsModal from "./PostDetailsModal";
-import { FileText, Image as ImageIcon } from "lucide-react";
+import { FileText, Image as ImageIcon, Video } from "lucide-react";
+import MediaRenderer from "./MediaRenderer";
 
 interface GridPostCardProps {
   post: PostResponseDTO;
@@ -22,11 +23,22 @@ export default function GridPostCard({ post, onPostUpdated }: GridPostCardProps)
         <div className="aspect-square relative group cursor-pointer overflow-hidden rounded-md bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800">
           {/* Thumbnail Content */}
           {hasAttachments && firstAttachment ? (
-            <img 
-              src={firstAttachment.attachmentUrl} 
-              alt="Post thumbnail" 
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
+            firstAttachment.attachmentType === "VIDEO" || firstAttachment.attachmentUrl.match(/\.(mp4|webm|ogg)$/i) ? (
+              <video 
+                src={firstAttachment.attachmentUrl} 
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                muted
+                playsInline
+                loop
+                autoPlay
+              />
+            ) : (
+              <img 
+                src={firstAttachment.attachmentUrl} 
+                alt="Post thumbnail" 
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            )
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
               <p className="text-sm font-medium line-clamp-4 overflow-hidden break-words w-full px-2">
@@ -50,7 +62,9 @@ export default function GridPostCard({ post, onPostUpdated }: GridPostCardProps)
           {/* Top right indicator for type of post */}
           <div className="absolute top-2 right-2 drop-shadow-md">
              {hasAttachments ? (
-                post.attachments.length > 1 ? (
+                firstAttachment?.attachmentType === "VIDEO" || firstAttachment?.attachmentUrl.match(/\.(mp4|webm|ogg)$/i) ? (
+                  <Video size={18} className="text-white fill-current opacity-80" />
+                ) : post.attachments.length > 1 ? (
                   <ImageIcon size={18} className="text-white fill-current opacity-80" />
                 ) : null
              ) : (

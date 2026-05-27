@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useUser } from "@/domain/profile/hooks/useUser";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface CommentListProps {
   postId: string;
@@ -114,16 +115,22 @@ export default function CommentList({ postId, postOwnerUsername, compact, refres
         comments.map((comment) => (
           <div key={comment.commentId} className="flex group relative w-full pt-1">
             {/* Avatar */}
-            <Avatar className="w-8 h-8 shrink-0 mr-3">
-              <AvatarImage src={comment.profilePictureUrl || undefined} className="object-cover" />
-              <AvatarFallback>{comment.firstName?.[0]}{comment.lastName?.[0]}</AvatarFallback>
-            </Avatar>
+            <Link href={`/${comment.username}`} className="shrink-0 mr-3 mt-1">
+              <Avatar className="w-8 h-8 cursor-pointer hover:opacity-80 transition-opacity">
+                <AvatarImage src={comment.profilePictureUrl || undefined} className="object-cover" />
+                <AvatarFallback>{comment.firstName?.[0]}{comment.lastName?.[0]}</AvatarFallback>
+              </Avatar>
+            </Link>
             
             {/* Content Container */}
             <div className="flex flex-col flex-1 min-w-0 pr-8">
               {/* Username + Text Inline */}
               <div className="text-[14px] leading-[1.4] break-words">
-                <span className="font-semibold mr-2">{comment.username}</span>
+                <Link href={`/${comment.username}`}>
+                  <span className="font-semibold mr-2 cursor-pointer hover:underline text-foreground">
+                    {comment.username}
+                  </span>
+                </Link>
                 {editingCommentId === comment.commentId ? (
                   <div className="flex flex-col gap-2 mt-1">
                     <Input 
