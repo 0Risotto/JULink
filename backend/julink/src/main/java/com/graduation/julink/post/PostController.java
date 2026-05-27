@@ -57,13 +57,13 @@ public class PostController {
         postService.deletePost(currentUser(principal).getId(), postId);
     }
 
-    @GetMapping("/user/{ownerId}")
+    @GetMapping("/user/{username}")
     public Page<PostResponseDTO> getUserPosts(
             Principal principal,
-            @PathVariable Long ownerId,
+            @PathVariable String username,
             Pageable pageable
     ) {
-        return postService.getUserPosts(currentUser(principal).getId(), ownerId, pageable);
+        return postService.getUserPosts(currentUser(principal).getId(), username, pageable);
     }
 
     @GetMapping("/feed")

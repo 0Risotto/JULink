@@ -95,9 +95,9 @@ class PostControllerTest {
     void getUserPosts_Success() {
         mockPrincipal();
         Page<PostResponseDTO> page = new PageImpl<>(Collections.emptyList());
-        when(postService.getUserPosts(eq(101L), eq(202L), any(Pageable.class))).thenReturn(page);
+        when(postService.getUserPosts(eq(101L), eq("targetuser"), any(Pageable.class))).thenReturn(page);
 
-        Page<PostResponseDTO> response = postController.getUserPosts(principal, 202L, Pageable.unpaged());
+        Page<PostResponseDTO> response = postController.getUserPosts(principal, "targetuser", Pageable.unpaged());
 
         assertEquals(page, response);
     }

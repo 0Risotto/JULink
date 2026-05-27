@@ -30,7 +30,7 @@ export default function OwnUserCard({ user }: OwnUserCardProps) {
   }, [fetchFollowData]);
 
   return (
-    <div className="w-full flex flex-col border-b">
+    <div className="w-full flex flex-col border-b rounded-t-3xl overflow-hidden bg-background">
       {/* Banner */}
       <div
         className="w-full h-40 bg-cover bg-center relative"

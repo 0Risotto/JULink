@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import ViewedUserCard from "./ViewedUserCard"; 
 import { useUser } from "../hooks/useUser";
 import { Spinner } from "@/components/ui/spinner";
+import UserPosts from "@/domain/posts/components/UserPosts";
 
 interface ViewedProfilePageProps {
   username: string;
@@ -45,9 +46,14 @@ export default function ViewedProfilePage({ username }: ViewedProfilePageProps) 
   }
 
   if (viewedUser) {
-    return (
-      <div className="container mx-auto py-8">
-        <ViewedUserCard user={viewedUser} />
+  return (
+    <div className="w-full">
+      <ViewedUserCard user={viewedUser} />
+        
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">Posts</h2>
+          <UserPosts username={viewedUser.username} />
+        </div>
       </div>
     );
   }

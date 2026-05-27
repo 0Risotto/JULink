@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import OwnUserCard from "./OwnUserCard";
 import { useUser } from "../hooks/useUser";
 import { Spinner } from "@/components/ui/spinner";
+import UserPosts from "@/domain/posts/components/UserPosts";
 
 import { useState } from "react";
 
@@ -39,8 +40,12 @@ export default function OwnProfilePage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="w-full ">
       <OwnUserCard user={currentUser} />
+      
+      <div className="mt-8">
+        <UserPosts username={currentUser.username} isOwnProfile={true} currentUser={currentUser} />
+      </div>
     </div>
   );
 }

@@ -105,12 +105,11 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PostResponseDTO> getUserPosts(Long currentUserId, Long ownerId, Pageable pageable) {
+    public Page<PostResponseDTO> getUserPosts(Long currentUserId, String ownerUsername, Pageable pageable) {
         getUserOrThrow(currentUserId);
-        getUserOrThrow(ownerId);
 
         return buildPostResponsePage(
-                postRepository.findByOwner_IdOrderByCreatedAtDesc(ownerId, pageable),
+                postRepository.findByOwner_UsernameOrderByCreatedAtDesc(ownerUsername, pageable),
                 currentUserId
         );
     }
@@ -597,42 +596,10 @@ public class PostService {
         }
 
         List<PostAttachment> attachmentEntities = attachments.stream()
-                .map(dto -> PostMapper.toPostAttachmentEntity(post, normalizeAttachment(dto)))
+                .map(dto -> PostMapper.toPostAttachmentEntity(post, dto))
                 .toList();
 
         postAttachmentRepository.saveAll(attachmentEntities);
-    }
-
-    private AttachmentDTO normalizeAttachment(AttachmentDTO dto) {
-        if (dto.attachmentUrl() != null && !dto.attachmentUrl().isBlank()) {
-            return dto;
-        }
-
-        if (dto.fileBytes() == null || dto.fileBytes().length == 0) {
-            throw new IllegalArgumentException("Attachment must include either attachmentUrl or fileBytes");
-        }
-
-        try {
-            MediaUploadResult upload = mediaUploadService.upload(new MediaUploadRequest(
-                    dto.fileBytes(),
-                    dto.filename(),
-                    dto.contentType(),
-                    ImageVariant.POST
-            ));
-
-            return new AttachmentDTO(
-                    dto.attachmentType(),
-                    upload.url(),
-                    null,
-                    upload.filename(),
-                    upload.contentType()
-            );
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Attachment upload was interrupted", e);
-        } catch (IOException e) {
-            throw new RuntimeException("Attachment upload failed", e);
-        }
     }
 
     private void saveHashtags(Post post, Set<String> hashtagNames) {
