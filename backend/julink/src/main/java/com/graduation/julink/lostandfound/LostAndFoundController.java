@@ -31,24 +31,25 @@ public class LostAndFoundController {
         AuthEntities.User user = authRepository.findByEmail(principal.getName()).orElseThrow();
         return ResponseEntity.ok(lostAndFoundService.addLostAndFound(dto, user.getId()));
     }
-    @PatchMapping("/{lostAndFoundId}/found")
-    public ResponseEntity<LostAndFoundDto.Response> markLostAndFoundAsFound(
+    @PatchMapping("/{lostAndFoundId}/resolve")
+    public ResponseEntity<LostAndFoundDto.Response> markLostAndFoundAsResolved(
             @PathVariable UUID lostAndFoundId,
             Principal principal
     ) {
         AuthEntities.User user = authRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return ResponseEntity.ok(lostAndFoundService.markAsFound(lostAndFoundId, user.getId()));
+        return ResponseEntity.ok(lostAndFoundService.markAsResolved(lostAndFoundId, user.getId()));
     }
 
     @GetMapping
     public ResponseEntity<Page<LostAndFoundDto.Response>> getAllLostAndFounds(
             @RequestParam(required = false) CollegeEnum college,
+            @RequestParam(required = false) TypeEnum type,
             @RequestParam(required = false) Boolean isResolved,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
 
-        return ResponseEntity.ok(lostAndFoundService.getLostAndFounds(college, isResolved, pageable));
+        return ResponseEntity.ok(lostAndFoundService.getLostAndFounds(college, type, isResolved, pageable));
     }
 }

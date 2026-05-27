@@ -37,8 +37,12 @@ public final class LostAndFoundEntities {
         @Column(name = "phone_number", length = 20)
         private String phoneNumber;
 
+        @Enumerated(EnumType.STRING)
         @Column(nullable = false)
-        private boolean found;
+        private TypeEnum type;
+
+        @Column(nullable = false)
+        private boolean isResolved = false;
 
         @Column(name = "created_at", nullable = false, updatable = false)
         private java.time.LocalDateTime createdAt = java.time.LocalDateTime.now();

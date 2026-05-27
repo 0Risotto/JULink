@@ -30,7 +30,7 @@ export default function CreateLostAndFoundModal({ open, onOpenChange, onSuccess 
   const [description, setDescription] = useState("");
   const [college, setCollege] = useState<CollegeEnum | "">("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [isFound, setIsFound] = useState<"true" | "false">("false");
+  const [type, setType] = useState<"LOST" | "FOUND">("LOST");
   const [loading, setLoading] = useState(false);
 
   const { uploadImage, isUploading, uploadError } = useImageUpload();
@@ -66,7 +66,7 @@ export default function CreateLostAndFoundModal({ open, onOpenChange, onSuccess 
         college: college as CollegeEnum,
         imageURL: imageUrl,
         phoneNumber: phoneNumber || undefined,
-        isFound: isFound === "true",
+        type: type,
       };
 
       const res = await createLostAndFound(data);
@@ -83,7 +83,7 @@ export default function CreateLostAndFoundModal({ open, onOpenChange, onSuccess 
     setDescription("");
     setCollege("");
     setPhoneNumber("");
-    setIsFound("false");
+    setType("LOST");
     handleRemoveImage();
     onOpenChange(false);
   };
@@ -105,24 +105,24 @@ export default function CreateLostAndFoundModal({ open, onOpenChange, onSuccess 
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
                   type="radio" 
-                  name="isFound" 
-                  value="false" 
-                  checked={isFound === "false"}
-                  onChange={(e) => setIsFound(e.target.value as "false")}
+                  name="type" 
+                  value="LOST" 
+                  checked={type === "LOST"}
+                  onChange={(e) => setType(e.target.value as "LOST")}
                   className="w-4 h-4 text-primary"
                 />
-                I lost something
+                I am missing something
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
                   type="radio" 
-                  name="isFound" 
-                  value="true" 
-                  checked={isFound === "true"}
-                  onChange={(e) => setIsFound(e.target.value as "true")}
+                  name="type" 
+                  value="FOUND" 
+                  checked={type === "FOUND"}
+                  onChange={(e) => setType(e.target.value as "FOUND")}
                   className="w-4 h-4 text-primary"
                 />
-                I found something
+                I have found something
               </label>
             </div>
           </div>

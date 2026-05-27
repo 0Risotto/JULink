@@ -13,7 +13,7 @@ public class LostAndFoundDto {
             @NotNull CollegeEnum college,
             @NotBlank String imageURL,
             String phoneNumber,
-            boolean isFound
+            @NotNull TypeEnum type
     ) {}
 
     public record Response(
@@ -24,7 +24,8 @@ public class LostAndFoundDto {
             CollegeEnum college,
             String imageURL,
             String phoneNumber,
-            boolean isFound,
+            TypeEnum type,
+            boolean isResolved,
             LocalDateTime createdAt
     ) {}
 

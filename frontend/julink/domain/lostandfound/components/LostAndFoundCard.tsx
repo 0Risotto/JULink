@@ -1,12 +1,16 @@
 import React, { useState } from "react";
 import { LostAndFoundResponse, CollegeEnum } from "../types";
-import { markAsFound } from "../service/lostAndFoundService";
+import { markAsResolved } from "../service/lostAndFoundService";
 import { useUser } from "@/domain/profile/hooks/useUser";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Phone, CheckCircle, Clock } from "lucide-react";
+import { MapPin, Phone, CheckCircle, Clock, MessageSquare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { createDM } from "@/domain/chat/api/chatApi";
+import { useAppDispatch } from "@/store/hooks";
+import { setActiveConversation, fetchConversations } from "@/domain/chat/store/chatSlice";
+import { useRouter } from "next/navigation";
 
 interface Props {
   item: LostAndFoundResponse;
@@ -22,19 +26,37 @@ import { UserCircle } from "lucide-react";
 
 export default function LostAndFoundCard({ item, onUpdate }: Props) {
   const { myUsername } = useUser();
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  
   const [loading, setLoading] = useState(false);
+  const [messaging, setMessaging] = useState(false);
 
   const isOwner = myUsername === item.ownerUsername;
 
-  const handleMarkAsFound = async () => {
+  const handleMarkAsResolved = async () => {
     try {
       setLoading(true);
-      const res = await markAsFound(item.id);
+      const res = await markAsResolved(item.id);
       onUpdate(res);
     } catch (error) {
-      console.error("Failed to mark as found:", error);
+      console.error("Failed to mark as resolved:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMessageUser = async () => {
+    try {
+      setMessaging(true);
+      const conversation = await createDM(item.ownerUsername);
+      await dispatch(fetchConversations());
+      dispatch(setActiveConversation(conversation.id));
+      router.push("/chat");
+    } catch (error) {
+      console.error("Failed to create DM:", error);
+    } finally {
+      setMessaging(false);
     }
   };
 
@@ -43,9 +65,16 @@ export default function LostAndFoundCard({ item, onUpdate }: Props) {
       <CardHeader className="p-4 pb-2">
         <div className="flex justify-between items-start">
           <div className="flex flex-col gap-1">
-            <Badge variant={item.isFound ? "default" : "destructive"} className="w-fit mb-2">
-              {item.isFound ? "Resolved (Found)" : "Not Resolved (Lost)"}
-            </Badge>
+            <div className="flex gap-2 mb-2">
+              <Badge variant={item.type === "LOST" ? "destructive" : "default"} className="w-fit">
+                {item.type === "LOST" ? "Lost Item" : "Found Item"}
+              </Badge>
+              {item.isResolved && (
+                <Badge variant="outline" className="w-fit text-muted-foreground bg-muted">
+                  Resolved
+                </Badge>
+              )}
+            </div>
             <div className="flex items-center text-sm text-muted-foreground gap-1">
               <Clock className="w-4 h-4" />
               <span>{formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}</span>
@@ -61,18 +90,32 @@ export default function LostAndFoundCard({ item, onUpdate }: Props) {
               </Link>
             </div>
           </div>
-          {isOwner && !item.isFound && (
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={handleMarkAsFound} 
-              disabled={loading}
-              className="text-green-600 hover:text-green-700 hover:bg-green-50"
-            >
-              <CheckCircle className="w-4 h-4 mr-2" />
-              {loading ? "Updating..." : "Mark as Found"}
-            </Button>
-          )}
+          <div className="flex flex-col gap-2 items-end">
+            {isOwner && !item.isResolved && (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={handleMarkAsResolved} 
+                disabled={loading}
+                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                {loading ? "Updating..." : "Mark as Resolved"}
+              </Button>
+            )}
+            
+            {!isOwner && (
+              <Button 
+                size="sm" 
+                variant="secondary" 
+                onClick={handleMessageUser} 
+                disabled={messaging}
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                {messaging ? "Wait..." : "Message"}
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       

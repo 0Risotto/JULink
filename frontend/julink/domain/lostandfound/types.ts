@@ -19,6 +19,8 @@ export enum CollegeEnum {
   TOURISM_AND_HOSPITALITY = "TOURISM_AND_HOSPITALITY",
 }
 
+export type TypeEnum = "LOST" | "FOUND";
+
 export interface LostAndFoundResponse {
   id: string;
   ownerId: number;
@@ -27,7 +29,8 @@ export interface LostAndFoundResponse {
   college: CollegeEnum;
   imageURL: string;
   phoneNumber?: string;
-  isFound: boolean;
+  type: TypeEnum;
+  isResolved: boolean;
   createdAt: string;
 }
 
@@ -36,5 +39,5 @@ export interface CreateLostAndFoundRequest {
   college: CollegeEnum;
   imageURL: string;
   phoneNumber?: string;
-  isFound: boolean;
+  type: TypeEnum;
 }

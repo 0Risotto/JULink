@@ -57,8 +57,8 @@ class LostAndFoundControllerTest {
     @Test
     void createLostAndFound_Success() {
         mockPrincipal();
-        LostAndFoundDto.CreateLostAndFound req = new LostAndFoundDto.CreateLostAndFound("description", CollegeEnum.KING_ABDULLAH_II_IT, "url", "123", false);
-        LostAndFoundDto.Response resp = new LostAndFoundDto.Response(UUID.randomUUID(), 101L, "testUser", "desc", CollegeEnum.KING_ABDULLAH_II_IT, "url", "123", false, null);
+        LostAndFoundDto.CreateLostAndFound req = new LostAndFoundDto.CreateLostAndFound("description", CollegeEnum.KING_ABDULLAH_II_IT, "url", "123", TypeEnum.LOST);
+        LostAndFoundDto.Response resp = new LostAndFoundDto.Response(UUID.randomUUID(), 101L, "testUser", "desc", CollegeEnum.KING_ABDULLAH_II_IT, "url", "123", TypeEnum.LOST, false, null);
         
         when(lostAndFoundService.addLostAndFound(req, 101L)).thenReturn(resp);
 
@@ -69,14 +69,14 @@ class LostAndFoundControllerTest {
     }
 
     @Test
-    void markLostAndFoundAsFound_Success() {
+    void markLostAndFoundAsResolved_Success() {
         mockPrincipal();
         UUID lostAndFoundId = UUID.randomUUID();
-        LostAndFoundDto.Response resp = new LostAndFoundDto.Response(lostAndFoundId, 101L, "testUser", "desc", CollegeEnum.KING_ABDULLAH_II_IT, "url", "123", true, null);
+        LostAndFoundDto.Response resp = new LostAndFoundDto.Response(lostAndFoundId, 101L, "testUser", "desc", CollegeEnum.KING_ABDULLAH_II_IT, "url", "123", TypeEnum.LOST, true, null);
         
-        when(lostAndFoundService.markAsFound(lostAndFoundId, 101L)).thenReturn(resp);
+        when(lostAndFoundService.markAsResolved(lostAndFoundId, 101L)).thenReturn(resp);
 
-        ResponseEntity<LostAndFoundDto.Response> response = lostAndFoundController.markLostAndFoundAsFound(lostAndFoundId, principal);
+        ResponseEntity<LostAndFoundDto.Response> response = lostAndFoundController.markLostAndFoundAsResolved(lostAndFoundId, principal);
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(resp, response.getBody());
@@ -85,9 +85,9 @@ class LostAndFoundControllerTest {
     @Test
     void getAllLostAndFounds_Success() {
         Page<LostAndFoundDto.Response> page = new PageImpl<>(Collections.emptyList());
-        when(lostAndFoundService.getLostAndFounds(eq(CollegeEnum.KING_ABDULLAH_II_IT), eq(false), any(Pageable.class))).thenReturn(page);
+        when(lostAndFoundService.getLostAndFounds(eq(CollegeEnum.KING_ABDULLAH_II_IT), eq(TypeEnum.LOST), eq(false), any(Pageable.class))).thenReturn(page);
 
-        ResponseEntity<Page<LostAndFoundDto.Response>> response = lostAndFoundController.getAllLostAndFounds(CollegeEnum.KING_ABDULLAH_II_IT, false, Pageable.unpaged());
+        ResponseEntity<Page<LostAndFoundDto.Response>> response = lostAndFoundController.getAllLostAndFounds(CollegeEnum.KING_ABDULLAH_II_IT, TypeEnum.LOST, false, Pageable.unpaged());
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(page, response.getBody());

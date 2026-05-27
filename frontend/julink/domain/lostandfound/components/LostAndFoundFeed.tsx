@@ -16,24 +16,31 @@ export default function LostAndFoundFeed() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
-  const [activeTab, setActiveTab] = useState<"ALL" | "RESOLVED" | "NOT_RESOLVED">("ALL");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "PENDING" | "RESOLVED">("PENDING");
+  const [typeFilter, setTypeFilter] = useState<"ALL" | "LOST" | "FOUND">("ALL");
   const [collegeFilter, setCollegeFilter] = useState<string>("ALL");
   
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchItems(0, true);
-  }, [activeTab, collegeFilter]);
+  }, [statusFilter, typeFilter, collegeFilter]);
 
   const fetchItems = async (pageNum: number, reset: boolean = false) => {
     try {
       if (pageNum === 0) setLoading(true);
       
       let isResolvedParam: boolean | undefined = undefined;
-      if (activeTab === "RESOLVED") isResolvedParam = true;
-      if (activeTab === "NOT_RESOLVED") isResolvedParam = false;
+      if (statusFilter === "RESOLVED") isResolvedParam = true;
+      if (statusFilter === "PENDING") isResolvedParam = false;
 
-      const res = await getLostAndFounds(collegeFilter, isResolvedParam, pageNum, 10);
+      const res = await getLostAndFounds(
+        collegeFilter, 
+        typeFilter, 
+        isResolvedParam, 
+        pageNum, 
+        10
+      );
       
       if (reset) {
         setItems(res.content);
@@ -62,13 +69,15 @@ export default function LostAndFoundFeed() {
 
   const handleItemCreated = (newItem: LostAndFoundResponse) => {
     // If the new item matches current filters, add it to the top
-    const matchesTab = activeTab === "ALL" || 
-      (activeTab === "RESOLVED" && newItem.isFound) || 
-      (activeTab === "NOT_RESOLVED" && !newItem.isFound);
+    const matchesStatus = statusFilter === "ALL" || 
+      (statusFilter === "RESOLVED" && newItem.isResolved) || 
+      (statusFilter === "PENDING" && !newItem.isResolved);
+      
+    const matchesType = typeFilter === "ALL" || typeFilter === newItem.type;
     
     const matchesCollege = collegeFilter === "ALL" || collegeFilter === newItem.college;
 
-    if (matchesTab && matchesCollege) {
+    if (matchesStatus && matchesType && matchesCollege) {
       setItems(prev => [newItem, ...prev]);
     }
   };
@@ -83,31 +92,52 @@ export default function LostAndFoundFeed() {
         </Button>
       </div>
 
-      <div className="w-full max-w-[600px] flex flex-col sm:flex-row gap-4 mb-6 items-center justify-between">
-        {/* Tabs */}
-        <div className="flex bg-muted p-1 rounded-lg w-full sm:w-auto">
-          <button 
-            className={`flex-1 sm:px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${activeTab === "ALL" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            onClick={() => setActiveTab("ALL")}
-          >
-            All
-          </button>
-          <button 
-            className={`flex-1 sm:px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${activeTab === "NOT_RESOLVED" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            onClick={() => setActiveTab("NOT_RESOLVED")}
-          >
-            Lost
-          </button>
-          <button 
-            className={`flex-1 sm:px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${activeTab === "RESOLVED" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            onClick={() => setActiveTab("RESOLVED")}
-          >
-            Found
-          </button>
+      <div className="w-full max-w-[600px] flex flex-col gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4 justify-between">
+          <div className="flex bg-muted p-1 rounded-lg w-full sm:w-1/2">
+            <button 
+              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${statusFilter === "ALL" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              onClick={() => setStatusFilter("ALL")}
+            >
+              All Status
+            </button>
+            <button 
+              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${statusFilter === "PENDING" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              onClick={() => setStatusFilter("PENDING")}
+            >
+              Pending
+            </button>
+            <button 
+              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${statusFilter === "RESOLVED" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              onClick={() => setStatusFilter("RESOLVED")}
+            >
+              Resolved
+            </button>
+          </div>
+
+          <div className="flex bg-muted p-1 rounded-lg w-full sm:w-1/2">
+            <button 
+              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${typeFilter === "ALL" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              onClick={() => setTypeFilter("ALL")}
+            >
+              All Types
+            </button>
+            <button 
+              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${typeFilter === "LOST" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              onClick={() => setTypeFilter("LOST")}
+            >
+              Lost
+            </button>
+            <button 
+              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${typeFilter === "FOUND" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              onClick={() => setTypeFilter("FOUND")}
+            >
+              Found
+            </button>
+          </div>
         </div>
 
-        {/* Filter */}
-        <div className="w-full sm:w-[200px]">
+        <div className="w-full">
           <Select value={collegeFilter} onValueChange={setCollegeFilter}>
             <SelectTrigger>
               <SelectValue placeholder="Filter by College" />

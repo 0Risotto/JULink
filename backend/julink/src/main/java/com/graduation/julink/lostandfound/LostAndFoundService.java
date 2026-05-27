@@ -25,7 +25,8 @@ public class LostAndFoundService {
         entity.setCollege(dto.college());
         entity.setImageURL(dto.imageURL());
         entity.setPhoneNumber(dto.phoneNumber());
-        entity.setFound(dto.isFound());
+        entity.setType(dto.type());
+        entity.setResolved(false);
         entity.setOwnerId(userId);
         LostAndFoundEntities.LostAndFound savedEntity = lostAndFoundRepository.save(entity);
 
@@ -41,13 +42,14 @@ public class LostAndFoundService {
                 savedEntity.getCollege(),
                 savedEntity.getImageURL(),
                 savedEntity.getPhoneNumber(),
-                savedEntity.isFound(),
+                savedEntity.getType(),
+                savedEntity.isResolved(),
                 savedEntity.getCreatedAt()
         );
     }
 
     @Transactional
-    public LostAndFoundDto.Response markAsFound(UUID lostAndFoundId, Long userId) {
+    public LostAndFoundDto.Response markAsResolved(UUID lostAndFoundId, Long userId) {
         LostAndFoundEntities.LostAndFound lostAndFound = lostAndFoundRepository.findById(lostAndFoundId)
                 .orElseThrow(() -> new RuntimeException("Lost and found post not found"));
 
@@ -55,7 +57,7 @@ public class LostAndFoundService {
             throw new RuntimeException("Unauthorized: You don't own this post.");
         }
 
-        lostAndFound.setFound(true);
+        lostAndFound.setResolved(true);
         LostAndFoundEntities.LostAndFound updatedLostAndFound = lostAndFoundRepository.save(lostAndFound);
 
         String ownerUsername = authRepository.findById(updatedLostAndFound.getOwnerId())
@@ -70,10 +72,12 @@ public class LostAndFoundService {
                 updatedLostAndFound.getCollege(),
                 updatedLostAndFound.getImageURL(),
                 updatedLostAndFound.getPhoneNumber(),
-                updatedLostAndFound.isFound(),
+                updatedLostAndFound.getType(),
+                updatedLostAndFound.isResolved(),
                 updatedLostAndFound.getCreatedAt()
         );
     }
+
     private LostAndFoundDto.Response mapToResponse(LostAndFoundEntities.LostAndFound entity) {
         String ownerUsername = authRepository.findById(entity.getOwnerId())
                 .map(AuthEntities.User::getUsername)
@@ -87,19 +91,29 @@ public class LostAndFoundService {
                 entity.getCollege(),
                 entity.getImageURL(),
                 entity.getPhoneNumber(),
-                entity.isFound(),
+                entity.getType(),
+                entity.isResolved(),
                 entity.getCreatedAt()
         );
     }
-    public Page<LostAndFoundDto.Response> getLostAndFounds(CollegeEnum college, Boolean isResolved, Pageable pageable) {
+
+    public Page<LostAndFoundDto.Response> getLostAndFounds(CollegeEnum college, TypeEnum type, Boolean isResolved, Pageable pageable) {
         Page<LostAndFoundEntities.LostAndFound> entities;
 
-        if (college != null && isResolved != null) {
-            entities = lostAndFoundRepository.findByCollegeAndFound(college, isResolved, pageable);
+        if (college != null && type != null && isResolved != null) {
+            entities = lostAndFoundRepository.findByCollegeAndTypeAndIsResolved(college, type, isResolved, pageable);
+        } else if (college != null && type != null) {
+            entities = lostAndFoundRepository.findByCollegeAndType(college, type, pageable);
+        } else if (college != null && isResolved != null) {
+            entities = lostAndFoundRepository.findByCollegeAndIsResolved(college, isResolved, pageable);
+        } else if (type != null && isResolved != null) {
+            entities = lostAndFoundRepository.findByTypeAndIsResolved(type, isResolved, pageable);
         } else if (college != null) {
             entities = lostAndFoundRepository.findByCollege(college, pageable);
+        } else if (type != null) {
+            entities = lostAndFoundRepository.findByType(type, pageable);
         } else if (isResolved != null) {
-            entities = lostAndFoundRepository.findByFound(isResolved, pageable);
+            entities = lostAndFoundRepository.findByIsResolved(isResolved, pageable);
         } else {
             entities = lostAndFoundRepository.findAll(pageable);
         }
