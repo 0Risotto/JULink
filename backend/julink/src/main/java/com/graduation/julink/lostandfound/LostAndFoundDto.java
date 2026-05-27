@@ -19,6 +19,7 @@ public class LostAndFoundDto {
     public record Response(
             UUID id,
             Long ownerId,
+            String ownerUsername,
             String description,
             CollegeEnum college,
             String imageURL,

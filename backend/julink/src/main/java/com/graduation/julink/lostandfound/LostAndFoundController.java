@@ -45,7 +45,7 @@ public class LostAndFoundController {
     @GetMapping
     public ResponseEntity<Page<LostAndFoundDto.Response>> getAllLostAndFounds(
             @RequestParam(required = false) CollegeEnum college,
-            @RequestParam(defaultValue = "false") boolean isResolved,
+            @RequestParam(required = false) Boolean isResolved,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
 

@@ -17,5 +17,7 @@ public interface LostAndFoundRepository extends JpaRepository<LostAndFoundEntiti
     List<LostAndFoundEntities.LostAndFound> findByOwnerId(Long ownerId);
     Page<LostAndFoundEntities.LostAndFound> findByCollegeAndFound(CollegeEnum college, boolean found, Pageable pageable);
 
+    Page<LostAndFoundEntities.LostAndFound> findByCollege(CollegeEnum college, Pageable pageable);
+
     Page<LostAndFoundEntities.LostAndFound> findByFound(boolean found, Pageable pageable);
 }

@@ -9,11 +9,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+import com.graduation.julink.auth.Repository.AuthRepository;
+import com.graduation.julink.auth.AuthEntities;
+
 @Service
 @RequiredArgsConstructor
 public class LostAndFoundService {
 
     private final LostAndFoundRepository lostAndFoundRepository;
+    private final AuthRepository authRepository;
 
     public LostAndFoundDto.Response addLostAndFound(LostAndFoundDto.CreateLostAndFound dto, Long userId) {
         LostAndFoundEntities.LostAndFound entity = new LostAndFoundEntities.LostAndFound();
@@ -25,9 +29,14 @@ public class LostAndFoundService {
         entity.setOwnerId(userId);
         LostAndFoundEntities.LostAndFound savedEntity = lostAndFoundRepository.save(entity);
 
+        String ownerUsername = authRepository.findById(savedEntity.getOwnerId())
+                .map(AuthEntities.User::getUsername)
+                .orElse("Unknown");
+
         return new LostAndFoundDto.Response(
                 savedEntity.getId(),
                 savedEntity.getOwnerId(),
+                ownerUsername,
                 savedEntity.getDescription(),
                 savedEntity.getCollege(),
                 savedEntity.getImageURL(),
@@ -49,9 +58,14 @@ public class LostAndFoundService {
         lostAndFound.setFound(true);
         LostAndFoundEntities.LostAndFound updatedLostAndFound = lostAndFoundRepository.save(lostAndFound);
 
+        String ownerUsername = authRepository.findById(updatedLostAndFound.getOwnerId())
+                .map(AuthEntities.User::getUsername)
+                .orElse("Unknown");
+
         return new LostAndFoundDto.Response(
                 updatedLostAndFound.getId(),
                 updatedLostAndFound.getOwnerId(),
+                ownerUsername,
                 updatedLostAndFound.getDescription(),
                 updatedLostAndFound.getCollege(),
                 updatedLostAndFound.getImageURL(),
@@ -61,9 +75,14 @@ public class LostAndFoundService {
         );
     }
     private LostAndFoundDto.Response mapToResponse(LostAndFoundEntities.LostAndFound entity) {
+        String ownerUsername = authRepository.findById(entity.getOwnerId())
+                .map(AuthEntities.User::getUsername)
+                .orElse("Unknown");
+
         return new LostAndFoundDto.Response(
                 entity.getId(),
                 entity.getOwnerId(),
+                ownerUsername,
                 entity.getDescription(),
                 entity.getCollege(),
                 entity.getImageURL(),
@@ -72,15 +91,17 @@ public class LostAndFoundService {
                 entity.getCreatedAt()
         );
     }
-    public Page<LostAndFoundDto.Response> getLostAndFounds(CollegeEnum college, boolean isResolved, Pageable pageable) {
+    public Page<LostAndFoundDto.Response> getLostAndFounds(CollegeEnum college, Boolean isResolved, Pageable pageable) {
         Page<LostAndFoundEntities.LostAndFound> entities;
 
-        if (college != null) {
-
+        if (college != null && isResolved != null) {
             entities = lostAndFoundRepository.findByCollegeAndFound(college, isResolved, pageable);
-        } else {
-
+        } else if (college != null) {
+            entities = lostAndFoundRepository.findByCollege(college, pageable);
+        } else if (isResolved != null) {
             entities = lostAndFoundRepository.findByFound(isResolved, pageable);
+        } else {
+            entities = lostAndFoundRepository.findAll(pageable);
         }
 
         return entities.map(this::mapToResponse);

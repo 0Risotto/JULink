@@ -13,8 +13,10 @@ interface MediaRendererProps {
 
 export default function MediaRenderer({ attachmentUrl, attachmentType, className = "", onDoubleClick, isModalOpen = false }: MediaRendererProps) {
   const [isMuted, setIsMuted] = useState(true);
+  const [volume, setVolume] = useState(1);
   const [isPlaying, setIsPlaying] = useState(true);
   const [showPlayIcon, setShowPlayIcon] = useState(false);
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -88,8 +90,29 @@ export default function MediaRenderer({ attachmentUrl, attachmentType, className
   const toggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (videoRef.current) {
-      videoRef.current.muted = !videoRef.current.muted;
-      setIsMuted(videoRef.current.muted);
+      const newMutedState = !videoRef.current.muted;
+      videoRef.current.muted = newMutedState;
+      setIsMuted(newMutedState);
+      if (!newMutedState && volume === 0) {
+        setVolume(1);
+        videoRef.current.volume = 1;
+      }
+    }
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    if (videoRef.current) {
+      videoRef.current.volume = newVolume;
+      if (newVolume > 0 && isMuted) {
+        videoRef.current.muted = false;
+        setIsMuted(false);
+      } else if (newVolume === 0 && !isMuted) {
+        videoRef.current.muted = true;
+        setIsMuted(true);
+      }
     }
   };
 
@@ -120,13 +143,37 @@ export default function MediaRenderer({ attachmentUrl, attachmentType, className
           </div>
         )}
 
-        {/* Mute/Unmute Toggle Button */}
-        <button
-          onClick={toggleMute}
-          className="absolute bottom-4 right-4 bg-black/60 hover:bg-black/80 text-white rounded-full p-2 transition-all opacity-0 group-hover:opacity-100 pointer-events-auto z-10"
+        {/* Volume Control Container */}
+        <div 
+          className="absolute bottom-4 right-4 flex flex-col items-center gap-2 transition-all opacity-0 group-hover:opacity-100 pointer-events-auto z-10"
+          onMouseEnter={() => setShowVolumeSlider(true)}
+          onMouseLeave={() => setShowVolumeSlider(false)}
         >
-          {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-        </button>
+          {/* Volume Slider (appears on hover, vertical) */}
+          <div className={`transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center bg-black/60 rounded-full w-8 ${showVolumeSlider ? 'h-24 py-2 opacity-100' : 'h-0 opacity-0'}`} onClick={(e) => e.stopPropagation()}>
+            {/* 
+              To make a range input vertical in most browsers, we use appearance-none and apply a 90deg rotation.
+              The dimensions need to be swapped since it's rotated.
+            */}
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={isMuted ? 0 : volume}
+              onChange={handleVolumeChange}
+              className="w-[80px] h-1 bg-white/30 rounded-lg appearance-none cursor-pointer -rotate-90 origin-center [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full"
+            />
+          </div>
+
+          {/* Mute/Unmute Toggle Button */}
+          <button
+            onClick={toggleMute}
+            className="bg-black/60 hover:bg-black/80 text-white rounded-full p-2 transition-colors"
+          >
+            {isMuted || volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          </button>
+        </div>
       </div>
     );
   }
