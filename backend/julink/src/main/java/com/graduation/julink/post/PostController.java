@@ -222,6 +222,15 @@ public class PostController {
         postService.markPostSeen(currentUser(principal).getId(), postId);
     }
 
+    @PostMapping("/{postId}/report")
+    public ReportResponseDTO reportPost(
+            Principal principal,
+            @PathVariable UUID postId,
+            @Valid @RequestBody ReportPostDTO dto
+    ) {
+        return postService.reportPost(currentUser(principal).getId(), postId, dto);
+    }
+
     @PostMapping("/media")
     public List<PostMediaUploadResponseDTO> uploadPostMedia(
             Principal principal,

@@ -31,6 +31,7 @@ public class ChatMapper {
                 .mediaUrl(message.isDeleted() ? null : message.getMediaUrl())
                 .mediaFilename(message.isDeleted() ? null : message.getMediaFilename())
                 .mediaSizeBytes(message.getMediaSizeBytes())
+                .sharedPostId(message.isDeleted() ? null : message.getSharedPostId())
                 .deleted(message.isDeleted())
                 .sentAt(message.getSentAt())
                 .editedAt(message.getEditedAt())

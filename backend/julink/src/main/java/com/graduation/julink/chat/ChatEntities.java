@@ -11,13 +11,14 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 public final class ChatEntities {
 
     private ChatEntities() {}
 
     public enum MessageType {
-        TEXT, IMAGE, FILE, VIDEO, AUDIO
+        TEXT, IMAGE, FILE, VIDEO, AUDIO, POST_SHARE
     }
 
     public enum MessageStatus {
@@ -140,6 +141,9 @@ public final class ChatEntities {
 
         @Column(name = "media_size_bytes")
         private Long mediaSizeBytes;
+
+        @Column(name = "shared_post_id")
+        private UUID sharedPostId;
 
         @Column(name = "deleted", nullable = false)
         private boolean deleted = false;

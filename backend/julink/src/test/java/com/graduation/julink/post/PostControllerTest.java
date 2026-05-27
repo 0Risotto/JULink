@@ -160,4 +160,25 @@ class PostControllerTest {
 
         assertEquals(page, response);
     }
+
+    @Test
+    void reportPost_Success() {
+        mockPrincipal();
+        UUID postId = UUID.randomUUID();
+        ReportPostDTO req = new ReportPostDTO("Inappropriate post");
+        ReportResponseDTO resp = new ReportResponseDTO(
+                "success",
+                java.time.LocalDateTime.now(),
+                101L,
+                "user1",
+                "POST",
+                postId,
+                "Inappropriate post"
+        );
+        when(postService.reportPost(101L, postId, req)).thenReturn(resp);
+
+        ReportResponseDTO response = postController.reportPost(principal, postId, req);
+
+        assertEquals(resp, response);
+    }
 }

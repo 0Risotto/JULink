@@ -4,6 +4,7 @@ import com.graduation.julink.auth.AuthEntities;
 import com.graduation.julink.auth.Repository.AuthRepository;
 import com.graduation.julink.chat.ChatDTOs.*;
 import com.graduation.julink.chat.service.ChatService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -107,6 +108,15 @@ public class ChatController {
             @RequestBody MediaBytesRequest req) throws IOException, InterruptedException {
         String username = getUsernameFromPrincipal(principal);
         return ResponseEntity.ok(chatService.sendMediaMessage(conversationId, username, req));
+    }
+
+    @PostMapping("/conversations/{conversationId}/messages/share-post")
+    public ResponseEntity<MessageResponse> sharePost(
+            Principal principal,
+            @PathVariable Long conversationId,
+            @Valid @RequestBody SharePostRequest req) {
+        String username = getUsernameFromPrincipal(principal);
+        return ResponseEntity.ok(chatService.sharePost(conversationId, username, req));
     }
 
     @PatchMapping("/messages/{messageId}")

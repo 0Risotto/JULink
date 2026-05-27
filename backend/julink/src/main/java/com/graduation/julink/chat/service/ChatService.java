@@ -6,6 +6,7 @@ import com.graduation.julink.chat.ChatDTOs.*;
 import com.graduation.julink.chat.ChatEntities.*;
 import com.graduation.julink.chat.ChatMapper;
 import com.graduation.julink.chat.repo.*;
+import com.graduation.julink.post.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,7 @@ public class ChatService {
     private final FileStorageService fileStorageService;
     private final ChatMapper mapper;
     private final SimpMessagingTemplate messagingTemplate;
+    private final PostRepository postRepository;
 
     // ─────────────────────────────────────────────────────────────
     // Conversations
@@ -206,6 +208,33 @@ public class ChatService {
     }
 
     /** Paginated message history — newest first. */
+    public MessageResponse sharePost(Long conversationId,
+                                     String senderUsername,
+                                     SharePostRequest req) {
+        User sender = loadUser(senderUsername);
+        Conversation conv = loadConversation(conversationId);
+
+        assertMember(conv, sender);
+        assertFriendshipForConversation(conv, sender);
+        postRepository.findById(req.getPostId())
+                .orElseThrow(() -> new EntityNotFoundException("Post not found: " + req.getPostId()));
+
+        Message message = new Message();
+        message.setConversation(conv);
+        message.setSender(sender);
+        message.setMessageType(MessageType.POST_SHARE);
+        message.setSharedPostId(req.getPostId());
+        message.setStatus(MessageStatus.SENT);
+        messageRepo.save(message);
+
+        conv.touch();
+        conversationRepo.save(conv);
+
+        MessageResponse response = mapper.toMessageResponse(message);
+        broadcastMessage(conversationId, "NEW_MESSAGE", response);
+        return response;
+    }
+
     @Transactional(readOnly = true)
     public Page<MessageResponse> getMessages(Long conversationId,
                                              String username,

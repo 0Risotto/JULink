@@ -22,6 +22,7 @@ import java.security.Principal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -146,6 +147,22 @@ class ChatControllerTest {
         when(chatService.sendMediaMessage(1L, username, multipartFile)).thenReturn(msgResponse);
 
         ResponseEntity<MessageResponse> response = chatController.sendMediaMessage(principal, 1L, multipartFile);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(msgResponse, response.getBody());
+    }
+
+    @Test
+    void sharePost_Success() {
+        mockPrincipal();
+        UUID postId = UUID.randomUUID();
+        SharePostRequest req = new SharePostRequest();
+        req.setPostId(postId);
+        MessageResponse msgResponse = new MessageResponse();
+        msgResponse.setSharedPostId(postId);
+        when(chatService.sharePost(1L, username, req)).thenReturn(msgResponse);
+
+        ResponseEntity<MessageResponse> response = chatController.sharePost(principal, 1L, req);
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(msgResponse, response.getBody());

@@ -6,6 +6,9 @@ import com.graduation.julink.chat.ChatDTOs.*;
 import com.graduation.julink.chat.ChatEntities.*;
 import com.graduation.julink.chat.ChatMapper;
 import com.graduation.julink.chat.repo.*;
+import com.graduation.julink.post.PostEntities.Post;
+import com.graduation.julink.post.PostRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,12 +43,14 @@ class ChatServiceTest {
     @Mock private FileStorageService fileStorageService;
     @Mock private ChatMapper mapper;
     @Mock private SimpMessagingTemplate messagingTemplate;
+    @Mock private PostRepository postRepository;
 
     @InjectMocks
     private ChatService chatService;
 
     private User user1;
     private User user2;
+    private User user3;
     private Conversation conversation;
     private ConversationMember member1;
     private ConversationMember member2;
@@ -58,6 +64,10 @@ class ChatServiceTest {
         user2 = new User();
         user2.setId(102L);
         user2.setUsername("user2");
+
+        user3 = new User();
+        user3.setId(103L);
+        user3.setUsername("user3");
 
         conversation = new Conversation();
         conversation.setId(1L);
@@ -151,6 +161,86 @@ class ChatServiceTest {
         assertNotNull(response);
         verify(messageRepo, times(1)).save(any(Message.class));
         verify(messagingTemplate, times(1)).convertAndSend(eq("/topic/conversations/1"), any(WsMessageEvent.class));
+    }
+
+    @Test
+    void sharePost_Success() {
+        UUID postId = UUID.randomUUID();
+        SharePostRequest req = new SharePostRequest();
+        req.setPostId(postId);
+        Post post = new Post();
+        post.setPostId(postId);
+
+        when(userRepo.findByUsername("user1")).thenReturn(Optional.of(user1));
+        when(conversationRepo.findById(1L)).thenReturn(Optional.of(conversation));
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        doNothing().when(friendshipValidator).assertFriends("user1", "user2");
+
+        MessageResponse msgResp = new MessageResponse();
+        msgResp.setMessageType(MessageType.POST_SHARE);
+        msgResp.setSharedPostId(postId);
+        when(mapper.toMessageResponse(any())).thenReturn(msgResp);
+
+        MessageResponse response = chatService.sharePost(1L, "user1", req);
+
+        assertNotNull(response);
+        assertEquals(MessageType.POST_SHARE, response.getMessageType());
+        assertEquals(postId, response.getSharedPostId());
+        verify(messageRepo).save(argThat(message ->
+                message.getMessageType() == MessageType.POST_SHARE
+                        && postId.equals(message.getSharedPostId())
+                        && message.getContent() == null
+        ));
+        verify(messagingTemplate).convertAndSend(eq("/topic/conversations/1"), any(WsMessageEvent.class));
+    }
+
+    @Test
+    void sharePost_PostNotFound_DoesNotPersistOrBroadcast() {
+        UUID postId = UUID.randomUUID();
+        SharePostRequest req = new SharePostRequest();
+        req.setPostId(postId);
+
+        when(userRepo.findByUsername("user1")).thenReturn(Optional.of(user1));
+        when(conversationRepo.findById(1L)).thenReturn(Optional.of(conversation));
+        doNothing().when(friendshipValidator).assertFriends("user1", "user2");
+        when(postRepository.findById(postId)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> chatService.sharePost(1L, "user1", req));
+        verify(messageRepo, never()).save(any(Message.class));
+        verify(conversationRepo, never()).save(any(Conversation.class));
+        verify(messagingTemplate, never()).convertAndSend(eq("/topic/conversations/1"), any(WsMessageEvent.class));
+    }
+
+    @Test
+    void sharePost_NonMember_DoesNotLookupPostOrPersist() {
+        UUID postId = UUID.randomUUID();
+        SharePostRequest req = new SharePostRequest();
+        req.setPostId(postId);
+
+        when(userRepo.findByUsername("user3")).thenReturn(Optional.of(user3));
+        when(conversationRepo.findById(1L)).thenReturn(Optional.of(conversation));
+
+        assertThrows(SecurityException.class, () -> chatService.sharePost(1L, "user3", req));
+        verify(postRepository, never()).findById(any());
+        verify(messageRepo, never()).save(any(Message.class));
+        verify(messagingTemplate, never()).convertAndSend(eq("/topic/conversations/1"), any(WsMessageEvent.class));
+    }
+
+    @Test
+    void sharePost_FriendshipRejected_DoesNotLookupPostOrPersist() {
+        UUID postId = UUID.randomUUID();
+        SharePostRequest req = new SharePostRequest();
+        req.setPostId(postId);
+
+        when(userRepo.findByUsername("user1")).thenReturn(Optional.of(user1));
+        when(conversationRepo.findById(1L)).thenReturn(Optional.of(conversation));
+        doThrow(new SecurityException("Not friends"))
+                .when(friendshipValidator).assertFriends("user1", "user2");
+
+        assertThrows(SecurityException.class, () -> chatService.sharePost(1L, "user1", req));
+        verify(postRepository, never()).findById(any());
+        verify(messageRepo, never()).save(any(Message.class));
+        verify(messagingTemplate, never()).convertAndSend(eq("/topic/conversations/1"), any(WsMessageEvent.class));
     }
 
     @Test

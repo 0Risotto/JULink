@@ -2,6 +2,7 @@ package com.graduation.julink.chat;
 
 import com.graduation.julink.chat.ChatEntities.MessageStatus;
 import com.graduation.julink.chat.ChatEntities.MessageType;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 public final class ChatDTOs {
 
@@ -51,6 +53,12 @@ public final class ChatDTOs {
         private byte[] fileBytes;
         private String filename;
         private String contentType;
+    }
+
+    @Data
+    public static class SharePostRequest {
+        @NotNull
+        private UUID postId;
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -115,6 +123,7 @@ public final class ChatDTOs {
         private String mediaUrl;
         private String mediaFilename;
         private Long mediaSizeBytes;
+        private UUID sharedPostId;
         private boolean deleted;
         private LocalDateTime sentAt;
         private LocalDateTime editedAt;

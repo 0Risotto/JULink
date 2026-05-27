@@ -16,6 +16,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
@@ -196,5 +198,34 @@ class PostServiceTest {
 
         assertEquals(1, response.getContent().size());
         assertEquals(postId, response.getContent().get(0).postId());
+    }
+
+    @Test
+    void reportPost_WritesReportEntry() throws Exception {
+        Path reportsFile = Files.createTempFile("julink-reports", ".txt");
+        org.springframework.test.util.ReflectionTestUtils.setField(
+                postService,
+                "reportsPath",
+                reportsFile.toString()
+        );
+        ReportPostDTO req = new ReportPostDTO("Spam post\nwith newline");
+
+        when(entityManager.find(User.class, 101L)).thenReturn(user);
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+
+        ReportResponseDTO response = postService.reportPost(101L, postId, req);
+        String reportContents = Files.readString(reportsFile);
+
+        assertEquals("success", response.status());
+        assertEquals(101L, response.reporterId());
+        assertEquals("user1", response.reporterUsername());
+        assertEquals("POST", response.reportedType());
+        assertEquals(postId, response.reportedId());
+        assertEquals("Spam post\nwith newline", response.message());
+        assertTrue(reportContents.contains("reporterId=101"));
+        assertTrue(reportContents.contains("reporterUsername=user1"));
+        assertTrue(reportContents.contains("reportedType=POST"));
+        assertTrue(reportContents.contains("reportedId=" + postId));
+        assertTrue(reportContents.contains("message=Spam post with newline"));
     }
 }

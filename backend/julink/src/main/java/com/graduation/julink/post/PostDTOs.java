@@ -82,6 +82,20 @@ public final class PostDTOs {
             long favoritesCount
     ) {}
 
+    public record ReportPostDTO(
+            @NotBlank @Size(max = 1_000) String message
+    ) {}
+
+    public record ReportResponseDTO(
+            String status,
+            LocalDateTime timestamp,
+            Long reporterId,
+            String reporterUsername,
+            String reportedType,
+            UUID reportedId,
+            String message
+    ) {}
+
     // Used when creating a comment or reply
     public record CreateCommentDTO(
             @NotBlank @Size(max = 1_000) String content,
