@@ -18,6 +18,7 @@ import Link from "next/link";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import PostDetailsModal from "./PostDetailsModal";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import SharePostDialog from "./SharePostDialog";
 import MediaRenderer from "./MediaRenderer";
 import DoubleTapToLike from "./DoubleTapToLike";
 import PostCarousel from "./PostCarousel";
@@ -219,9 +220,14 @@ export default function FeedPost({ post, onPostUpdated, onPostDeleted }: FeedPos
                 </div>
               </DialogTrigger>
               
-              <button className="hover:opacity-60 transition-opacity">
-                <Share size={26} />
-              </button>
+              <SharePostDialog
+                postId={post.postId}
+                trigger={
+                  <button className="hover:opacity-60 transition-opacity">
+                    <Share size={26} />
+                  </button>
+                }
+              />
             </div>
             
             <button 

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Bookmark, Share } from "lucide-react";
 import { PostResponseDTO } from "../types";
 import { toggleLike, toggleFavorite } from "../services/postServices";
+import SharePostDialog from "./SharePostDialog";
 import { formatDistanceToNow } from "date-fns";
 import CommentSection from "./CommentSection";
 
@@ -110,9 +111,14 @@ export default function PostCard({ post, onPostUpdated }: PostCardProps) {
           <span>{likesCount}</span>
         </Button>
         
-        <Button variant="ghost" size="sm" className="gap-2 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20">
-          <Share size={18} />
-        </Button>
+        <SharePostDialog
+          postId={post.postId}
+          trigger={
+            <Button variant="ghost" size="sm" className="gap-2 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20">
+              <Share size={18} />
+            </Button>
+          }
+        />
         
         <Button 
           variant="ghost" 

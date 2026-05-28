@@ -97,8 +97,9 @@ export function GlobalCallListener() {
         client.subscribe("/topic/video-calls", (message) => {
           try {
             const payload = JSON.parse(message.body);
-            if (payload.type === "INVITE_TO_VIDEO") {
-              console.log("Received a video call payload for:", payload.targetUsername, "from:", payload.callerUsername);
+            if (payload.type === "INVITE_TO_VIDEO" || payload.type === "INVITE_TO_GROUP_VIDEO") {
+              const isGroup = payload.type === "INVITE_TO_GROUP_VIDEO";
+              console.log(`Received a ${isGroup ? "group " : ""}call payload for:`, payload.targetUsername, "from:", payload.callerUsername);
               // Check if the call is for the current user
               if (payload.targetUsername === myUsername) {
                 console.log(`[Incoming Call] You are being called by ${payload.callerUsername}!`);
@@ -115,7 +116,7 @@ export function GlobalCallListener() {
                   });
 
                 setIncomingCall({
-                  callerUsername: payload.callerUsername,
+                  callerUsername: isGroup ? `${payload.callerUsername} (Group: ${payload.groupName})` : payload.callerUsername,
                   videoUrl: payload.videoUrl,
                 });
                 setIsIncomingMinimized(false);

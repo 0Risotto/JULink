@@ -9,10 +9,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/domain/profile/hooks/useUser";
-import { Phone, Video } from "lucide-react";
+import { Phone, Video, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import * as chatApi from "../api/chatApi";
 import { MessageResponse } from "../types";
+import GroupSettingsDialog from "./GroupSettingsDialog";
 
 interface ChatWindowProps {
   onSendMessage: (conversationId: number, content: string) => void;
@@ -94,37 +95,77 @@ export default function ChatWindow({ onSendMessage, onSendTyping, onMarkRead, on
     }
   };
 
+  const handleGroupAudioCall = async () => {
+    try {
+      sessionStorage.setItem("callType", "audio");
+      await chatApi.startGroupCall(activeConv.id, { videoCall: false });
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Failed to start group call.");
+    }
+  };
+
+  const handleGroupVideoCall = async () => {
+    try {
+      sessionStorage.setItem("callType", "video");
+      await chatApi.startGroupCall(activeConv.id, { videoCall: true });
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Failed to start group call.");
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full bg-background">
       {/* Header */}
       <div className="p-4 border-b flex items-center justify-between bg-card">
         <div className="flex items-center gap-3">
-          {(!activeConv.group && otherUser) ? (
-            <Link href={`/${otherUser.username}`}>
-              <Avatar className="hover:opacity-80 transition-opacity cursor-pointer">
-                <AvatarImage src={image || undefined} />
-                <AvatarFallback>{title ? title[0].toUpperCase() : "?"}</AvatarFallback>
-              </Avatar>
-            </Link>
+          {!activeConv.group && otherUser ? (
+            <>
+              <Link href={`/${otherUser.username}`}>
+                <Avatar className="hover:opacity-80 transition-opacity cursor-pointer">
+                  <AvatarImage src={image || undefined} />
+                  <AvatarFallback>{title ? title[0].toUpperCase() : "?"}</AvatarFallback>
+                </Avatar>
+              </Link>
+              <div className="flex flex-col">
+                <h2 className="font-bold">{title}</h2>
+                <span className="text-xs text-muted-foreground">{subtitle}</span>
+              </div>
+            </>
           ) : (
-            <Avatar>
-              <AvatarImage src={image || undefined} />
-              <AvatarFallback>{title ? title[0].toUpperCase() : "?"}</AvatarFallback>
-            </Avatar>
+            <GroupSettingsDialog
+              conversation={activeConv}
+              trigger={
+                <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
+                  <Avatar>
+                    <AvatarImage src={image || undefined} />
+                    <AvatarFallback>{title ? title[0].toUpperCase() : "?"}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col text-left">
+                    <h2 className="font-bold">{title}</h2>
+                    <span className="text-xs text-muted-foreground">{subtitle}</span>
+                  </div>
+                </div>
+              }
+            />
           )}
-          <div className="flex flex-col">
-            <h2 className="font-bold">{title}</h2>
-            <span className="text-xs text-muted-foreground">{subtitle}</span>
-          </div>
         </div>
 
         <div className="flex gap-2">
-          {!activeConv.group && (
+          {!activeConv.group ? (
             <>
               <Button variant="ghost" size="icon" title="Audio Call" onClick={handleAudioCall}>
                 <Phone className="w-5 h-5" />
               </Button>
               <Button variant="ghost" size="icon" title="Video Call" onClick={handleVideoCall}>
+                <Video className="w-5 h-5" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" size="icon" title="Group Audio Call" onClick={handleGroupAudioCall}>
+                <Phone className="w-5 h-5" />
+              </Button>
+              <Button variant="ghost" size="icon" title="Group Video Call" onClick={handleGroupVideoCall}>
                 <Video className="w-5 h-5" />
               </Button>
             </>

@@ -121,6 +121,21 @@ const chatSlice = createSlice({
         }
       }
     },
+    updateConversation: (state, action: PayloadAction<ConversationResponse>) => {
+      const updatedConv = action.payload;
+      const index = state.conversations.findIndex((c) => c.id === updatedConv.id);
+      if (index !== -1) {
+        state.conversations[index] = updatedConv;
+      } else {
+        state.conversations.unshift(updatedConv);
+      }
+    },
+    removeConversation: (state, action: PayloadAction<number>) => {
+      state.conversations = state.conversations.filter((c) => c.id !== action.payload);
+      if (state.activeConversationId === action.payload) {
+        state.activeConversationId = null;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(fetchConversations.pending, (state) => {
@@ -157,6 +172,13 @@ const chatSlice = createSlice({
   },
 });
 
-export const { setActiveConversation, wsMessageReceived, wsTypingReceived, wsReadReceived } = chatSlice.actions;
+export const {
+  setActiveConversation,
+  wsMessageReceived,
+  wsTypingReceived,
+  wsReadReceived,
+  updateConversation,
+  removeConversation,
+} = chatSlice.actions;
 
 export default chatSlice.reducer;

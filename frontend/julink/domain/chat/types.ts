@@ -7,6 +7,7 @@ export interface UserSummary {
   firstName: string;
   lastName: string;
   profilePictureUrl: string | null;
+  admin?: boolean;
 }
 
 export interface MessageResponse {
@@ -19,6 +20,7 @@ export interface MessageResponse {
   mediaUrl: string | null;
   mediaFilename: string | null;
   mediaSizeBytes: number | null;
+  sharedPostId?: string | null;
   deleted: boolean;
   sentAt: string;
   editedAt: string | null;
@@ -33,6 +35,37 @@ export interface ConversationResponse {
   lastMessage: MessageResponse | null;
   unreadCount: number;
   updatedAt: string;
+}
+
+export interface GroupCallResponse {
+  conversationId: number;
+  roomName: string;
+  videoUrl: string;
+  videoCall: boolean;
+  invitedUsernames: string[];
+}
+
+export interface UpdateGroupRequest {
+  groupName?: string;
+  groupPictureUrl?: string;
+}
+
+export interface UpdateMemberAdminRequest {
+  admin: boolean;
+}
+
+export interface StartGroupCallRequest {
+  videoCall?: boolean;
+}
+
+export interface MediaBytesRequest {
+  fileBytes: string; // Base64-encoded string
+  filename: string;
+  contentType: string;
+}
+
+export interface SharePostRequest {
+  postId: string;
 }
 
 export interface WsMessageEvent {

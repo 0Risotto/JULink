@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Check, CheckCheck, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import MessageMedia from "./media";
 import Link from "next/link";
+import { PostPreview } from "@/domain/notifications/components/PostPreview";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,22 +66,40 @@ export default function MessageList({ messages, myUsername, typingUsers, onEditM
               )}
               
               <div className={`flex items-center gap-2 group/msg ${isMe ? "flex-row-reverse" : "flex-row"}`}>
-                <div
-                  className={`rounded-2xl text-sm ${
-                    msg.mediaUrl ? "p-[1px]" : "p-3"
-                  } ${
-                    isMe ? "bg-primary text-primary-foreground rounded-tr-sm" : "bg-muted rounded-tl-sm"
-                  }`}
-                >
-                  <MessageMedia msg={msg} isMe={isMe} />
-                  {msg.deleted ? (
-                    <span className="italic opacity-70">This message was deleted</span>
-                  ) : msg.content ? (
-                    <p className={`whitespace-pre-wrap break-words ${msg.mediaUrl ? "px-2 pb-2" : ""}`}>
-                      {msg.content}
-                    </p>
-                  ) : null}
-                </div>
+                {(() => {
+                  const isMediaOrPost = !!msg.mediaUrl || !!msg.sharedPostId;
+                  return (
+                    <div
+                      className={`rounded-2xl text-sm ${
+                        isMediaOrPost ? "p-0" : "p-3"
+                      } ${
+                        isMediaOrPost 
+                          ? "" 
+                          : isMe ? "bg-primary text-primary-foreground" : "bg-muted"
+                      }`}
+                    >
+                      <MessageMedia msg={msg} isMe={isMe} />
+                      {msg.deleted ? (
+                        <span className="italic opacity-70 p-3 block bg-muted rounded-2xl text-muted-foreground">This message was deleted</span>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {msg.sharedPostId && (
+                            <PostPreview postId={msg.sharedPostId} />
+                          )}
+                          {msg.content && (
+                            <p className={`whitespace-pre-wrap break-words ${
+                              isMediaOrPost 
+                                ? `p-3 rounded-2xl ${isMe ? "bg-primary text-primary-foreground" : "bg-muted"}` 
+                                : ""
+                            }`}>
+                              {msg.content}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {isMe && !msg.deleted && (
                   <div className="opacity-0 group-hover/msg:opacity-100 transition-opacity">

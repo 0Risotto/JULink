@@ -5,6 +5,9 @@ import { getPostById } from "@/domain/posts/services/postServices";
 import { PostResponseDTO } from "@/domain/posts/types";
 import { Spinner } from "@/components/ui/spinner";
 import { FileText } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import PostDetailsModal from "@/domain/posts/components/PostDetailsModal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface PostPreviewProps {
   postId: string;
@@ -39,47 +42,86 @@ export function PostPreview({ postId }: PostPreviewProps) {
   if (loading) {
     return (
       <div 
-        className="w-14 h-14 border bg-muted/30 flex items-center justify-center shrink-0"
-        style={{ borderRadius: "12px" }}
+        className="w-[280px] h-[180px] border rounded-xl bg-muted/20 flex flex-col items-center justify-center shrink-0"
       >
-        <Spinner className="w-3.5 h-3.5 text-muted-foreground" />
+        <Spinner className="w-5 h-5 text-muted-foreground" />
+        <span className="text-[10px] text-muted-foreground mt-2">Loading shared post...</span>
       </div>
     );
   }
 
   if (!post) {
-    return null;
+    return (
+      <div className="text-xs text-muted-foreground p-3 italic bg-muted/10 border rounded-xl w-[280px]">
+        Shared post is unavailable or deleted
+      </div>
+    );
   }
 
-  // Get the first image attachment if available
-  const imageAttachment = post.attachments.find(
-    (att) => att.attachmentType === "IMAGE" || att.attachmentType === "image"
-  );
+  // Get the first attachment if available
+  const firstAttachment = post.attachments?.[0];
 
   return (
-    <div 
-      className="w-14 h-14 border bg-muted/50 overflow-hidden shrink-0 flex items-center justify-center relative group shadow-sm hover:border-primary/40 transition-all"
-      title={`Preview of post: "${post.description.slice(0, 60)}..."`}
-      style={{ borderRadius: "12px" }}
-    >
-      {imageAttachment ? (
-        <img 
-          src={imageAttachment.attachmentUrl} 
-          alt="Post thumbnail" 
-          className="w-full h-full object-cover"
-          style={{ borderRadius: "12px" }}
-        />
-      ) : (
+    <Dialog>
+      <DialogTrigger asChild>
         <div 
-          className="p-1.5 flex flex-col h-full w-full bg-muted/80 text-[8px] text-muted-foreground leading-tight select-none overflow-hidden justify-between"
-          style={{ borderRadius: "12px" }}
+          className="w-[280px] bg-card dark:bg-zinc-900 overflow-hidden shrink-0 flex flex-col relative group shadow-sm hover:shadow-md transition-all cursor-pointer text-card-foreground text-left rounded-xl"
         >
-          <span className="line-clamp-3 font-medium scale-[0.95] origin-top-left leading-[10px] break-words">
-            {post.description}
-          </span>
-          <FileText className="w-2.5 h-2.5 text-muted-foreground/50 self-end mt-auto shrink-0" />
+          {/* Header: [pfp(username)] */}
+          <div className="flex items-center gap-2 p-2.5 bg-muted/20 shrink-0 select-none">
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={post.ownerProfilePictureUrl || undefined} alt={post.ownerUsername} />
+              <AvatarFallback className="text-[10px]">
+                {post.ownerFirstName ? post.ownerFirstName[0] : post.ownerUsername[0]}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col min-w-0 leading-tight">
+              <span className="text-xs font-bold truncate max-w-[150px]">
+                {post.ownerFirstName ? `${post.ownerFirstName} ${post.ownerLastName}` : post.ownerUsername}
+              </span>
+              <span className="text-[9px] text-muted-foreground truncate">@{post.ownerUsername}</span>
+            </div>
+          </div>
+
+          {/* Content: post content (image, video, or full description) */}
+          <div className="flex-1 flex flex-col bg-muted/10">
+            {firstAttachment ? (
+              <div className="w-full h-32 overflow-hidden relative">
+                {firstAttachment.attachmentType?.toLowerCase().includes("video") ? (
+                  <video 
+                    src={firstAttachment.attachmentUrl} 
+                    className="w-full h-full object-cover"
+                    muted
+                    loop
+                    playsInline
+                  />
+                ) : (
+                  <img 
+                    src={firstAttachment.attachmentUrl} 
+                    alt="Post thumbnail" 
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="p-3 text-xs leading-relaxed max-h-32 overflow-hidden text-ellipsis line-clamp-4 select-none">
+                {post.description}
+              </div>
+            )}
+          </div>
+
+          {/* Footer: [username + caption] */}
+          <div className="p-2.5 bg-muted/10 shrink-0 text-xs select-none">
+            <p className="line-clamp-2 leading-tight">
+              <span className="font-bold mr-1.5">@{post.ownerUsername}</span>
+              <span className="text-muted-foreground">{post.description}</span>
+            </p>
+          </div>
         </div>
-      )}
-    </div>
+      </DialogTrigger>
+      <DialogContent className="max-w-[95vw] md:max-w-[900px] lg:max-w-[1000px] p-0 bg-transparent border-none shadow-none focus:outline-none">
+        <PostDetailsModal post={post} />
+      </DialogContent>
+    </Dialog>
   );
 }

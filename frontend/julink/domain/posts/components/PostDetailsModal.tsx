@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import UpdatePostModal from "./UpdatePostModal";
 import CommentList from "./CommentList";
+import SharePostDialog from "./SharePostDialog";
 import CommentInput from "./CommentInput";
 import Link from "next/link";
 import MediaRenderer from "./MediaRenderer";
@@ -180,9 +181,14 @@ export default function PostDetailsModal({ post, onPostUpdated, onPostDeleted }:
                 <MessageCircle size={26} />
               </button>
               
-              <button className="hover:opacity-60 transition-opacity">
-                <Share size={26} />
-              </button>
+              <SharePostDialog
+                postId={post.postId}
+                trigger={
+                  <button className="hover:opacity-60 transition-opacity">
+                    <Share size={26} />
+                  </button>
+                }
+              />
             </div>
             
             <button 
