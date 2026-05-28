@@ -1,6 +1,7 @@
 package com.graduation.julink.follow;
 
 import com.graduation.julink.auth.Repository.AuthRepository;
+import com.graduation.julink.block.BlockService;
 import com.graduation.julink.notification.NotificationService;
 import com.graduation.julink.notification.NotificationType;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class FollowService {
     private final FollowRepository followRepository;
     private final AuthRepository authRepository;
     private final NotificationService notificationService;
+    private final BlockService blockService;
 
 //    FollowService(){};
 
@@ -34,6 +36,7 @@ public class FollowService {
         if (followerUsername.equals(followeeUsername)) {
             throw new IllegalArgumentException("Cannot follow yourself");
         }
+        blockService.assertNotBlocked(followerUsername, followeeUsername);
         if (followRepository.isFollowing(followerUsername, followeeUsername)) {
             throw new IllegalStateException("Already following this user");
         }

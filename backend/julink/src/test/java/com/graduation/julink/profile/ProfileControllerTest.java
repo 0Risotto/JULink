@@ -56,9 +56,9 @@ class ProfileControllerTest {
     @Test
     void getUserProfile_Success() {
         ProfileDTOs.UserProfile profile = new ProfileDTOs.UserProfile("user", "First", "Last", "KASIT", "bio", "pfp", "banner", java.util.Collections.emptyList(), java.util.Collections.emptyList(), 0);
-        when(profileService.getProfileByUsername("user")).thenReturn(profile);
+        when(profileService.getProfileByUsername(email, "user")).thenReturn(profile);
 
-        Map<String, Object> response = profileController.getUserProfile("USER "); // tests formatting too
+        Map<String, Object> response = profileController.getUserProfile(principal, "USER "); // tests formatting too
 
         assertEquals("success", response.get("status"));
         assertEquals(profile, response.get("user"));

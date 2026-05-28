@@ -3,6 +3,7 @@ package com.graduation.julink.profile;
 import com.graduation.julink.auth.AuthEntities.User;
 import com.graduation.julink.auth.Repository.AuthRepository;
 import com.graduation.julink.auth.ThemePreference;
+import com.graduation.julink.block.BlockService;
 import com.graduation.julink.common.media.MediaUploadService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,9 @@ class ProfileServiceTest {
 
     @Mock
     private MediaUploadService mediaUploadService;
+
+    @Mock
+    private BlockService blockService;
 
     @InjectMocks
     private ProfileServiceImplementation profileService;
@@ -67,14 +71,16 @@ class ProfileServiceTest {
 
     @Test
     void getProfileByUsername_Success() {
+        when(authRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(authRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
         ProfileDTOs.UserProfile profile = new ProfileDTOs.UserProfile("testuser", "Test", "User", "KASIT", null, null, null, java.util.Collections.emptyList(), java.util.Collections.emptyList(), 0);
         when(profileMapper.toDTO(user)).thenReturn(profile);
 
-        ProfileDTOs.UserProfile result = profileService.getProfileByUsername("testuser");
+        ProfileDTOs.UserProfile result = profileService.getProfileByUsername(email, "testuser");
 
         assertNotNull(result);
         assertEquals("testuser", result.username());
+        verify(blockService).assertNotBlocked(user.getId(), user.getId());
     }
 
     @Test

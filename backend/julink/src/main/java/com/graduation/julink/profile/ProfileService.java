@@ -2,6 +2,7 @@ package com.graduation.julink.profile;
 
 import com.graduation.julink.auth.AuthEntities;
 import com.graduation.julink.auth.Repository.AuthRepository;
+import com.graduation.julink.block.BlockService;
 import com.graduation.julink.common.media.MediaUploadService;
 import com.graduation.julink.common.media.MediaUploadService.ImageVariant;
 import com.graduation.julink.common.media.MediaUploadService.MediaUploadRequest;
@@ -13,7 +14,7 @@ import java.io.IOException;
 
 public interface ProfileService {
     ProfileDTOs.UserProfile getProfileByEmail(String email);
-    ProfileDTOs.UserProfile getProfileByUsername(String username);
+    ProfileDTOs.UserProfile getProfileByUsername(String currentEmail, String username);
     ProfileDTOs.UserProfile updateProfile(String email, ProfileDTOs.UpdateProfile dto);
     String getOwnUsername(String email);
     void completeOnboarding(String email, ProfileDTOs.OnboardingRequest dto);
@@ -26,6 +27,7 @@ class ProfileServiceImplementation implements ProfileService {
     private final AuthRepository authRepository;
     private final ProfileMapper ProfileMapper;
     private final MediaUploadService mediaUploadService;
+    private final BlockService blockService;
 
     @Override
     public ProfileDTOs.UserProfile getProfileByEmail(String email) {
@@ -36,9 +38,13 @@ class ProfileServiceImplementation implements ProfileService {
     }
 
     @Override
-    public ProfileDTOs.UserProfile getProfileByUsername(String username) {
+    public ProfileDTOs.UserProfile getProfileByUsername(String currentEmail, String username) {
+        AuthEntities.User currentUser = authRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new RuntimeException("User not found for the provided token"));
         AuthEntities.User user = authRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User profile not found"));
+
+        blockService.assertNotBlocked(currentUser.getId(), user.getId());
 
         return ProfileMapper.toDTO(user);
     }

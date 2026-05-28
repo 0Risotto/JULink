@@ -49,6 +49,8 @@ public class FollowRepository {
         String query = """
             MATCH (follower:User {username: $follower})
             MATCH (followee:User {username: $followee})
+            WHERE NOT (follower)-[:BLOCKED]->(followee)
+              AND NOT (followee)-[:BLOCKED]->(follower)
             MERGE (follower)-[:FOLLOWS]->(followee)
             """;
         neo4jClient.query(query)
@@ -71,6 +73,8 @@ public class FollowRepository {
     public boolean isFollowing(String followerUsername, String followeeUsername) {
         String query = """
             MATCH (follower:User {username: $follower})-[r:FOLLOWS]->(followee:User {username: $followee})
+            WHERE NOT (follower)-[:BLOCKED]->(followee)
+              AND NOT (followee)-[:BLOCKED]->(follower)
             RETURN r
             """;
         return neo4jClient.query(query)
@@ -85,6 +89,8 @@ public class FollowRepository {
         String query = """
             MATCH (u1:User {username: $username1})-[r1:FOLLOWS]->(u2:User {username: $username2})
             MATCH (u2)-[r2:FOLLOWS]->(u1)
+            WHERE NOT (u1)-[:BLOCKED]->(u2)
+              AND NOT (u2)-[:BLOCKED]->(u1)
             RETURN r1, r2
             """;
         return neo4jClient.query(query)
@@ -98,6 +104,8 @@ public class FollowRepository {
     public Page<String> getFollowers(String username, Pageable pageable) {
         String query = """
             MATCH (follower:User)-[:FOLLOWS]->(u:User {username: $username})
+            WHERE NOT (follower)-[:BLOCKED]->(u)
+              AND NOT (u)-[:BLOCKED]->(follower)
             RETURN follower.username AS username
             ORDER BY follower.username
             SKIP $skip
@@ -105,6 +113,8 @@ public class FollowRepository {
             """;
         String countQuery = """
             MATCH (follower:User)-[:FOLLOWS]->(u:User {username: $username})
+            WHERE NOT (follower)-[:BLOCKED]->(u)
+              AND NOT (u)-[:BLOCKED]->(follower)
             RETURN count(follower) AS total
             """;
 
@@ -132,6 +142,8 @@ public class FollowRepository {
     public Page<String> getFollowings(String username, Pageable pageable) {
         String query = """
             MATCH (u:User {username: $username})-[:FOLLOWS]->(followee:User)
+            WHERE NOT (u)-[:BLOCKED]->(followee)
+              AND NOT (followee)-[:BLOCKED]->(u)
             RETURN followee.username AS username
             ORDER BY followee.username
             SKIP $skip
@@ -139,6 +151,8 @@ public class FollowRepository {
             """;
         String countQuery = """
             MATCH (u:User {username: $username})-[:FOLLOWS]->(followee:User)
+            WHERE NOT (u)-[:BLOCKED]->(followee)
+              AND NOT (followee)-[:BLOCKED]->(u)
             RETURN count(followee) AS total
             """;
 
@@ -164,6 +178,8 @@ public class FollowRepository {
     public Collection<String> getFollowingUsernames(String username) {
         String query = """
             MATCH (u:User {username: $username})-[:FOLLOWS]->(followee:User)
+            WHERE NOT (u)-[:BLOCKED]->(followee)
+              AND NOT (followee)-[:BLOCKED]->(u)
             RETURN followee.username AS username
             """;
 
@@ -177,6 +193,12 @@ public class FollowRepository {
     public Page<String> getMutualFollowings(String username1, String username2, Pageable pageable) {
         String query = """
         MATCH (u1:User {username: $username1})-[:FOLLOWS]->(common:User)<-[:FOLLOWS]-(u2:User {username: $username2})
+        WHERE NOT (u1)-[:BLOCKED]->(u2)
+          AND NOT (u2)-[:BLOCKED]->(u1)
+          AND NOT (u1)-[:BLOCKED]->(common)
+          AND NOT (common)-[:BLOCKED]->(u1)
+          AND NOT (u2)-[:BLOCKED]->(common)
+          AND NOT (common)-[:BLOCKED]->(u2)
         RETURN common.username AS username
         ORDER BY common.username
         SKIP $skip
@@ -184,6 +206,12 @@ public class FollowRepository {
         """;
         String countQuery = """
         MATCH (u1:User {username: $username1})-[:FOLLOWS]->(common:User)<-[:FOLLOWS]-(u2:User {username: $username2})
+        WHERE NOT (u1)-[:BLOCKED]->(u2)
+          AND NOT (u2)-[:BLOCKED]->(u1)
+          AND NOT (u1)-[:BLOCKED]->(common)
+          AND NOT (common)-[:BLOCKED]->(u1)
+          AND NOT (u2)-[:BLOCKED]->(common)
+          AND NOT (common)-[:BLOCKED]->(u2)
         RETURN count(common) AS total
         """;
 
@@ -219,6 +247,12 @@ public class FollowRepository {
 //        """;
         String query = """
             MATCH (u1:User {username: $username1})<-[:FOLLOWS]-(follower:User)-[:FOLLOWS]->(u2:User {username: $username2})
+            WHERE NOT (u1)-[:BLOCKED]->(u2)
+              AND NOT (u2)-[:BLOCKED]->(u1)
+              AND NOT (u1)-[:BLOCKED]->(follower)
+              AND NOT (follower)-[:BLOCKED]->(u1)
+              AND NOT (u2)-[:BLOCKED]->(follower)
+              AND NOT (follower)-[:BLOCKED]->(u2)
             RETURN follower.username AS username
             ORDER BY follower.username
             SKIP $skip
@@ -233,6 +267,12 @@ public class FollowRepository {
 
         String countQuery = """
             MATCH (u1:User {username: $username1})<-[:FOLLOWS]-(follower:User)-[:FOLLOWS]->(u2:User {username: $username2})
+            WHERE NOT (u1)-[:BLOCKED]->(u2)
+              AND NOT (u2)-[:BLOCKED]->(u1)
+              AND NOT (u1)-[:BLOCKED]->(follower)
+              AND NOT (follower)-[:BLOCKED]->(u1)
+              AND NOT (u2)-[:BLOCKED]->(follower)
+              AND NOT (follower)-[:BLOCKED]->(u2)
             RETURN count(follower) AS total
             """;
 
@@ -261,6 +301,10 @@ public class FollowRepository {
         String query = """
                 MATCH (me:User {username: $username})-[:FOLLOWS]->(mutual)<-[:FOLLOWS]-(them:User)
                 WHERE me <> them AND NOT (me)-[:FOLLOWS]->(them)
+                  AND NOT (me)-[:BLOCKED]->(them)
+                  AND NOT (them)-[:BLOCKED]->(me)
+                  AND NOT (me)-[:BLOCKED]->(mutual)
+                  AND NOT (mutual)-[:BLOCKED]->(me)
                 WITH me, them, COUNT(mutual) AS intersection
                 MATCH (me)-[:FOLLOWS]->(m1)
                 WITH me, them, intersection, COUNT(m1) AS myFollowsCount

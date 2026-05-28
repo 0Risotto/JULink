@@ -1,6 +1,8 @@
 package com.graduation.julink.post;
 
 import com.graduation.julink.auth.AuthEntities.User;
+import com.graduation.julink.auth.Repository.AuthRepository;
+import com.graduation.julink.block.BlockService;
 import com.graduation.julink.common.media.MediaUploadService;
 import com.graduation.julink.common.media.MediaUploadService.ImageVariant;
 import com.graduation.julink.common.media.MediaUploadService.MediaUploadRequest;
@@ -45,9 +47,11 @@ public class PostService {
     private final PostCommentRepository postCommentRepository;
     private final CommentLikeRepository commentLikeRepository;
     private final PostImpressionRepository postImpressionRepository;
+    private final AuthRepository authRepository;
     private final FollowService followService;
     private final MediaUploadService mediaUploadService;
     private final NotificationService notificationService;
+    private final BlockService blockService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -78,6 +82,7 @@ public class PostService {
     @Transactional(readOnly = true)
     public PostResponseDTO getPostById(Long currentUserId, UUID postId) {
         Post post = getPostOrThrow(postId);
+        assertCanViewPost(currentUserId, post);
         return buildPostResponse(post, currentUserId);
     }
 
@@ -119,6 +124,8 @@ public class PostService {
     @Transactional(readOnly = true)
     public Page<PostResponseDTO> getUserPosts(Long currentUserId, String ownerUsername, Pageable pageable) {
         getUserOrThrow(currentUserId);
+        User owner = authRepositoryByUsername(ownerUsername);
+        blockService.assertNotBlocked(currentUserId, owner.getId());
 
         return buildPostResponsePage(
                 postRepository.findByOwner_UsernameOrderByCreatedAtDesc(ownerUsername, pageable),
@@ -131,6 +138,7 @@ public class PostService {
         Pageable effectivePageable = pageable.isPaged() ? pageable : PageRequest.of(0, 20);
         User currentUser = getUserOrThrow(currentUserId);
         Set<String> followingUsernames = followingUsernamesFor(currentUser);
+        Set<Long> blockedUserIds = blockService.blockedUserIdsFor(currentUserId);
         Pageable candidatePage = PageRequest.of(
                 0,
                 Math.max(MAX_FEED_CANDIDATES, effectivePageable.getPageSize() + (int) effectivePageable.getOffset()),
@@ -138,6 +146,9 @@ public class PostService {
         );
 
         List<Post> candidates = postRepository.findAllByOrderByCreatedAtDesc(candidatePage).getContent();
+        candidates = candidates.stream()
+                .filter(post -> !blockedUserIds.contains(post.getOwner().getId()))
+                .toList();
         List<UUID> candidatePostIds = candidates.stream().map(Post::getPostId).toList();
         Set<UUID> seenPostIds = candidatePostIds.isEmpty()
                 ? Set.of()
@@ -157,6 +168,7 @@ public class PostService {
     public LikeResponseDTO likePost(Long userId, UUID postId) {
         User user = getUserOrThrow(userId);
         Post post = getPostOrThrow(postId);
+        blockService.assertNotBlocked(user.getId(), post.getOwner().getId());
 
         Optional<PostLike> existingLike =
                 postLikeRepository.findByPost_PostIdAndUser_Id(postId, userId);
@@ -181,7 +193,8 @@ public class PostService {
     @Transactional
     public LikeResponseDTO unlikePost(Long userId, UUID postId) {
         getUserOrThrow(userId);
-        getPostOrThrow(postId);
+        Post post = getPostOrThrow(postId);
+        blockService.assertNotBlocked(userId, post.getOwner().getId());
 
         postLikeRepository.deleteByPost_PostIdAndUser_Id(postId, userId);
 
@@ -210,6 +223,7 @@ public class PostService {
     public FavoriteResponseDTO favoritePost(Long userId, UUID postId) {
         User user = getUserOrThrow(userId);
         Post post = getPostOrThrow(postId);
+        blockService.assertNotBlocked(user.getId(), post.getOwner().getId());
 
         Optional<PostFavorite> existingFavorite =
                 postFavoriteRepository.findByPost_PostIdAndUser_Id(postId, userId);
@@ -233,7 +247,8 @@ public class PostService {
     @Transactional
     public FavoriteResponseDTO unfavoritePost(Long userId, UUID postId) {
         getUserOrThrow(userId);
-        getPostOrThrow(postId);
+        Post post = getPostOrThrow(postId);
+        blockService.assertNotBlocked(userId, post.getOwner().getId());
 
         postFavoriteRepository.deleteByPost_PostIdAndUser_Id(postId, userId);
 
@@ -261,16 +276,16 @@ public class PostService {
     @Transactional(readOnly = true)
     public Page<PostResponseDTO> getFavoritePosts(Long currentUserId, Pageable pageable) {
         getUserOrThrow(currentUserId);
-        return buildPostResponsePage(
-                postFavoriteRepository.findFavoritePostsByUserId(currentUserId, pageable),
-                currentUserId
-        );
+        Page<Post> favorites = postFavoriteRepository.findFavoritePostsByUserId(currentUserId, pageable);
+        Set<Long> blockedUserIds = blockService.blockedUserIdsFor(currentUserId);
+        return buildPostResponsePage(filterPostPage(favorites, blockedUserIds), currentUserId);
     }
 
     @Transactional
     public CommentResponseDTO createComment(Long userId, UUID postId, CreateCommentDTO dto) {
         User user = getUserOrThrow(userId);
         Post post = getPostOrThrow(postId);
+        blockService.assertNotBlocked(user.getId(), post.getOwner().getId());
 
         PostComment comment = new PostComment();
         comment.setUser(user);
@@ -282,6 +297,7 @@ public class PostService {
             if (!parentComment.getPost().getPostId().equals(postId)) {
                 throw new IllegalArgumentException("Parent comment belongs to another post");
             }
+            blockService.assertNotBlocked(user.getId(), parentComment.getUser().getId());
             comment.setParentComment(parentComment);
         }
 
@@ -309,6 +325,7 @@ public class PostService {
     ) {
         Post post = getPostOrThrow(postId);
         getUserOrThrow(currentUserId);
+        assertCanViewPost(currentUserId, post);
 
         Page<PostComment> comments;
 
@@ -323,7 +340,16 @@ public class PostService {
                     .findByPost_PostIdAndParentCommentIsNullOrderByCreatedAtDesc(postId, pageable);
         }
 
-        return comments.map(comment -> buildCommentResponse(comment, currentUserId));
+        Set<Long> blockedUserIds = blockService.blockedUserIdsFor(currentUserId);
+        return new PageImpl<>(
+                comments.getContent()
+                        .stream()
+                        .filter(comment -> !blockedUserIds.contains(comment.getUser().getId()))
+                        .map(comment -> buildCommentResponse(comment, currentUserId))
+                        .toList(),
+                pageable,
+                comments.getTotalElements()
+        );
     }
 
     @Transactional(readOnly = true)
@@ -334,10 +360,20 @@ public class PostService {
     ) {
         PostComment parentComment = getCommentOrThrow(commentId);
         getUserOrThrow(currentUserId);
+        assertCanViewPost(currentUserId, parentComment.getPost());
+        blockService.assertNotBlocked(currentUserId, parentComment.getUser().getId());
 
-        return postCommentRepository
-                .findByParentComment_CommentIdOrderByCreatedAtAsc(commentId, pageable)
-                .map(comment -> buildCommentResponse(comment, currentUserId));
+        Page<PostComment> replies = postCommentRepository.findByParentComment_CommentIdOrderByCreatedAtAsc(commentId, pageable);
+        Set<Long> blockedUserIds = blockService.blockedUserIdsFor(currentUserId);
+        return new PageImpl<>(
+                replies.getContent()
+                        .stream()
+                        .filter(comment -> !blockedUserIds.contains(comment.getUser().getId()))
+                        .map(comment -> buildCommentResponse(comment, currentUserId))
+                        .toList(),
+                pageable,
+                replies.getTotalElements()
+        );
     }
 
     @Transactional
@@ -376,6 +412,8 @@ public class PostService {
     public CommentLikeResponseDTO likeComment(Long userId, UUID commentId) {
         User user = getUserOrThrow(userId);
         PostComment comment = getCommentOrThrow(commentId);
+        blockService.assertNotBlocked(user.getId(), comment.getUser().getId());
+        blockService.assertNotBlocked(user.getId(), comment.getPost().getOwner().getId());
 
         Optional<CommentLike> existingLike =
                 commentLikeRepository.findByComment_CommentIdAndUser_Id(commentId, userId);
@@ -400,7 +438,9 @@ public class PostService {
     @Transactional
     public CommentLikeResponseDTO unlikeComment(Long userId, UUID commentId) {
         getUserOrThrow(userId);
-        getCommentOrThrow(commentId);
+        PostComment comment = getCommentOrThrow(commentId);
+        blockService.assertNotBlocked(userId, comment.getUser().getId());
+        blockService.assertNotBlocked(userId, comment.getPost().getOwner().getId());
 
         commentLikeRepository.deleteByComment_CommentIdAndUser_Id(commentId, userId);
 
@@ -435,7 +475,8 @@ public class PostService {
         getUserOrThrow(currentUserId);
 
         Page<Post> hashtagPosts = postHashtagRepository.findPostsByHashtagName(normalized, pageable);
-        return buildPostResponsePage(hashtagPosts, currentUserId);
+        Set<Long> blockedUserIds = blockService.blockedUserIdsFor(currentUserId);
+        return buildPostResponsePage(filterPostPage(hashtagPosts, blockedUserIds), currentUserId);
     }
 
     @Transactional(readOnly = true)
@@ -452,6 +493,7 @@ public class PostService {
     public void markPostSeen(Long userId, UUID postId) {
         User user = getUserOrThrow(userId);
         Post post = getPostOrThrow(postId);
+        blockService.assertNotBlocked(user.getId(), post.getOwner().getId());
 
         if (!postImpressionRepository.existsByPost_PostIdAndUser_Id(postId, userId)) {
             PostImpression impression = new PostImpression();
@@ -520,6 +562,17 @@ public class PostService {
                 posts.getPageable(),
                 posts.getTotalElements()
         );
+    }
+
+    private Page<Post> filterPostPage(Page<Post> posts, Set<Long> blockedUserIds) {
+        if (blockedUserIds == null || blockedUserIds.isEmpty()) {
+            return posts;
+        }
+        List<Post> visiblePosts = posts.getContent()
+                .stream()
+                .filter(post -> !blockedUserIds.contains(post.getOwner().getId()))
+                .toList();
+        return new PageImpl<>(visiblePosts, posts.getPageable(), visiblePosts.size());
     }
 
     private List<PostResponseDTO> buildPostResponses(List<Post> posts, Long currentUserId) {
@@ -704,6 +757,15 @@ public class PostService {
         }
 
         return user;
+    }
+
+    private User authRepositoryByUsername(String username) {
+        return authRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
+    }
+
+    private void assertCanViewPost(Long currentUserId, Post post) {
+        blockService.assertNotBlocked(currentUserId, post.getOwner().getId());
     }
 
     private Post getPostOrThrow(UUID postId) {

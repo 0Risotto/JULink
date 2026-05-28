@@ -18,6 +18,14 @@ interface SearchUserRepository extends JpaRepository<User, Long> {
             FROM users u
             WHERE (:currentUserId IS NULL OR u.id <> :currentUserId)
             AND (
+                :currentUserId IS NULL
+                OR NOT EXISTS (
+                    SELECT 1 FROM user_blocks b
+                    WHERE (b.blocker_id = :currentUserId AND b.blocked_id = u.id)
+                       OR (b.blocker_id = u.id AND b.blocked_id = :currentUserId)
+                )
+            )
+            AND (
                 LOWER(u.username) LIKE LOWER(CONCAT('%', :q, '%'))
                 OR LOWER(u.first_name) LIKE LOWER(CONCAT('%', :q, '%'))
                 OR LOWER(u.last_name) LIKE LOWER(CONCAT('%', :q, '%'))
@@ -41,6 +49,14 @@ interface SearchUserRepository extends JpaRepository<User, Long> {
             SELECT COUNT(*)
             FROM users u
             WHERE (:currentUserId IS NULL OR u.id <> :currentUserId)
+            AND (
+                :currentUserId IS NULL
+                OR NOT EXISTS (
+                    SELECT 1 FROM user_blocks b
+                    WHERE (b.blocker_id = :currentUserId AND b.blocked_id = u.id)
+                       OR (b.blocker_id = u.id AND b.blocked_id = :currentUserId)
+                )
+            )
             AND (
                 LOWER(u.username) LIKE LOWER(CONCAT('%', :q, '%'))
                 OR LOWER(u.first_name) LIKE LOWER(CONCAT('%', :q, '%'))
@@ -71,6 +87,14 @@ interface SearchPostRepository extends JpaRepository<Post, UUID> {
             FROM posts p
             WHERE (:currentUserId IS NULL OR p.owner_id <> :currentUserId)
             AND (
+                :currentUserId IS NULL
+                OR NOT EXISTS (
+                    SELECT 1 FROM user_blocks b
+                    WHERE (b.blocker_id = :currentUserId AND b.blocked_id = p.owner_id)
+                       OR (b.blocker_id = p.owner_id AND b.blocked_id = :currentUserId)
+                )
+            )
+            AND (
                 LOWER(p.description) LIKE LOWER(CONCAT('%', :q, '%'))
                 OR p.description % :q
             )
@@ -80,6 +104,14 @@ interface SearchPostRepository extends JpaRepository<Post, UUID> {
             SELECT COUNT(*)
             FROM posts p
             WHERE (:currentUserId IS NULL OR p.owner_id <> :currentUserId)
+            AND (
+                :currentUserId IS NULL
+                OR NOT EXISTS (
+                    SELECT 1 FROM user_blocks b
+                    WHERE (b.blocker_id = :currentUserId AND b.blocked_id = p.owner_id)
+                       OR (b.blocker_id = p.owner_id AND b.blocked_id = :currentUserId)
+                )
+            )
             AND (
                 LOWER(p.description) LIKE LOWER(CONCAT('%', :q, '%'))
                 OR p.description % :q
@@ -104,6 +136,14 @@ interface SearchHashtagRepository extends JpaRepository<Hashtag, UUID> {
             JOIN posts p ON p.post_id = ph.post_id
             WHERE (:currentUserId IS NULL OR p.owner_id <> :currentUserId)
             AND (
+                :currentUserId IS NULL
+                OR NOT EXISTS (
+                    SELECT 1 FROM user_blocks b
+                    WHERE (b.blocker_id = :currentUserId AND b.blocked_id = p.owner_id)
+                       OR (b.blocker_id = p.owner_id AND b.blocked_id = :currentUserId)
+                )
+            )
+            AND (
                 LOWER(h.name) LIKE LOWER(CONCAT('%', :q, '%'))
                 OR h.name % :q
             )
@@ -116,6 +156,14 @@ interface SearchHashtagRepository extends JpaRepository<Hashtag, UUID> {
             JOIN post_hashtags ph ON ph.hashtag_id = h.hashtag_id
             JOIN posts p ON p.post_id = ph.post_id
             WHERE (:currentUserId IS NULL OR p.owner_id <> :currentUserId)
+            AND (
+                :currentUserId IS NULL
+                OR NOT EXISTS (
+                    SELECT 1 FROM user_blocks b
+                    WHERE (b.blocker_id = :currentUserId AND b.blocked_id = p.owner_id)
+                       OR (b.blocker_id = p.owner_id AND b.blocked_id = :currentUserId)
+                )
+            )
             AND (
                 LOWER(h.name) LIKE LOWER(CONCAT('%', :q, '%'))
                 OR h.name % :q

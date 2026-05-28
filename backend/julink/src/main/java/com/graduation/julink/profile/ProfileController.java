@@ -38,11 +38,11 @@ public class ProfileController {
     }
 
     @GetMapping("/{username}")
-    public Map<String, Object> getUserProfile(@PathVariable String username) {
+    public Map<String, Object> getUserProfile(Principal principal, @PathVariable String username) {
         try {
             String formattedUsername = username.toLowerCase().trim();
 
-            ProfileDTOs.UserProfile profile = profileService.getProfileByUsername(formattedUsername);
+            ProfileDTOs.UserProfile profile = profileService.getProfileByUsername(principal.getName(), formattedUsername);
 
             return Map.of("status", "success", "user", profile);
         } catch (Exception e) {

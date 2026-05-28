@@ -1,5 +1,6 @@
 package com.graduation.julink.chat.service;
 
+import com.graduation.julink.block.BlockService;
 import com.graduation.julink.follow.FollowRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +16,9 @@ class FriendshipValidatorTest {
 
     @Mock
     private FollowRepository followRepository;
+
+    @Mock
+    private BlockService blockService;
 
     @InjectMocks
     private FriendshipValidator friendshipValidator;

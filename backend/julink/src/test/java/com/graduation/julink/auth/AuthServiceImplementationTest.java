@@ -2,6 +2,7 @@ package com.graduation.julink.auth;
 
 import com.graduation.julink.auth.Repository.AuthRepository;
 import com.graduation.julink.auth.Repository.OTPRepository;
+import com.graduation.julink.block.BlockService;
 import com.graduation.julink.follow.FollowRepository;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.persistence.EntityManager;
@@ -30,6 +31,9 @@ class AuthServiceImplementationTest {
 
     @Mock
     private FollowRepository followRepository;
+
+    @Mock
+    private BlockService blockService;
 
     @Mock
     private AuthRepository userRepository;

@@ -2,6 +2,7 @@ package com.graduation.julink.notification;
 
 import com.graduation.julink.auth.AuthEntities;
 import com.graduation.julink.auth.Repository.AuthRepository;
+import com.graduation.julink.block.BlockService;
 import com.graduation.julink.notification.NotificationDTOs.NotificationResponse;
 import com.graduation.julink.notification.NotificationEntities.Notification;
 import jakarta.persistence.EntityNotFoundException;
@@ -38,6 +39,9 @@ class NotificationServiceTest {
 
     @Mock
     private SimpMessagingTemplate messagingTemplate;
+
+    @Mock
+    private BlockService blockService;
 
     @InjectMocks
     private NotificationService notificationService;

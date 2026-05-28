@@ -1,6 +1,7 @@
 package com.graduation.julink.auth;
 import com.graduation.julink.auth.Repository.OTPRepository;
 import com.graduation.julink.auth.Repository.AuthRepository;
+import com.graduation.julink.block.BlockService;
 import com.graduation.julink.follow.FollowRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -32,6 +33,7 @@ public interface AuthService {
 @Transactional
 class AuthServiceImplementation implements AuthService {
     private final FollowRepository followRepository;
+    private final BlockService blockService;
     private final AuthRepository userRepository;
     private final OTPRepository otpRepository;
     private final AuthMapper authMapper;
@@ -106,6 +108,7 @@ class AuthServiceImplementation implements AuthService {
         deleteUserChatData(userId);
         deleteUserPostData(userId);
         deleteUserLostAndFounds(userId);
+        blockService.deleteAllForUser(userId);
         deleteExistingOTP(email);
         followRepository.deleteUser(username);
         userRepository.delete(user);

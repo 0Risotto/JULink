@@ -1,8 +1,11 @@
 package com.graduation.julink.post;
 
 import com.graduation.julink.auth.AuthEntities.User;
+import com.graduation.julink.auth.Repository.AuthRepository;
+import com.graduation.julink.block.BlockService;
 import com.graduation.julink.common.media.MediaUploadService;
 import com.graduation.julink.follow.FollowService;
+import com.graduation.julink.notification.NotificationService;
 import com.graduation.julink.post.PostDTOs.*;
 import com.graduation.julink.post.PostEntities.*;
 import jakarta.persistence.EntityManager;
@@ -39,8 +42,11 @@ class PostServiceTest {
     @Mock private PostCommentRepository postCommentRepository;
     @Mock private CommentLikeRepository commentLikeRepository;
     @Mock private PostImpressionRepository postImpressionRepository;
+    @Mock private AuthRepository authRepository;
     @Mock private FollowService followService;
     @Mock private MediaUploadService mediaUploadService;
+    @Mock private NotificationService notificationService;
+    @Mock private BlockService blockService;
     @Mock private EntityManager entityManager;
 
     @InjectMocks

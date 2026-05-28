@@ -149,6 +149,7 @@ public class ChatService {
     public List<ConversationResponse> listConversations(String username) {
         User user = loadUser(username);
         return conversationRepo.findAllByUserId(user.getId()).stream()
+                .filter(conv -> isConversationVisibleTo(conv, user))
                 .map(conv -> buildConversationResponse(conv, user))
                 .toList();
     }
@@ -544,8 +545,24 @@ public class ChatService {
                     .findFirst()
                     .ifPresent(other -> friendshipValidator.assertFriends(
                             sender.getUsername(), other.getUser().getUsername()));
+        } else {
+            conv.getMembers().stream()
+                    .filter(m -> !m.getUser().getId().equals(sender.getId()))
+                    .forEach(other -> friendshipValidator.assertNotBlocked(
+                            sender.getUsername(), other.getUser().getUsername()));
         }
-        // Groups: membership was validated at creation / add-member time. No per-message check needed.
+    }
+
+    private boolean isConversationVisibleTo(Conversation conv, User viewer) {
+        if (conv.isGroup()) {
+            return true;
+        }
+        return conv.getMembers().stream()
+                .filter(member -> !member.getUser().getId().equals(viewer.getId()))
+                .noneMatch(member -> !friendshipValidator.areFriends(
+                        viewer.getUsername(),
+                        member.getUser().getUsername()
+                ));
     }
 
     private User loadUser(String username) {

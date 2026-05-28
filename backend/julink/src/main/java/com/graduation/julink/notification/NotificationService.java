@@ -2,6 +2,7 @@ package com.graduation.julink.notification;
 
 import com.graduation.julink.auth.AuthEntities;
 import com.graduation.julink.auth.Repository.AuthRepository;
+import com.graduation.julink.block.BlockService;
 import com.graduation.julink.notification.NotificationDTOs.NotificationResponse;
 import com.graduation.julink.notification.NotificationEntities.Notification;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,6 +24,7 @@ public class NotificationService {
     private final NotificationMapper notificationMapper;
     private final AuthRepository authRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final BlockService blockService;
 
     @Transactional
     public NotificationResponse notifyUser(
@@ -38,6 +40,9 @@ public class NotificationService {
             return null;
         }
         if (actor != null && Objects.equals(recipient.getId(), actor.getId())) {
+            return null;
+        }
+        if (actor != null && blockService.isBlockedEitherWay(recipient.getId(), actor.getId())) {
             return null;
         }
 

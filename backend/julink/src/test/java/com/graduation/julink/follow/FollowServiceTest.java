@@ -2,6 +2,8 @@ package com.graduation.julink.follow;
 
 import com.graduation.julink.auth.AuthEntities.User;
 import com.graduation.julink.auth.Repository.AuthRepository;
+import com.graduation.julink.block.BlockService;
+import com.graduation.julink.notification.NotificationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,6 +30,12 @@ class FollowServiceTest {
 
     @Mock
     private AuthRepository authRepository;
+
+    @Mock
+    private NotificationService notificationService;
+
+    @Mock
+    private BlockService blockService;
 
     @InjectMocks
     private FollowService followService;
