@@ -62,6 +62,11 @@ public final class PostDTOs {
             LocalDateTime updatedAt
     ) {}
 
+    public record PostShareLinkDTO(
+            UUID postId,
+            String sharePath
+    ) {}
+
     public record CommentLikeResponseDTO(
             UUID commentId,
             boolean liked,

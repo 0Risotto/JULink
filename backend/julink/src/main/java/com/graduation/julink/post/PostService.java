@@ -86,6 +86,13 @@ public class PostService {
         return buildPostResponse(post, currentUserId);
     }
 
+    @Transactional(readOnly = true)
+    public PostShareLinkDTO getPostShareLink(Long currentUserId, UUID postId) {
+        Post post = getPostOrThrow(postId);
+        assertCanViewPost(currentUserId, post);
+        return new PostShareLinkDTO(postId, "/posts/" + postId);
+    }
+
     @Transactional
     public PostResponseDTO updatePost(Long ownerId, UUID postId, UpdatePostDTO dto) {
         Post post = getPostOrThrow(postId);

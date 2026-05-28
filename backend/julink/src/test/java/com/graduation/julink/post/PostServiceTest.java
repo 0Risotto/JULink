@@ -118,6 +118,17 @@ class PostServiceTest {
     }
 
     @Test
+    void getPostShareLink_ReturnsCanonicalFrontendPath() {
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+
+        PostShareLinkDTO response = postService.getPostShareLink(101L, postId);
+
+        assertEquals(postId, response.postId());
+        assertEquals("/posts/" + postId, response.sharePath());
+        verify(blockService).assertNotBlocked(101L, user.getId());
+    }
+
+    @Test
     void updatePost_SameHashtag_ReplacesExistingHashtagsBeforeSaving() {
         UpdatePostDTO req = new UpdatePostDTO("Test description #cool", null);
 

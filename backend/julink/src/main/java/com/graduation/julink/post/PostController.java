@@ -40,6 +40,14 @@ public class PostController {
         return postService.getPostById(currentUser(principal).getId(), postId);
     }
 
+    @GetMapping("/{postId}/share-link")
+    public PostShareLinkDTO getPostShareLink(
+            Principal principal,
+            @PathVariable UUID postId
+    ) {
+        return postService.getPostShareLink(currentUser(principal).getId(), postId);
+    }
+
     @PutMapping("/{postId}")
     public PostResponseDTO updatePost(
             Principal principal,

@@ -81,6 +81,19 @@ class PostControllerTest {
     }
 
     @Test
+    void getPostShareLink_Success() {
+        mockPrincipal();
+        UUID postId = UUID.randomUUID();
+        PostShareLinkDTO resp = new PostShareLinkDTO(postId, "/posts/" + postId);
+
+        when(postService.getPostShareLink(101L, postId)).thenReturn(resp);
+
+        PostShareLinkDTO response = postController.getPostShareLink(principal, postId);
+
+        assertEquals(resp, response);
+    }
+
+    @Test
     void deletePost_Success() {
         mockPrincipal();
         UUID postId = UUID.randomUUID();
