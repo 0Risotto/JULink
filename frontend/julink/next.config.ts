@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+
+    allowedDevOrigins: ["192.168.1.18"],
+
     images: {
         /* * Next.js <Image /> component has a strict security policy by default.
          * To prevent malicious users from exploiting the built-in image optimization API
