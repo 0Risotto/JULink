@@ -106,12 +106,12 @@ export default function CreateLostAndFoundModal({ open, onOpenChange, onSuccess 
       if (!val) handleReset();
       else onOpenChange(val);
     }}>
-      <DialogContent className="max-w-lg overflow-y-auto max-h-[90vh]">
-        <DialogHeader>
+      <DialogContent className="max-w-lg p-0 overflow-hidden">
+        <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle>Create Lost & Found Post</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-6 max-h-[75vh] overflow-y-auto">
           <div className="flex flex-col gap-2">
             <Label>Type</Label>
             <div className="flex gap-4">
