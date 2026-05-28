@@ -8,6 +8,9 @@ export const createLostAndFound = (data: CreateLostAndFoundRequest) =>
 export const markAsResolved = (id: string) =>
   patch<LostAndFoundResponse>(`/lost-and-founds/${id}/resolve`);
 
+export const claimLostAndFound = (id: string, message?: string) =>
+  post<{ status: string; notificationId?: string; message: string }>(`/lost-and-founds/${id}/claim`, { message });
+
 export const getLostAndFounds = (
   college?: string, 
   type?: string,

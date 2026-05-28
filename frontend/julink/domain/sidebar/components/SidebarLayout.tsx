@@ -7,6 +7,7 @@ import { AuthGuard } from "@/domain/auth/components/AuthGuard"
 import { useAppSelector, useAppDispatch } from "@/store/hooks"
 import { setSidebarOpen } from "../store/sidebarSlice"
 import { GlobalCallListener } from "@/domain/call/components/GlobalCallListener"
+import { GlobalNotificationListener } from "@/domain/notifications/components/GlobalNotificationListener"
 import { useTheme } from "next-themes"
 import { useUser } from "@/domain/profile/hooks/useUser"
 import { useEffect } from "react"
@@ -43,6 +44,7 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
         onOpenChange={(open) => dispatch(setSidebarOpen(open))}
       >
         <GlobalCallListener />
+        <GlobalNotificationListener />
         <AppSidebar />
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">

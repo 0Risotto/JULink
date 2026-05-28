@@ -5,7 +5,7 @@ import { useUser } from "@/domain/profile/hooks/useUser";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Phone, CheckCircle, Clock, MessageSquare, UserCircle } from "lucide-react";
+import { MapPin, Phone, CheckCircle, Clock, MessageSquare, UserCircle, Handshake } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { createDM } from "@/domain/chat/api/chatApi";
 import { useAppDispatch } from "@/store/hooks";
@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PostCarousel from "@/domain/posts/components/PostCarousel";
+import ClaimLostAndFoundModal from "./ClaimLostAndFoundModal";
 
 interface Props {
   item: LostAndFoundResponse;
@@ -31,6 +32,7 @@ export default function LostAndFoundCard({ item, onUpdate }: Props) {
   
   const [loading, setLoading] = useState(false);
   const [messaging, setMessaging] = useState(false);
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
 
   const isOwner = myUsername === item.ownerUsername;
 
@@ -61,6 +63,7 @@ export default function LostAndFoundCard({ item, onUpdate }: Props) {
   };
 
   return (
+    <>
     <Card className="w-full mb-4 overflow-hidden">
       <CardHeader className="p-4 pb-2">
         <div className="flex items-center gap-3 mb-3 border-b pb-3">
@@ -115,15 +118,27 @@ export default function LostAndFoundCard({ item, onUpdate }: Props) {
             )}
             
             {!isOwner && (
-              <Button 
-                size="sm" 
-                variant="secondary" 
-                onClick={handleMessageUser} 
-                disabled={messaging}
-              >
-                <MessageSquare className="w-4 h-4 mr-2" />
-                {messaging ? "Wait..." : "Message"}
-              </Button>
+              <div className="flex gap-2">
+                {!item.isResolved && (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => setIsClaimModalOpen(true)}
+                  >
+                    <Handshake className="w-4 h-4 mr-2" />
+                    Claim Item
+                  </Button>
+                )}
+                <Button 
+                  size="sm" 
+                  variant="secondary" 
+                  onClick={handleMessageUser} 
+                  disabled={messaging}
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  {messaging ? "Wait..." : "Message"}
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -154,5 +169,15 @@ export default function LostAndFoundCard({ item, onUpdate }: Props) {
         </CardFooter>
       )}
     </Card>
+
+    <ClaimLostAndFoundModal
+      open={isClaimModalOpen}
+      onOpenChange={setIsClaimModalOpen}
+      itemId={item.id}
+      onSuccess={() => {
+        setIsClaimModalOpen(false);
+      }}
+    />
+    </>
   );
 }

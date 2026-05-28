@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, MessageSquare, Search, Box, Settings } from "lucide-react"
+import { Home, MessageSquare, Search, Box, Settings, Bell } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -16,10 +16,12 @@ import {
 import { NavUser } from "./NavUser"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useAppSelector } from "@/store/hooks"
 
 const items = [
   { title: "Home", url: "/home", icon: Home },
   { title: "Search", url: "/search", icon: Search },
+  { title: "Notifications", url: "/notifications", icon: Bell },
   { title: "Chat", url: "/chat", icon: MessageSquare },
   { title: "Lost & Found", url: "/lost-and-found", icon: Box },
   { title: "Settings", url: "/settings", icon: Settings },
@@ -27,6 +29,7 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const unreadCount = useAppSelector((state) => state.notifications.unreadCount);
 
   return (
     <Sidebar>
@@ -43,9 +46,16 @@ export function AppSidebar() {
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive}>
-                      <Link href={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
+                      <Link href={item.url} className="flex justify-between w-full items-center">
+                        <span className="flex items-center gap-2">
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </span>
+                        {item.title === "Notifications" && unreadCount > 0 && (
+                          <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-5 h-5 flex items-center justify-center shadow-sm">
+                            {unreadCount}
+                          </span>
+                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
