@@ -142,7 +142,7 @@ export default function UserPosts({ username, isOwnProfile, currentUser, feedTyp
               <DialogHeader className="px-4 py-4 border-b border-gray-100 dark:border-zinc-800">
                 <DialogTitle className="text-center">Create Post</DialogTitle>
               </DialogHeader>
-              <div className="p-4">
+              <div className="p-4 max-h-[75vh] overflow-y-auto">
                 <CreatePost 
                   currentUser={currentUser} 
                   onPostCreated={(newPost) => {

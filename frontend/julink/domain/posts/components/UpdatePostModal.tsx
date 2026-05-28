@@ -119,7 +119,7 @@ export default function UpdatePostModal({ post, isOpen, onClose, onPostUpdated }
           <DialogTitle className="text-center">Edit Post</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleUpdate} className="p-4 space-y-6">
+        <form onSubmit={handleUpdate} className="p-4 space-y-6 max-h-[75vh] overflow-y-auto">
           {/* Caption Input */}
           <div className="space-y-2">
             <Textarea
