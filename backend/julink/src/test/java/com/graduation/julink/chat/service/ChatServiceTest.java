@@ -6,6 +6,7 @@ import com.graduation.julink.chat.ChatDTOs.*;
 import com.graduation.julink.chat.ChatEntities.*;
 import com.graduation.julink.chat.ChatMapper;
 import com.graduation.julink.chat.repo.*;
+import com.graduation.julink.notification.NotificationService;
 import com.graduation.julink.post.PostEntities.Post;
 import com.graduation.julink.post.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -29,6 +30,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,6 +46,7 @@ class ChatServiceTest {
     @Mock private ChatMapper mapper;
     @Mock private SimpMessagingTemplate messagingTemplate;
     @Mock private PostRepository postRepository;
+    @Mock private NotificationService notificationService;
 
     @InjectMocks
     private ChatService chatService;
@@ -54,6 +57,7 @@ class ChatServiceTest {
     private Conversation conversation;
     private ConversationMember member1;
     private ConversationMember member2;
+    private ConversationMember member3;
 
     @BeforeEach
     void setUp() {
@@ -83,7 +87,15 @@ class ChatServiceTest {
         member2.setConversation(conversation);
         member2.setAdmin(false);
 
+        member3 = new ConversationMember();
+        member3.setUser(user3);
+        member3.setConversation(conversation);
+        member3.setAdmin(false);
+
         conversation.setMembers(new java.util.HashSet<>(List.of(member1, member2)));
+
+        lenient().when(messageRepo.findLatestByConversationId(nullable(Long.class))).thenReturn(Optional.empty());
+        lenient().when(messageRepo.countUnread(nullable(Long.class), nullable(Long.class))).thenReturn(0);
     }
 
     @Test
@@ -97,7 +109,7 @@ class ChatServiceTest {
         when(conversationRepo.findDMBetween(101L, 102L)).thenReturn(Optional.of(conversation));
         
         ConversationResponse convResp = new ConversationResponse();
-        when(mapper.toConversationResponse(any(), any(), anyInt())).thenReturn(convResp);
+        when(mapper.toConversationResponse(any(Conversation.class), nullable(Message.class), anyInt())).thenReturn(convResp);
 
         ConversationResponse response = chatService.getOrCreateDM("user1", req);
 
@@ -116,12 +128,187 @@ class ChatServiceTest {
         when(conversationRepo.findDMBetween(101L, 102L)).thenReturn(Optional.empty());
         
         ConversationResponse convResp = new ConversationResponse();
-        when(mapper.toConversationResponse(any(), any(), anyInt())).thenReturn(convResp);
+        when(mapper.toConversationResponse(any(Conversation.class), nullable(Message.class), anyInt())).thenReturn(convResp);
 
         ConversationResponse response = chatService.getOrCreateDM("user1", req);
 
         assertNotNull(response);
         verify(conversationRepo, times(1)).save(any(Conversation.class));
+    }
+
+    @Test
+    void createGroup_CreatorIsAdmin() {
+        CreateGroupRequest req = new CreateGroupRequest();
+        req.setGroupName("Test Group");
+        req.setMemberUsernames(List.of("user2"));
+
+        when(userRepo.findByUsername("user1")).thenReturn(Optional.of(user1));
+        when(userRepo.findByUsername("user2")).thenReturn(Optional.of(user2));
+        doNothing().when(friendshipValidator).assertFriends("user1", "user2");
+        when(mapper.toConversationResponse(any(Conversation.class), nullable(Message.class), anyInt()))
+                .thenReturn(new ConversationResponse());
+
+        chatService.createGroup("user1", req);
+
+        verify(conversationRepo).save(argThat(savedGroup ->
+                savedGroup.isGroup()
+                        && savedGroup.getMembers().stream()
+                        .anyMatch(member -> member.getUser().getId().equals(101L) && member.isAdmin())
+        ));
+    }
+
+    @Test
+    void updateGroup_AdminCanRenameAndChangeImage() {
+        makeGroup();
+        UpdateGroupRequest req = new UpdateGroupRequest();
+        req.setGroupName("Renamed Group");
+        req.setGroupPictureUrl("https://example.com/group.png");
+        ConversationResponse convResp = new ConversationResponse();
+
+        when(userRepo.findByUsername("user1")).thenReturn(Optional.of(user1));
+        when(conversationRepo.findById(1L)).thenReturn(Optional.of(conversation));
+        when(conversationRepo.save(conversation)).thenReturn(conversation);
+        when(mapper.toConversationResponse(conversation, null, 0)).thenReturn(convResp);
+
+        ConversationResponse response = chatService.updateGroup(1L, "user1", req);
+
+        assertEquals(convResp, response);
+        assertEquals("Renamed Group", conversation.getGroupName());
+        assertEquals("https://example.com/group.png", conversation.getGroupPictureUrl());
+    }
+
+    @Test
+    void updateGroup_NonAdminRejected() {
+        makeGroup();
+        UpdateGroupRequest req = new UpdateGroupRequest();
+        req.setGroupName("Renamed Group");
+
+        when(userRepo.findByUsername("user2")).thenReturn(Optional.of(user2));
+        when(conversationRepo.findById(1L)).thenReturn(Optional.of(conversation));
+
+        assertThrows(SecurityException.class, () -> chatService.updateGroup(1L, "user2", req));
+        verify(conversationRepo, never()).save(any());
+    }
+
+    @Test
+    void removeMember_AdminCanRemoveMember() {
+        makeGroupWithThreeMembers();
+        ConversationResponse convResp = new ConversationResponse();
+
+        when(userRepo.findByUsername("user1")).thenReturn(Optional.of(user1));
+        when(userRepo.findByUsername("user2")).thenReturn(Optional.of(user2));
+        when(conversationRepo.findById(1L)).thenReturn(Optional.of(conversation));
+        when(conversationRepo.save(conversation)).thenReturn(conversation);
+        when(mapper.toConversationResponse(conversation, null, 0)).thenReturn(convResp);
+
+        ConversationResponse response = chatService.removeMemberFromGroup(1L, "user1", "user2");
+
+        assertEquals(convResp, response);
+        assertFalse(conversation.getMembers().contains(member2));
+        verify(memberRepo).delete(member2);
+    }
+
+    @Test
+    void removeMember_AdminCannotRemoveSelf() {
+        makeGroup();
+
+        when(userRepo.findByUsername("user1")).thenReturn(Optional.of(user1));
+        when(conversationRepo.findById(1L)).thenReturn(Optional.of(conversation));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> chatService.removeMemberFromGroup(1L, "user1", "user1"));
+        verify(memberRepo, never()).delete(any());
+        verify(conversationRepo, never()).save(any());
+    }
+
+    @Test
+    void leaveGroup_LastAdminRejected() {
+        makeGroup();
+
+        when(userRepo.findByUsername("user1")).thenReturn(Optional.of(user1));
+        when(conversationRepo.findById(1L)).thenReturn(Optional.of(conversation));
+
+        assertThrows(IllegalStateException.class, () -> chatService.leaveGroup(1L, "user1"));
+        verify(memberRepo, never()).delete(any());
+    }
+
+    @Test
+    void leaveGroup_NonAdminCanLeave() {
+        makeGroup();
+        ConversationResponse convResp = new ConversationResponse();
+
+        when(userRepo.findByUsername("user2")).thenReturn(Optional.of(user2));
+        when(conversationRepo.findById(1L)).thenReturn(Optional.of(conversation));
+        when(conversationRepo.save(conversation)).thenReturn(conversation);
+        when(mapper.toConversationResponse(conversation, null, 0)).thenReturn(convResp);
+
+        ConversationResponse response = chatService.leaveGroup(1L, "user2");
+
+        assertEquals(convResp, response);
+        assertFalse(conversation.getMembers().contains(member2));
+        verify(memberRepo).delete(member2);
+    }
+
+    @Test
+    void updateMemberAdmin_AdminCanPromoteMember() {
+        makeGroup();
+        UpdateMemberAdminRequest req = new UpdateMemberAdminRequest();
+        req.setAdmin(true);
+        ConversationResponse convResp = new ConversationResponse();
+
+        when(userRepo.findByUsername("user1")).thenReturn(Optional.of(user1));
+        when(userRepo.findByUsername("user2")).thenReturn(Optional.of(user2));
+        when(conversationRepo.findById(1L)).thenReturn(Optional.of(conversation));
+        when(conversationRepo.save(conversation)).thenReturn(conversation);
+        when(mapper.toConversationResponse(conversation, null, 0)).thenReturn(convResp);
+
+        ConversationResponse response = chatService.updateMemberAdmin(1L, "user1", "user2", req);
+
+        assertEquals(convResp, response);
+        assertTrue(member2.isAdmin());
+        verify(memberRepo).save(member2);
+    }
+
+    @Test
+    void updateMemberAdmin_LastAdminCannotBeDemoted() {
+        makeGroup();
+        UpdateMemberAdminRequest req = new UpdateMemberAdminRequest();
+        req.setAdmin(false);
+
+        when(userRepo.findByUsername("user1")).thenReturn(Optional.of(user1));
+        when(conversationRepo.findById(1L)).thenReturn(Optional.of(conversation));
+
+        assertThrows(IllegalStateException.class, () -> chatService.updateMemberAdmin(1L, "user1", "user1", req));
+        verify(memberRepo, never()).save(any());
+    }
+
+    @Test
+    void startGroupCall_BroadcastsToAllMembersExceptCaller() {
+        makeGroupWithThreeMembers();
+        StartGroupCallRequest req = new StartGroupCallRequest();
+        req.setVideoCall(true);
+
+        when(userRepo.findByUsername("user1")).thenReturn(Optional.of(user1));
+        when(conversationRepo.findById(1L)).thenReturn(Optional.of(conversation));
+
+        GroupCallResponse response = chatService.startGroupCall(1L, "user1", req);
+
+        assertEquals(1L, response.getConversationId());
+        assertTrue(response.getRoomName().startsWith("JuLink-Group-1-"));
+        assertTrue(response.getVideoUrl().contains(response.getRoomName()));
+        assertEquals(List.of("user2", "user3"), response.getInvitedUsernames().stream().sorted().toList());
+        verify(messagingTemplate, times(2)).convertAndSend(eq("/topic/video-calls"), any(Object.class));
+    }
+
+    @Test
+    void groupOnlyOperation_RejectsDm() {
+        UpdateGroupRequest req = new UpdateGroupRequest();
+        req.setGroupName("Nope");
+
+        when(userRepo.findByUsername("user1")).thenReturn(Optional.of(user1));
+        when(conversationRepo.findById(1L)).thenReturn(Optional.of(conversation));
+
+        assertThrows(IllegalStateException.class, () -> chatService.updateGroup(1L, "user1", req));
     }
 
     @Test
@@ -135,7 +322,7 @@ class ChatServiceTest {
         doNothing().when(friendshipValidator).assertFriends("user1", "user2");
 
         ConversationResponse convResp = new ConversationResponse();
-        when(mapper.toConversationResponse(any(), any(), anyInt())).thenReturn(convResp);
+        when(mapper.toConversationResponse(any(Conversation.class), nullable(Message.class), anyInt())).thenReturn(convResp);
 
         ConversationResponse response = chatService.createGroup("user1", req);
 
@@ -276,5 +463,17 @@ class ChatServiceTest {
         verify(receiptRepo, times(1)).save(any(MessageReadReceipt.class));
         verify(messageRepo, times(1)).markAsRead(1L, 101L, 10L);
         verify(messagingTemplate, times(1)).convertAndSend(eq("/topic/conversations/1/read"), any(WsReadEvent.class));
+    }
+
+    private void makeGroup() {
+        conversation.setGroup(true);
+        conversation.setGroupName("Test Group");
+        conversation.setMembers(new java.util.HashSet<>(List.of(member1, member2)));
+    }
+
+    private void makeGroupWithThreeMembers() {
+        conversation.setGroup(true);
+        conversation.setGroupName("Test Group");
+        conversation.setMembers(new java.util.HashSet<>(List.of(member1, member2, member3)));
     }
 }

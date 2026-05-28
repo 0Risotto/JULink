@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -142,6 +144,143 @@ public class ChatService {
                 null
         );
         return buildConversationResponse(conv, requester);
+    }
+
+    public ConversationResponse updateGroup(Long conversationId,
+                                            String requesterUsername,
+                                            UpdateGroupRequest req) {
+        User requester = loadUser(requesterUsername);
+        Conversation conv = loadConversation(conversationId);
+
+        assertGroup(conv);
+        assertMember(conv, requester);
+        assertAdmin(conv, requester);
+
+        if (req.getGroupName() != null) {
+            String groupName = req.getGroupName().trim();
+            if (groupName.isBlank()) {
+                throw new IllegalArgumentException("Group name cannot be blank");
+            }
+            conv.setGroupName(groupName);
+        }
+        if (req.getGroupPictureUrl() != null) {
+            String groupPictureUrl = req.getGroupPictureUrl().trim();
+            conv.setGroupPictureUrl(groupPictureUrl.isBlank() ? null : groupPictureUrl);
+        }
+
+        Conversation saved = conversationRepo.save(conv);
+        return buildConversationResponse(saved != null ? saved : conv, requester);
+    }
+
+    public ConversationResponse removeMemberFromGroup(Long conversationId,
+                                                      String requesterUsername,
+                                                      String targetUsername) {
+        User requester = loadUser(requesterUsername);
+        User target = loadUserByUsername(targetUsername);
+        Conversation conv = loadConversation(conversationId);
+
+        assertGroup(conv);
+        assertMember(conv, requester);
+        assertAdmin(conv, requester);
+        ConversationMember targetMember = findMemberOrThrow(conv, target);
+
+        if (requester.getId().equals(target.getId())) {
+            throw new IllegalArgumentException("Use leave group to remove yourself");
+        }
+        if (targetMember.isAdmin() && countAdmins(conv) <= 1) {
+            throw new IllegalStateException("Cannot remove the last group admin");
+        }
+
+        conv.getMembers().remove(targetMember);
+        memberRepo.delete(targetMember);
+        conv.touch();
+        Conversation saved = conversationRepo.save(conv);
+        return buildConversationResponse(saved != null ? saved : conv, requester);
+    }
+
+    public ConversationResponse leaveGroup(Long conversationId, String requesterUsername) {
+        User requester = loadUser(requesterUsername);
+        Conversation conv = loadConversation(conversationId);
+
+        assertGroup(conv);
+        ConversationMember requesterMember = findMemberOrThrow(conv, requester);
+        if (requesterMember.isAdmin() && countAdmins(conv) <= 1) {
+            throw new IllegalStateException("Cannot leave as the last group admin");
+        }
+
+        conv.getMembers().remove(requesterMember);
+        memberRepo.delete(requesterMember);
+        conv.touch();
+        Conversation saved = conversationRepo.save(conv);
+        return buildConversationResponse(saved != null ? saved : conv, requester);
+    }
+
+    public ConversationResponse updateMemberAdmin(Long conversationId,
+                                                  String requesterUsername,
+                                                  String targetUsername,
+                                                  UpdateMemberAdminRequest req) {
+        User requester = loadUser(requesterUsername);
+        User target = loadUserByUsername(targetUsername);
+        Conversation conv = loadConversation(conversationId);
+
+        assertGroup(conv);
+        assertMember(conv, requester);
+        assertAdmin(conv, requester);
+        ConversationMember targetMember = findMemberOrThrow(conv, target);
+
+        if (!req.isAdmin() && targetMember.isAdmin() && countAdmins(conv) <= 1) {
+            throw new IllegalStateException("Cannot demote the last group admin");
+        }
+
+        targetMember.setAdmin(req.isAdmin());
+        memberRepo.save(targetMember);
+        conv.touch();
+        Conversation saved = conversationRepo.save(conv);
+        return buildConversationResponse(saved != null ? saved : conv, requester);
+    }
+
+    public GroupCallResponse startGroupCall(Long conversationId,
+                                            String requesterUsername,
+                                            StartGroupCallRequest req) {
+        User requester = loadUser(requesterUsername);
+        Conversation conv = loadConversation(conversationId);
+
+        assertGroup(conv);
+        assertMember(conv, requester);
+        assertAdmin(conv, requester);
+
+        String roomName = "JuLink-Group-" + conversationId + "-" + UUID.randomUUID().toString().substring(0, 8);
+        String videoUrl = "https://meet.opensuse.org/" + roomName;
+        boolean videoCall = req == null || req.isVideoCall();
+
+        List<String> invitedUsernames = conv.getMembers()
+                .stream()
+                .map(ConversationMember::getUser)
+                .filter(user -> !user.getId().equals(requester.getId()))
+                .map(User::getUsername)
+                .toList();
+        for (String targetUsername : invitedUsernames) {
+            Map<String, Object> payload = Map.of(
+                    "type", "INVITE_TO_GROUP_VIDEO",
+                    "conversationId", conversationId,
+                    "groupName", groupDisplayName(conv),
+                    "callerUsername", requester.getUsername(),
+                    "targetUsername", targetUsername,
+                    "videoUrl", videoUrl,
+                    "videoCall", videoCall
+            );
+
+            messagingTemplate.convertAndSend("/topic/video-calls", (Object) payload);
+
+        }
+
+        return GroupCallResponse.builder()
+                .conversationId(conversationId)
+                .roomName(roomName)
+                .videoUrl(videoUrl)
+                .videoCall(videoCall)
+                .invitedUsernames(invitedUsernames)
+                .build();
     }
 
     /** List all conversations for the current user. */
@@ -521,6 +660,19 @@ public class ChatService {
         if (!isMember) throw new SecurityException("User is not a member of this conversation");
     }
 
+    private ConversationMember findMemberOrThrow(Conversation conv, User user) {
+        return conv.getMembers().stream()
+                .filter(member -> member.getUser().getId().equals(user.getId()))
+                .findFirst()
+                .orElseThrow(() -> new SecurityException("User is not a member of this conversation"));
+    }
+
+    private void assertGroup(Conversation conv) {
+        if (!conv.isGroup()) {
+            throw new IllegalStateException("Not a group conversation");
+        }
+    }
+
     private void assertAdmin(Conversation conv, User user) {
         boolean isAdmin = conv.getMembers().stream()
                 .anyMatch(m -> m.getUser().getId().equals(user.getId()) && m.isAdmin());
@@ -530,6 +682,12 @@ public class ChatService {
     private boolean isAdmin(Conversation conv, User user) {
         return conv.getMembers().stream()
                 .anyMatch(m -> m.getUser().getId().equals(user.getId()) && m.isAdmin());
+    }
+
+    private long countAdmins(Conversation conv) {
+        return conv.getMembers().stream()
+                .filter(ConversationMember::isAdmin)
+                .count();
     }
 
     /**

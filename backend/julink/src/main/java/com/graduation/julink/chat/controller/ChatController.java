@@ -72,6 +72,51 @@ public class ChatController {
     // Messages
     // ─────────────────────────────────────────────────────────────
 
+    @PatchMapping("/conversations/{conversationId}/group")
+    public ResponseEntity<ConversationResponse> updateGroup(
+            Principal principal,
+            @PathVariable Long conversationId,
+            @RequestBody UpdateGroupRequest req) {
+        String username = getUsernameFromPrincipal(principal);
+        return ResponseEntity.ok(chatService.updateGroup(conversationId, username, req));
+    }
+
+    @DeleteMapping("/conversations/{conversationId}/members/{memberUsername}")
+    public ResponseEntity<ConversationResponse> removeMember(
+            Principal principal,
+            @PathVariable Long conversationId,
+            @PathVariable String memberUsername) {
+        String username = getUsernameFromPrincipal(principal);
+        return ResponseEntity.ok(chatService.removeMemberFromGroup(conversationId, username, memberUsername));
+    }
+
+    @PostMapping("/conversations/{conversationId}/leave")
+    public ResponseEntity<ConversationResponse> leaveGroup(
+            Principal principal,
+            @PathVariable Long conversationId) {
+        String username = getUsernameFromPrincipal(principal);
+        return ResponseEntity.ok(chatService.leaveGroup(conversationId, username));
+    }
+
+    @PatchMapping("/conversations/{conversationId}/members/{memberUsername}/admin")
+    public ResponseEntity<ConversationResponse> updateMemberAdmin(
+            Principal principal,
+            @PathVariable Long conversationId,
+            @PathVariable String memberUsername,
+            @RequestBody UpdateMemberAdminRequest req) {
+        String username = getUsernameFromPrincipal(principal);
+        return ResponseEntity.ok(chatService.updateMemberAdmin(conversationId, username, memberUsername, req));
+    }
+
+    @PostMapping("/conversations/{conversationId}/call")
+    public ResponseEntity<GroupCallResponse> startGroupCall(
+            Principal principal,
+            @PathVariable Long conversationId,
+            @RequestBody(required = false) StartGroupCallRequest req) {
+        String username = getUsernameFromPrincipal(principal);
+        return ResponseEntity.ok(chatService.startGroupCall(conversationId, username, req));
+    }
+
     @GetMapping("/conversations/{conversationId}/messages")
     public ResponseEntity<Page<MessageResponse>> getMessages(
             Principal principal,

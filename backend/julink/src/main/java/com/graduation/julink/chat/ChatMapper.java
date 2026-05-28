@@ -11,12 +11,17 @@ import java.util.List;
 public class ChatMapper {
 
     public UserSummary toUserSummary(User user) {
+        return toUserSummary(user, null);
+    }
+
+    public UserSummary toUserSummary(User user, Boolean admin) {
         return UserSummary.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .profilePictureUrl(user.getProfilePictureUrl())
+                .admin(admin)
                 .build();
     }
 
@@ -42,7 +47,7 @@ public class ChatMapper {
                                                         Message lastMessage,
                                                         int unreadCount) {
         List<UserSummary> members = conv.getMembers().stream()
-                .map(m -> toUserSummary(m.getUser()))
+                .map(m -> toUserSummary(m.getUser(), m.isAdmin()))
                 .toList();
 
         return ConversationResponse.builder()

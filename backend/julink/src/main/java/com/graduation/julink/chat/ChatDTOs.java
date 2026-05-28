@@ -37,6 +37,22 @@ public final class ChatDTOs {
     }
 
     @Data
+    public static class UpdateGroupRequest {
+        private String groupName;
+        private String groupPictureUrl;
+    }
+
+    @Data
+    public static class UpdateMemberAdminRequest {
+        private boolean admin;
+    }
+
+    @Data
+    public static class StartGroupCallRequest {
+        private boolean videoCall = true;
+    }
+
+    @Data
     public static class SendMessageRequest {
         private String content;
         private MessageType messageType = MessageType.TEXT;
@@ -107,6 +123,7 @@ public final class ChatDTOs {
         private String firstName;
         private String lastName;
         private String profilePictureUrl;
+        private Boolean admin;
     }
 
     @Data
@@ -142,6 +159,18 @@ public final class ChatDTOs {
         private MessageResponse lastMessage;
         private int unreadCount;
         private LocalDateTime updatedAt;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class GroupCallResponse {
+        private Long conversationId;
+        private String roomName;
+        private String videoUrl;
+        private boolean videoCall;
+        private List<String> invitedUsernames;
     }
 
     /** Broadcast over WebSocket when someone sends a message */

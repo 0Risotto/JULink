@@ -115,6 +115,77 @@ class ChatControllerTest {
     }
 
     @Test
+    void updateGroup_Success() {
+        mockPrincipal();
+        UpdateGroupRequest req = new UpdateGroupRequest();
+        req.setGroupName("Renamed Group");
+        ConversationResponse convResponse = new ConversationResponse();
+        when(chatService.updateGroup(1L, username, req)).thenReturn(convResponse);
+
+        ResponseEntity<ConversationResponse> response = chatController.updateGroup(principal, 1L, req);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(convResponse, response.getBody());
+    }
+
+    @Test
+    void removeMember_Success() {
+        mockPrincipal();
+        ConversationResponse convResponse = new ConversationResponse();
+        when(chatService.removeMemberFromGroup(1L, username, "member1")).thenReturn(convResponse);
+
+        ResponseEntity<ConversationResponse> response = chatController.removeMember(principal, 1L, "member1");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(convResponse, response.getBody());
+    }
+
+    @Test
+    void leaveGroup_Success() {
+        mockPrincipal();
+        ConversationResponse convResponse = new ConversationResponse();
+        when(chatService.leaveGroup(1L, username)).thenReturn(convResponse);
+
+        ResponseEntity<ConversationResponse> response = chatController.leaveGroup(principal, 1L);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(convResponse, response.getBody());
+    }
+
+    @Test
+    void updateMemberAdmin_Success() {
+        mockPrincipal();
+        UpdateMemberAdminRequest req = new UpdateMemberAdminRequest();
+        req.setAdmin(true);
+        ConversationResponse convResponse = new ConversationResponse();
+        when(chatService.updateMemberAdmin(1L, username, "member1", req)).thenReturn(convResponse);
+
+        ResponseEntity<ConversationResponse> response = chatController.updateMemberAdmin(principal, 1L, "member1", req);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(convResponse, response.getBody());
+    }
+
+    @Test
+    void startGroupCall_Success() {
+        mockPrincipal();
+        StartGroupCallRequest req = new StartGroupCallRequest();
+        GroupCallResponse callResponse = GroupCallResponse.builder()
+                .conversationId(1L)
+                .roomName("JuLink-Group-1-test")
+                .videoUrl("https://meet.opensuse.org/JuLink-Group-1-test")
+                .videoCall(true)
+                .invitedUsernames(List.of("member1"))
+                .build();
+        when(chatService.startGroupCall(1L, username, req)).thenReturn(callResponse);
+
+        ResponseEntity<GroupCallResponse> response = chatController.startGroupCall(principal, 1L, req);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(callResponse, response.getBody());
+    }
+
+    @Test
     void getMessages_Success() {
         mockPrincipal();
         Pageable pageable = PageRequest.of(0, 30);
