@@ -7,10 +7,25 @@ import { AuthGuard } from "@/domain/auth/components/AuthGuard"
 import { useAppSelector, useAppDispatch } from "@/store/hooks"
 import { setSidebarOpen } from "../store/sidebarSlice"
 import { GlobalCallListener } from "@/domain/call/components/GlobalCallListener"
+import { useTheme } from "next-themes"
+import { useUser } from "@/domain/profile/hooks/useUser"
+import { useEffect } from "react"
 
 export function SidebarLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const dispatch = useAppDispatch()
+  const { theme, setTheme } = useTheme()
+  const { currentUser } = useUser()
+  
+  // Sync theme with backend user preference
+  useEffect(() => {
+    if (currentUser?.themePreference) {
+      const backendTheme = currentUser.themePreference.toLowerCase();
+      if (theme !== backendTheme) {
+        setTheme(backendTheme);
+      }
+    }
+  }, [currentUser?.themePreference, theme, setTheme])
   
   // Get sidebar state from Redux
   const isOpen = useAppSelector((state) => state.sidebar.isOpen)

@@ -12,6 +12,7 @@ export interface UserProfileDTO {
   bio?: string;
   profilePicture?: string;
   bannerPhoto?: string;
+  themePreference?: string;
   followings?: UserFollowList[];
   followers?: UserFollowList[];
   postsNumber?: number;
@@ -24,6 +25,7 @@ export interface UpdateProfileDTO {
   bio?: string;
   profilePicture?: string;
   bannerPhoto?: string;
+  themePreference?: string;
 }
 
 export interface ApiResponse<T> {

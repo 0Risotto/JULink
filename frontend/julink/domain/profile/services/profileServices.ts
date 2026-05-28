@@ -5,6 +5,7 @@ export interface OnboardingData {
     bio: string;
     profilePicture: string;
     bannerPhoto: string;
+    themePreference?: string;
 }
 
 export const completeOnboardingService = async (data: OnboardingData) => {

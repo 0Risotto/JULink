@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useImageUpload } from "@/domain/common/hooks/useImageUpload";
 import { completeOnboardingService } from "../services/profileServices";
-import { Camera } from "lucide-react";
+import { Camera, Sun, Moon, Monitor, Check } from "lucide-react";
+import { useTheme } from "next-themes";
 
 export function OnboardingForm() {
     const router = useRouter();
@@ -18,6 +19,19 @@ export function OnboardingForm() {
     const [bio, setBio] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const { setTheme } = useTheme();
+    const [themePref, setThemePref] = useState<"system" | "light" | "dark">("system");
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const handleThemeChange = (pref: "system" | "light" | "dark") => {
+        setThemePref(pref);
+        setTheme(pref);
+    };
 
     // State for holding the actual File objects
     const [profileFile, setProfileFile] = useState<File | null>(null);
@@ -67,11 +81,12 @@ export function OnboardingForm() {
                 if (uploadedUrl) bannerUrl = uploadedUrl;
             }
 
-            // 2. Send the URLs and Bio to your Spring Boot Backend
+            // 2. Send the URLs, Bio, and Theme Preference to your Spring Boot Backend
             await completeOnboardingService({
                 bio: bio,
                 profilePicture: profileUrl,
                 bannerPhoto: bannerUrl,
+                themePreference: themePref,
             });
 
             // 3. Redirect to their profile or the main feed
@@ -153,6 +168,43 @@ export function OnboardingForm() {
                         />
                         <p className="text-xs text-muted-foreground text-right">{bio.length}/500</p>
                     </div>
+
+                    {/* Theme Preference Selection */}
+                    {mounted && (
+                        <div className="space-y-3">
+                            <Label>Choose Theme Preference</Label>
+                            <div className="grid grid-cols-3 gap-4">
+                                {[
+                                    { value: "system", label: "System Default", icon: Monitor },
+                                    { value: "light", label: "Light Mode", icon: Sun },
+                                    { value: "dark", label: "Dark Mode", icon: Moon },
+                                ].map((item) => {
+                                    const Icon = item.icon;
+                                    const isSelected = themePref === item.value;
+                                    return (
+                                        <button
+                                            key={item.value}
+                                            type="button"
+                                            onClick={() => handleThemeChange(item.value as any)}
+                                            className={`relative flex flex-col items-center justify-center p-4 rounded-xl border-2 text-center transition-all cursor-pointer ${
+                                                isSelected
+                                                    ? "border-primary bg-primary/5 text-primary"
+                                                    : "border-muted bg-popover hover:bg-accent hover:text-accent-foreground text-muted-foreground"
+                                            }`}
+                                        >
+                                            <Icon className="w-6 h-6 mb-2" />
+                                            <span className="text-sm font-semibold">{item.label}</span>
+                                            {isSelected && (
+                                                <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-0.5">
+                                                    <Check className="w-3.5 h-3.5" />
+                                                </div>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
 
