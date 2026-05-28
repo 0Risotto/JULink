@@ -37,4 +37,15 @@ public class LostAndFoundDto {
             String message,
             LocalDateTime sentAt
     ) {}
+
+    public record ClaimRequest(String message) {}
+
+    public record ClaimResponse(
+            String status,
+            UUID notificationId,
+            UUID lostAndFoundId,
+            Long claimantId,
+            Long ownerId,
+            String message
+    ) {}
 }

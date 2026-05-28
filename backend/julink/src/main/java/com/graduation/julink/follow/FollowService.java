@@ -1,6 +1,8 @@
 package com.graduation.julink.follow;
 
 import com.graduation.julink.auth.Repository.AuthRepository;
+import com.graduation.julink.notification.NotificationService;
+import com.graduation.julink.notification.NotificationType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +19,7 @@ public class FollowService {
 
     private final FollowRepository followRepository;
     private final AuthRepository authRepository;
+    private final NotificationService notificationService;
 
 //    FollowService(){};
 
@@ -35,6 +38,7 @@ public class FollowService {
             throw new IllegalStateException("Already following this user");
         }
         followRepository.follow(followerUsername, followeeUsername);
+        notifyFollow(followerUsername, followeeUsername);
     }
 
     @Transactional
@@ -130,5 +134,28 @@ public class FollowService {
                 ))
                 .toList();
 
+    }
+
+    private void notifyFollow(String followerUsername, String followeeUsername) {
+        if (notificationService == null) {
+            return;
+        }
+        try {
+            authRepository.findByUsername(followerUsername).ifPresent(follower ->
+                    authRepository.findByUsername(followeeUsername).ifPresent(followee ->
+                            notificationService.notifyUser(
+                                    followee,
+                                    follower,
+                                    NotificationType.FOLLOWED_YOU,
+                                    follower.getUsername() + " followed you",
+                                    "PROFILE",
+                                    follower.getUsername(),
+                                    null
+                            )
+                    )
+            );
+        } catch (RuntimeException ignored) {
+            // Notifications should not break the follow action.
+        }
     }
 }

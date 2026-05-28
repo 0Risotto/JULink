@@ -6,6 +6,8 @@ import com.graduation.julink.common.media.MediaUploadService.ImageVariant;
 import com.graduation.julink.common.media.MediaUploadService.MediaUploadRequest;
 import com.graduation.julink.common.media.MediaUploadService.MediaUploadResult;
 import com.graduation.julink.follow.FollowService;
+import com.graduation.julink.notification.NotificationService;
+import com.graduation.julink.notification.NotificationType;
 import com.graduation.julink.post.PostDTOs.*;
 import com.graduation.julink.post.PostEntities.*;
 import jakarta.persistence.EntityManager;
@@ -45,6 +47,7 @@ public class PostService {
     private final PostImpressionRepository postImpressionRepository;
     private final FollowService followService;
     private final MediaUploadService mediaUploadService;
+    private final NotificationService notificationService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -163,6 +166,7 @@ public class PostService {
             like.setPost(post);
             like.setUser(user);
             saveIgnoringDuplicate(() -> postLikeRepository.saveAndFlush(like));
+            notifyPostOwner(post, user, NotificationType.POST_LIKED, user.getUsername() + " liked your post");
         }
 
         long likesCount = postLikeRepository.countByPost_PostId(postId);
@@ -282,6 +286,16 @@ public class PostService {
         }
 
         PostComment savedComment = postCommentRepository.save(comment);
+        if (savedComment.getParentComment() != null) {
+            notifyCommentOwner(
+                    savedComment.getParentComment(),
+                    user,
+                    NotificationType.COMMENT_REPLIED,
+                    user.getUsername() + " replied to your comment"
+            );
+        } else {
+            notifyPostOwner(post, user, NotificationType.POST_COMMENTED, user.getUsername() + " commented on your post");
+        }
 
         return buildCommentResponse(savedComment, userId);
     }
@@ -371,6 +385,7 @@ public class PostService {
             like.setUser(user);
             like.setComment(comment);
             saveIgnoringDuplicate(() -> commentLikeRepository.saveAndFlush(like));
+            notifyCommentOwner(comment, user, NotificationType.COMMENT_LIKED, user.getUsername() + " liked your comment");
         }
 
         long likesCount = commentLikeRepository.countByComment_CommentId(commentId);
@@ -706,6 +721,44 @@ public class PostService {
             save.run();
         } catch (DataIntegrityViolationException ignored) {
             // A concurrent request already created the same unique relationship.
+        }
+    }
+
+    private void notifyPostOwner(Post post, User actor, NotificationType type, String message) {
+        if (notificationService == null || post == null) {
+            return;
+        }
+        try {
+            notificationService.notifyUser(
+                    post.getOwner(),
+                    actor,
+                    type,
+                    message,
+                    "POST",
+                    post.getPostId().toString(),
+                    null
+            );
+        } catch (RuntimeException ignored) {
+            // Notifications should not break post interactions.
+        }
+    }
+
+    private void notifyCommentOwner(PostComment comment, User actor, NotificationType type, String message) {
+        if (notificationService == null || comment == null) {
+            return;
+        }
+        try {
+            notificationService.notifyUser(
+                    comment.getUser(),
+                    actor,
+                    type,
+                    message,
+                    "COMMENT",
+                    comment.getCommentId().toString(),
+                    null
+            );
+        } catch (RuntimeException ignored) {
+            // Notifications should not break post interactions.
         }
     }
 

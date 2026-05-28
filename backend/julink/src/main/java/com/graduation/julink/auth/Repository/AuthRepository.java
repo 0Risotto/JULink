@@ -16,4 +16,5 @@ public interface AuthRepository extends JpaRepository<AuthEntities.User, Long> {
     boolean existsByEmail(String email);
     void deleteByEmail(String email);
     List<AuthEntities.User> findByUsernameIn(Collection<String> usernames);
+    List<AuthEntities.User> findByCollege(String college);
 }

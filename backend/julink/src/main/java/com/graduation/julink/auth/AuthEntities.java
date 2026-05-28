@@ -48,7 +48,7 @@ public final class AuthEntities {
         private String bio;
 
         @Enumerated(EnumType.STRING)
-        @Column(name = "theme_preference", nullable = false, columnDefinition = "varchar(20) default 'SYSTEM'")
+        @Column(name = "theme_preference", nullable = false, length = 20)
         private ThemePreference themePreference = ThemePreference.SYSTEM;
 
         @Column(nullable = false, columnDefinition = "boolean default true")

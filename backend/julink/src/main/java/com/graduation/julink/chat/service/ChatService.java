@@ -6,6 +6,8 @@ import com.graduation.julink.chat.ChatDTOs.*;
 import com.graduation.julink.chat.ChatEntities.*;
 import com.graduation.julink.chat.ChatMapper;
 import com.graduation.julink.chat.repo.*;
+import com.graduation.julink.notification.NotificationService;
+import com.graduation.julink.notification.NotificationType;
 import com.graduation.julink.post.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,7 @@ public class ChatService {
     private final ChatMapper mapper;
     private final SimpMessagingTemplate messagingTemplate;
     private final PostRepository postRepository;
+    private final NotificationService notificationService;
 
     // ─────────────────────────────────────────────────────────────
     // Conversations
@@ -91,8 +94,17 @@ public class ChatService {
             addMember(group, member, member.getId().equals(requester.getId()));
         }
 
-        conversationRepo.save(group);
-        return buildConversationResponse(group, requester);
+        Conversation savedGroup = conversationRepo.save(group);
+        if (savedGroup == null) {
+            savedGroup = group;
+        }
+        notifyConversationMembers(
+                savedGroup,
+                requester,
+                NotificationType.GROUP_CREATED,
+                requester.getUsername() + " added you to " + groupDisplayName(savedGroup)
+        );
+        return buildConversationResponse(savedGroup, requester);
     }
 
     /** Add members to an existing group (admin only). */
@@ -106,16 +118,29 @@ public class ChatService {
         assertAdmin(conv, requester);
         if (!conv.isGroup()) throw new IllegalStateException("Not a group conversation");
 
+        List<User> addedMembers = new ArrayList<>();
         for (String username : req.getUsernames()) {
             friendshipValidator.assertFriends(requesterUsername, username);
             User newMember = loadUserByUsername(username);
             boolean alreadyIn = memberRepo
                     .findByConversationIdAndUserId(conversationId, newMember.getId())
                     .isPresent();
-            if (!alreadyIn) addMember(conv, newMember, false);
+            if (!alreadyIn) {
+                addMember(conv, newMember, false);
+                addedMembers.add(newMember);
+            }
         }
 
         conversationRepo.save(conv);
+        notifyUsers(
+                addedMembers,
+                requester,
+                NotificationType.GROUP_MEMBER_ADDED,
+                requester.getUsername() + " added you to " + groupDisplayName(conv),
+                "CONVERSATION",
+                conv.getId().toString(),
+                null
+        );
         return buildConversationResponse(conv, requester);
     }
 
@@ -158,6 +183,13 @@ public class ChatService {
 
         MessageResponse response = mapper.toMessageResponse(message);
         broadcastMessage(conversationId, "NEW_MESSAGE", response);
+        notifyConversationMembers(
+                conv,
+                sender,
+                NotificationType.NEW_MESSAGE,
+                sender.getUsername() + " sent you a message",
+                "{\"messageId\":" + message.getId() + "}"
+        );
         return response;
     }
 
@@ -204,6 +236,13 @@ public class ChatService {
 
         MessageResponse response = mapper.toMessageResponse(message);
         broadcastMessage(conversationId, "NEW_MESSAGE", response);
+        notifyConversationMembers(
+                conv,
+                sender,
+                NotificationType.NEW_MESSAGE,
+                sender.getUsername() + " sent you a media message",
+                "{\"messageId\":" + message.getId() + "}"
+        );
         return response;
     }
 
@@ -232,6 +271,13 @@ public class ChatService {
 
         MessageResponse response = mapper.toMessageResponse(message);
         broadcastMessage(conversationId, "NEW_MESSAGE", response);
+        notifyConversationMembers(
+                conv,
+                sender,
+                NotificationType.NEW_MESSAGE,
+                sender.getUsername() + " shared a post with you",
+                "{\"messageId\":" + message.getId() + "}"
+        );
         return response;
     }
 
@@ -359,6 +405,13 @@ public class ChatService {
         conversationRepo.save(conv);
 
         broadcastMessage(conv.getId(), "NEW_MESSAGE", mapper.toMessageResponse(message));
+        notifyConversationMembers(
+                conv,
+                sender,
+                NotificationType.NEW_MESSAGE,
+                sender.getUsername() + " sent you a message",
+                "{\"messageId\":" + message.getId() + "}"
+        );
     }
 
     /**
@@ -384,6 +437,67 @@ public class ChatService {
                 .message(msg)
                 .build();
         messagingTemplate.convertAndSend("/topic/conversations/" + conversationId, event);
+    }
+
+    private void notifyConversationMembers(
+            Conversation conversation,
+            User actor,
+            NotificationType type,
+            String message
+    ) {
+        notifyConversationMembers(conversation, actor, type, message, null);
+    }
+
+    private void notifyConversationMembers(
+            Conversation conversation,
+            User actor,
+            NotificationType type,
+            String message,
+            String metadataJson
+    ) {
+        if (conversation == null || conversation.getId() == null) {
+            return;
+        }
+        List<User> recipients = conversation.getMembers()
+                .stream()
+                .map(ConversationMember::getUser)
+                .filter(user -> actor == null || !user.getId().equals(actor.getId()))
+                .toList();
+        notifyUsers(
+                recipients,
+                actor,
+                type,
+                message,
+                "CONVERSATION",
+                conversation.getId().toString(),
+                metadataJson
+        );
+    }
+
+    private void notifyUsers(
+            List<User> recipients,
+            User actor,
+            NotificationType type,
+            String message,
+            String targetType,
+            String targetId,
+            String metadataJson
+    ) {
+        if (notificationService == null || recipients == null || recipients.isEmpty()) {
+            return;
+        }
+        try {
+            notificationService.notifyUsers(recipients, actor, type, message, targetType, targetId, metadataJson);
+        } catch (RuntimeException ignored) {
+            // Notifications should not break chat actions.
+        }
+    }
+
+    private String groupDisplayName(Conversation conversation) {
+        if (conversation.getGroupName() == null || conversation.getGroupName().isBlank()) {
+            return "a group chat";
+        }
+        return conversation.getGroupName();
     }
 
     private ConversationResponse buildConversationResponse(Conversation conv, User viewer) {

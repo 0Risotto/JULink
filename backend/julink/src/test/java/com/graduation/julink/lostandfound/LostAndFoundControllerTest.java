@@ -92,4 +92,27 @@ class LostAndFoundControllerTest {
         assertEquals(200, response.getStatusCode().value());
         assertEquals(page, response.getBody());
     }
+
+    @Test
+    void claimLostAndFound_Success() {
+        mockPrincipal();
+        UUID lostAndFoundId = UUID.randomUUID();
+        LostAndFoundDto.ClaimRequest request = new LostAndFoundDto.ClaimRequest("This is mine");
+        LostAndFoundDto.ClaimResponse resp = new LostAndFoundDto.ClaimResponse(
+                "success",
+                UUID.randomUUID(),
+                lostAndFoundId,
+                101L,
+                202L,
+                "This is mine"
+        );
+
+        when(lostAndFoundService.claimLostAndFound(lostAndFoundId, 101L, request)).thenReturn(resp);
+
+        ResponseEntity<LostAndFoundDto.ClaimResponse> response =
+                lostAndFoundController.claimLostAndFound(lostAndFoundId, request, principal);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(resp, response.getBody());
+    }
 }

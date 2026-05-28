@@ -42,6 +42,18 @@ public class LostAndFoundController {
         return ResponseEntity.ok(lostAndFoundService.markAsResolved(lostAndFoundId, user.getId()));
     }
 
+    @PostMapping("/{lostAndFoundId}/claim")
+    public ResponseEntity<LostAndFoundDto.ClaimResponse> claimLostAndFound(
+            @PathVariable UUID lostAndFoundId,
+            @RequestBody(required = false) LostAndFoundDto.ClaimRequest request,
+            Principal principal
+    ) {
+        AuthEntities.User user = authRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return ResponseEntity.ok(lostAndFoundService.claimLostAndFound(lostAndFoundId, user.getId(), request));
+    }
+
     @GetMapping
     public ResponseEntity<Page<LostAndFoundDto.Response>> getAllLostAndFounds(
             @RequestParam(required = false) CollegeEnum college,

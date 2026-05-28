@@ -1,6 +1,10 @@
 package com.graduation.julink.lostandfound;
 
 import com.graduation.julink.auth.CollegeEnum;
+import com.graduation.julink.auth.AuthEntities;
+import com.graduation.julink.notification.NotificationDTOs;
+import com.graduation.julink.notification.NotificationService;
+import com.graduation.julink.notification.NotificationType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,6 +39,9 @@ class LostAndFoundServiceTest {
 
     @Mock
     private com.graduation.julink.auth.Repository.AuthRepository authRepository;
+
+    @Mock
+    private NotificationService notificationService;
 
     @BeforeEach
     void setUp() {
@@ -105,5 +113,70 @@ class LostAndFoundServiceTest {
 
         assertNotNull(response);
         assertEquals(1, response.getTotalElements());
+    }
+
+    @Test
+    void claimLostAndFound_Success_NotifiesOwner() {
+        AuthEntities.User owner = new AuthEntities.User();
+        owner.setId(101L);
+        owner.setUsername("owner");
+
+        AuthEntities.User claimant = new AuthEntities.User();
+        claimant.setId(202L);
+        claimant.setUsername("claimant");
+
+        UUID notificationId = UUID.randomUUID();
+        NotificationDTOs.NotificationResponse notification = new NotificationDTOs.NotificationResponse(
+                notificationId,
+                "owner",
+                "claimant",
+                null,
+                NotificationType.LOST_AND_FOUND_CLAIM_REQUESTED,
+                "This is mine",
+                "LOST_AND_FOUND",
+                lostAndFoundId.toString(),
+                false,
+                null,
+                LocalDateTime.now()
+        );
+
+        when(lostAndFoundRepository.findById(lostAndFoundId)).thenReturn(Optional.of(lostAndFound));
+        when(authRepository.findById(101L)).thenReturn(Optional.of(owner));
+        when(authRepository.findById(202L)).thenReturn(Optional.of(claimant));
+        when(notificationService.notifyUser(eq(owner), eq(claimant), eq(NotificationType.LOST_AND_FOUND_CLAIM_REQUESTED),
+                eq("This is mine"), eq("LOST_AND_FOUND"), eq(lostAndFoundId.toString()), any()))
+                .thenReturn(notification);
+
+        LostAndFoundDto.ClaimResponse response = lostAndFoundService.claimLostAndFound(
+                lostAndFoundId,
+                202L,
+                new LostAndFoundDto.ClaimRequest("This is mine")
+        );
+
+        assertEquals("success", response.status());
+        assertEquals(notificationId, response.notificationId());
+        assertEquals(101L, response.ownerId());
+        assertEquals(202L, response.claimantId());
+    }
+
+    @Test
+    void claimLostAndFound_OwnerCannotClaimOwnPost() {
+        when(lostAndFoundRepository.findById(lostAndFoundId)).thenReturn(Optional.of(lostAndFound));
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> lostAndFoundService.claimLostAndFound(lostAndFoundId, 101L, new LostAndFoundDto.ClaimRequest("mine")));
+
+        assertEquals("You cannot claim your own lost and found post.", exception.getMessage());
+    }
+
+    @Test
+    void claimLostAndFound_ResolvedPostCannotBeClaimed() {
+        lostAndFound.setResolved(true);
+        when(lostAndFoundRepository.findById(lostAndFoundId)).thenReturn(Optional.of(lostAndFound));
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> lostAndFoundService.claimLostAndFound(lostAndFoundId, 202L, new LostAndFoundDto.ClaimRequest("mine")));
+
+        assertEquals("Cannot claim a resolved lost and found post.", exception.getMessage());
     }
 }
