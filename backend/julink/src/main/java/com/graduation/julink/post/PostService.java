@@ -12,21 +12,21 @@ import com.graduation.julink.notification.NotificationService;
 import com.graduation.julink.notification.NotificationType;
 import com.graduation.julink.post.PostDTOs.*;
 import com.graduation.julink.post.PostEntities.*;
+import com.graduation.julink.report.ReportDTOs.ReportMessageRequest;
+import com.graduation.julink.report.ReportDTOs.ReportRequest;
+import com.graduation.julink.report.ReportDTOs.ReportResponse;
+import com.graduation.julink.report.ReportService;
+import com.graduation.julink.report.ReportTargetType;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -52,16 +52,13 @@ public class PostService {
     private final MediaUploadService mediaUploadService;
     private final NotificationService notificationService;
     private final BlockService blockService;
+    private final ReportService reportService;
 
     @PersistenceContext
     private EntityManager entityManager;
 
     private static final Pattern HASHTAG_PATTERN = Pattern.compile("#(\\w+)");
     private static final int MAX_FEED_CANDIDATES = 500;
-    private static final Object REPORTS_FILE_LOCK = new Object();
-
-    @Value("${julink.reports.path:src/main/resources/assets/reports}")
-    private String reportsPath;
 
     @Transactional
     public PostResponseDTO createPost(Long ownerId, CreatePostDTO dto) {
@@ -511,22 +508,10 @@ public class PostService {
     }
 
     @Transactional
-    public ReportResponseDTO reportPost(Long reporterId, UUID postId, ReportPostDTO dto) {
-        User reporter = getUserOrThrow(reporterId);
-        Post reportedPost = getPostOrThrow(postId);
-        LocalDateTime timestamp = LocalDateTime.now();
-        String message = dto.message().trim();
-
-        appendReport(timestamp, reporter, "POST", reportedPost.getPostId(), message);
-
-        return new ReportResponseDTO(
-                "success",
-                timestamp,
-                reporter.getId(),
-                reporter.getUsername(),
-                "POST",
-                reportedPost.getPostId(),
-                message
+    public ReportResponse reportPost(Long reporterId, UUID postId, ReportMessageRequest dto) {
+        return reportService.createReport(
+                reporterId,
+                new ReportRequest(ReportTargetType.POST, postId.toString(), dto.message())
         );
     }
 
@@ -829,54 +814,6 @@ public class PostService {
         } catch (RuntimeException ignored) {
             // Notifications should not break post interactions.
         }
-    }
-
-    private void appendReport(
-            LocalDateTime timestamp,
-            User reporter,
-            String reportedType,
-            UUID reportedId,
-            String message
-    ) {
-        Path path = Path.of(reportsPath);
-        Path parent = path.getParent();
-        String entry = String.format(
-                "timestamp=%s | reporterId=%d | reporterUsername=%s | reportedType=%s | reportedId=%s | message=%s%n",
-                timestamp,
-                reporter.getId(),
-                sanitizeReportValue(reporter.getUsername()),
-                reportedType,
-                reportedId,
-                sanitizeReportValue(message)
-        );
-
-        synchronized (REPORTS_FILE_LOCK) {
-            try {
-                if (parent != null) {
-                    Files.createDirectories(parent);
-                }
-                Files.writeString(
-                        path,
-                        entry,
-                        StandardCharsets.UTF_8,
-                        java.nio.file.StandardOpenOption.CREATE,
-                        java.nio.file.StandardOpenOption.APPEND
-                );
-            } catch (IOException e) {
-                throw new UncheckedIOException("Failed to write post report", e);
-            }
-        }
-    }
-
-    private String sanitizeReportValue(String value) {
-        if (value == null) {
-            return "";
-        }
-        return value
-                .replace('\r', ' ')
-                .replace('\n', ' ')
-                .replace('|', '/')
-                .trim();
     }
 
     private String normalizeAttachmentType(String requestedType, String contentType) {

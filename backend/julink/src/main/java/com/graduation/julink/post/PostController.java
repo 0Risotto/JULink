@@ -3,6 +3,8 @@ package com.graduation.julink.post;
 import com.graduation.julink.auth.AuthEntities.User;
 import com.graduation.julink.auth.Repository.AuthRepository;
 import com.graduation.julink.post.PostDTOs.*;
+import com.graduation.julink.report.ReportDTOs.ReportMessageRequest;
+import com.graduation.julink.report.ReportDTOs.ReportResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -231,10 +233,10 @@ public class PostController {
     }
 
     @PostMapping("/{postId}/report")
-    public ReportResponseDTO reportPost(
+    public ReportResponse reportPost(
             Principal principal,
             @PathVariable UUID postId,
-            @Valid @RequestBody ReportPostDTO dto
+            @Valid @RequestBody ReportMessageRequest dto
     ) {
         return postService.reportPost(currentUser(principal).getId(), postId, dto);
     }

@@ -3,6 +3,9 @@ package com.graduation.julink.post;
 import com.graduation.julink.auth.AuthEntities;
 import com.graduation.julink.auth.Repository.AuthRepository;
 import com.graduation.julink.post.PostDTOs.*;
+import com.graduation.julink.report.ReportDTOs.ReportMessageRequest;
+import com.graduation.julink.report.ReportDTOs.ReportResponse;
+import com.graduation.julink.report.ReportTargetType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -178,19 +181,20 @@ class PostControllerTest {
     void reportPost_Success() {
         mockPrincipal();
         UUID postId = UUID.randomUUID();
-        ReportPostDTO req = new ReportPostDTO("Inappropriate post");
-        ReportResponseDTO resp = new ReportResponseDTO(
+        ReportMessageRequest req = new ReportMessageRequest("Inappropriate post");
+        ReportResponse resp = new ReportResponse(
                 "success",
                 java.time.LocalDateTime.now(),
                 101L,
                 "user1",
-                "POST",
-                postId,
+                ReportTargetType.POST,
+                postId.toString(),
+                "user1",
                 "Inappropriate post"
         );
         when(postService.reportPost(101L, postId, req)).thenReturn(resp);
 
-        ReportResponseDTO response = postController.reportPost(principal, postId, req);
+        ReportResponse response = postController.reportPost(principal, postId, req);
 
         assertEquals(resp, response);
     }

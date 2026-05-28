@@ -8,6 +8,11 @@ import com.graduation.julink.follow.FollowService;
 import com.graduation.julink.notification.NotificationService;
 import com.graduation.julink.post.PostDTOs.*;
 import com.graduation.julink.post.PostEntities.*;
+import com.graduation.julink.report.ReportDTOs.ReportMessageRequest;
+import com.graduation.julink.report.ReportDTOs.ReportRequest;
+import com.graduation.julink.report.ReportDTOs.ReportResponse;
+import com.graduation.julink.report.ReportService;
+import com.graduation.julink.report.ReportTargetType;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,8 +24,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
@@ -47,6 +50,7 @@ class PostServiceTest {
     @Mock private MediaUploadService mediaUploadService;
     @Mock private NotificationService notificationService;
     @Mock private BlockService blockService;
+    @Mock private ReportService reportService;
     @Mock private EntityManager entityManager;
 
     @InjectMocks
@@ -218,31 +222,27 @@ class PostServiceTest {
     }
 
     @Test
-    void reportPost_WritesReportEntry() throws Exception {
-        Path reportsFile = Files.createTempFile("julink-reports", ".txt");
-        org.springframework.test.util.ReflectionTestUtils.setField(
-                postService,
-                "reportsPath",
-                reportsFile.toString()
+    void reportPost_DelegatesToReportService() {
+        ReportMessageRequest req = new ReportMessageRequest("Spam post");
+        ReportResponse expected = new ReportResponse(
+                "success",
+                java.time.LocalDateTime.now(),
+                101L,
+                "user1",
+                ReportTargetType.POST,
+                postId.toString(),
+                "user1",
+                "Spam post"
         );
-        ReportPostDTO req = new ReportPostDTO("Spam post\nwith newline");
 
-        when(entityManager.find(User.class, 101L)).thenReturn(user);
-        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(reportService.createReport(eq(101L), any(ReportRequest.class))).thenReturn(expected);
 
-        ReportResponseDTO response = postService.reportPost(101L, postId, req);
-        String reportContents = Files.readString(reportsFile);
+        ReportResponse response = postService.reportPost(101L, postId, req);
 
-        assertEquals("success", response.status());
-        assertEquals(101L, response.reporterId());
-        assertEquals("user1", response.reporterUsername());
-        assertEquals("POST", response.reportedType());
-        assertEquals(postId, response.reportedId());
-        assertEquals("Spam post\nwith newline", response.message());
-        assertTrue(reportContents.contains("reporterId=101"));
-        assertTrue(reportContents.contains("reporterUsername=user1"));
-        assertTrue(reportContents.contains("reportedType=POST"));
-        assertTrue(reportContents.contains("reportedId=" + postId));
-        assertTrue(reportContents.contains("message=Spam post with newline"));
+        assertEquals(expected, response);
+        verify(reportService).createReport(
+                eq(101L),
+                eq(new ReportRequest(ReportTargetType.POST, postId.toString(), "Spam post"))
+        );
     }
 }
