@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { PostResponseDTO } from "../types";
-import { getUserPosts } from "../services/postServices";
+import { getUserPosts, getFavoritePosts } from "../services/postServices";
 import GridPostCard from "./GridPostCard";
 import CreatePost from "./CreatePost";
 import { Spinner } from "@/components/ui/spinner";
@@ -19,9 +19,10 @@ interface UserPostsProps {
     lastName: string;
     profilePicture?: string;
   };
+  feedType?: "posts" | "favorites";
 }
 
-export default function UserPosts({ username, isOwnProfile, currentUser }: UserPostsProps) {
+export default function UserPosts({ username, isOwnProfile, currentUser, feedType = "posts" }: UserPostsProps) {
   const [posts, setPosts] = useState<PostResponseDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -30,12 +31,14 @@ export default function UserPosts({ username, isOwnProfile, currentUser }: UserP
 
   useEffect(() => {
     fetchPosts(0);
-  }, [username]);
+  }, [username, feedType]);
 
   const fetchPosts = async (pageNum: number) => {
     try {
       if (pageNum === 0) setLoading(true);
-      const res = await getUserPosts(username, pageNum, 10);
+      const res = feedType === "favorites" 
+        ? await getFavoritePosts(pageNum, 10)
+        : await getUserPosts(username, pageNum, 10);
       
       if (pageNum === 0) {
         setPosts(res.content);
@@ -62,6 +65,10 @@ export default function UserPosts({ username, isOwnProfile, currentUser }: UserP
     setPosts(prev => prev.map(p => p.postId === updatedPost.postId ? updatedPost : p));
   };
 
+  const handlePostDeleted = (postId: string) => {
+    setPosts(prev => prev.filter(p => p.postId !== postId));
+  };
+
   if (loading && page === 0) {
     return (
       <div className="w-full text-center py-10">
@@ -73,7 +80,7 @@ export default function UserPosts({ username, isOwnProfile, currentUser }: UserP
   if (posts.length === 0 && !isOwnProfile) {
     return (
       <div className="text-center text-gray-500 py-10 bg-white dark:bg-zinc-950 rounded-xl border border-gray-200 dark:border-zinc-800">
-        No posts yet.
+        {feedType === "favorites" ? "No favorite posts yet." : "No posts yet."}
       </div>
     );
   }
@@ -81,8 +88,8 @@ export default function UserPosts({ username, isOwnProfile, currentUser }: UserP
   return (
     <div className="flex flex-col">
       <div className="flex items-center justify-between mb-6 px-4">
-        <h2 className="text-2xl font-bold">Posts</h2>
-        {isOwnProfile && currentUser && (
+        <div></div>
+        {isOwnProfile && currentUser && feedType !== "favorites" && (
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button variant="default" className="rounded-full px-5 py-2 font-medium bg-[#1a73e8] hover:bg-[#1557b0] text-white">
@@ -110,13 +117,13 @@ export default function UserPosts({ username, isOwnProfile, currentUser }: UserP
 
       <div className="px-4">
         {posts.length === 0 ? (
-          <div className="text-center text-gray-400 py-12 bg-[#1c1c1c] rounded-3xl border border-[#2a2a2a] shadow-sm">
-            No posts to display.
+          <div className="text-center text-gray-400 py-12 bg-white dark:bg-zinc-950 rounded-3xl border border-gray-200 dark:border-zinc-800 shadow-sm">
+            {feedType === "favorites" ? "No favorite posts to display." : "No posts to display."}
           </div>
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 gap-1 md:gap-4 max-w-[900px] mx-auto">
             {posts.map(post => (
-              <GridPostCard key={post.postId} post={post} onPostUpdated={handlePostUpdated} />
+              <GridPostCard key={post.postId} post={post} onPostUpdated={handlePostUpdated} onPostDeleted={handlePostDeleted} />
             ))}
           </div>
         )}

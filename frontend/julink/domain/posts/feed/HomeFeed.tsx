@@ -46,6 +46,10 @@ export default function HomeFeed() {
     setPosts(prev => prev.map(p => p.postId === updatedPost.postId ? updatedPost : p));
   };
 
+  const handlePostDeleted = (postId: string) => {
+    setPosts(prev => prev.filter(p => p.postId !== postId));
+  };
+
   return (
     <div className="w-full flex flex-col items-center pt-8 pb-20">
       <div className="w-full max-w-[470px] md:max-w-[540px]">
@@ -61,7 +65,7 @@ export default function HomeFeed() {
         ) : (
           <div className="flex flex-col">
             {posts.map(post => (
-              <FeedPost key={post.postId} post={post} onPostUpdated={handlePostUpdated} />
+              <FeedPost key={post.postId} post={post} onPostUpdated={handlePostUpdated} onPostDeleted={handlePostDeleted} />
             ))}
 
             {hasMore && (

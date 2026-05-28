@@ -1,11 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart, MessageCircle, Bookmark, Share, MoreHorizontal } from "lucide-react";
 import { PostResponseDTO } from "../types";
-import { toggleLike, toggleFavorite } from "../services/postServices";
+import { toggleLike, toggleFavorite, markPostSeen, deletePost } from "../services/postServices";
 import { formatDistanceToNow } from "date-fns";
+import { useAppSelector } from "@/store/hooks";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import UpdatePostModal from "./UpdatePostModal";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import PostDetailsModal from "./PostDetailsModal";
@@ -16,14 +24,42 @@ import DoubleTapToLike from "./DoubleTapToLike";
 interface FeedPostProps {
   post: PostResponseDTO;
   onPostUpdated?: (updatedPost: PostResponseDTO) => void;
+  onPostDeleted?: (postId: string) => void;
 }
 
-export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
+export default function FeedPost({ post, onPostUpdated, onPostDeleted }: FeedPostProps) {
+  const myUsername = useAppSelector((state) => state.user.myUsername);
   const [liked, setLiked] = useState(post.likedByCurrentUser);
   const [likesCount, setLikesCount] = useState(post.likesCount);
   const [favorited, setFavorited] = useState(post.favoritedByCurrentUser);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [hasBeenSeen, setHasBeenSeen] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (hasBeenSeen) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setHasBeenSeen(true);
+          markPostSeen(post.postId).catch((err) => {
+            console.error("Failed to mark post as seen", err);
+          });
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasBeenSeen, post.postId]);
 
   const handleLike = async () => {
     setLiked(!liked);
@@ -78,9 +114,20 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
     ? `${post.description.substring(0, MAX_CAPTION_LENGTH)}...` 
     : post.description;
 
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this post?")) {
+      try {
+        await deletePost(post.postId);
+        if (onPostDeleted) onPostDeleted(post.postId);
+      } catch (error) {
+        console.error("Failed to delete post", error);
+      }
+    }
+  };
+
   return (
     <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-      <Card className="w-full max-w-[470px] md:max-w-[540px] mx-auto mb-8 border-none shadow-none bg-transparent">
+      <Card ref={cardRef} className="w-full max-w-[470px] md:max-w-[540px] mx-auto mb-8 border-none shadow-none bg-transparent">
         
         {/* POST HEADER */}
         <CardHeader className="flex flex-row items-center justify-between px-2 py-3 space-y-0">
@@ -99,9 +146,28 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
               </span>
             </div>
           </Link>
-          <button className="p-2 hover:opacity-60 transition-opacity">
-             <MoreHorizontal size={20} />
-          </button>
+          
+          {myUsername === post.ownerUsername ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2 hover:opacity-60 transition-opacity">
+                  <MoreHorizontal size={20} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsUpdateModalOpen(true)}>
+                  Update
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDelete} className="text-red-500">
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <button className="p-2 hover:opacity-60 transition-opacity">
+               <MoreHorizontal size={20} />
+            </button>
+          )}
         </CardHeader>
 
         {/* POST MEDIA */}
@@ -212,8 +278,15 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
 
       {/* POST DETAILS MODAL */}
       <DialogContent className="max-w-[95vw] md:max-w-[900px] lg:max-w-[1000px] p-0 bg-transparent border-none shadow-none focus:outline-none">
-         <PostDetailsModal post={post} onPostUpdated={onPostUpdated} />
+         <PostDetailsModal post={post} onPostUpdated={onPostUpdated} onPostDeleted={onPostDeleted} />
       </DialogContent>
+
+      <UpdatePostModal 
+        post={post} 
+        isOpen={isUpdateModalOpen} 
+        onClose={() => setIsUpdateModalOpen(false)} 
+        onPostUpdated={onPostUpdated || (() => {})} 
+      />
     </Dialog>
   );
 }

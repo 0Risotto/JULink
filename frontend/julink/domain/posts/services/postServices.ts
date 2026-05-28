@@ -44,12 +44,6 @@ export const toggleLike = (postId: string) =>
 export const toggleFavorite = (postId: string) =>
   post<FavoriteResponseDTO>(`/posts/${postId}/toggle-favorite`);
 
-export const favoritePost = (postId: string) =>
-  post<FavoriteResponseDTO>(`/posts/${postId}/favorite`);
-
-export const unfavoritePost = (postId: string) =>
-  del<FavoriteResponseDTO>(`/posts/${postId}/favorite`);
-
 export const createComment = (postId: string, data: CreateCommentDTO) =>
   post<CommentResponseDTO>(`/posts/${postId}/comments`, data);
 
@@ -61,12 +55,6 @@ export const getCommentReplies = (commentId: string, page = 0, size = 10) =>
 
 export const toggleCommentLike = (commentId: string) =>
   post<CommentLikeResponseDTO>(`/posts/comments/${commentId}/toggle-like`);
-
-export const likeComment = (commentId: string) =>
-  post<CommentLikeResponseDTO>(`/posts/comments/${commentId}/like`);
-
-export const unlikeComment = (commentId: string) =>
-  del<CommentLikeResponseDTO>(`/posts/comments/${commentId}/like`);
 
 export const updateComment = (commentId: string, data: UpdateCommentDTO) =>
   put<CommentResponseDTO>(`/posts/comments/${commentId}`, data);

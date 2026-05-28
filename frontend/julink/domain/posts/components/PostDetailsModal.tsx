@@ -5,8 +5,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Bookmark, Share, MoreHorizontal } from "lucide-react";
 import { PostResponseDTO } from "../types";
-import { toggleLike, toggleFavorite } from "../services/postServices";
+import { toggleLike, toggleFavorite, deletePost } from "../services/postServices";
 import { formatDistanceToNow } from "date-fns";
+import { useAppSelector } from "@/store/hooks";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import UpdatePostModal from "./UpdatePostModal";
 import CommentList from "./CommentList";
 import CommentInput from "./CommentInput";
 import Link from "next/link";
@@ -16,13 +24,16 @@ import DoubleTapToLike from "./DoubleTapToLike";
 interface PostDetailsModalProps {
   post: PostResponseDTO;
   onPostUpdated?: (updatedPost: PostResponseDTO) => void;
+  onPostDeleted?: (postId: string) => void;
 }
 
-export default function PostDetailsModal({ post, onPostUpdated }: PostDetailsModalProps) {
+export default function PostDetailsModal({ post, onPostUpdated, onPostDeleted }: PostDetailsModalProps) {
+  const myUsername = useAppSelector((state) => state.user.myUsername);
   const [liked, setLiked] = useState(post.likedByCurrentUser);
   const [likesCount, setLikesCount] = useState(post.likesCount);
   const [favorited, setFavorited] = useState(post.favoritedByCurrentUser);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
   const handleLike = async () => {
     // Optimistic update
@@ -63,6 +74,17 @@ export default function PostDetailsModal({ post, onPostUpdated }: PostDetailsMod
 
   const hasAttachments = post.attachments && post.attachments.length > 0;
 
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this post?")) {
+      try {
+        await deletePost(post.postId);
+        if (onPostDeleted) onPostDeleted(post.postId);
+      } catch (error) {
+        console.error("Failed to delete post", error);
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col md:flex-row w-full h-[85vh] md:h-[600px] lg:h-[700px] bg-white dark:bg-zinc-950 overflow-hidden rounded-[var(--radius)]">
       {/* Left side: Media */}
@@ -88,7 +110,7 @@ export default function PostDetailsModal({ post, onPostUpdated }: PostDetailsMod
       <div className="w-full md:w-[40%] lg:w-[35%] flex flex-col h-full bg-white dark:bg-zinc-950 border-l border-gray-200 dark:border-zinc-800">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-zinc-800 shrink-0">
+        <div className="flex items-center justify-between p-4 pr-12 border-b border-gray-200 dark:border-zinc-800 shrink-0">
           <Link href={`/${post.ownerUsername}`} className="flex items-center gap-3 group">
             <Avatar className="w-8 h-8 cursor-pointer group-hover:opacity-80 transition-opacity">
               <AvatarImage src={post.ownerProfilePictureUrl || undefined} />
@@ -100,9 +122,27 @@ export default function PostDetailsModal({ post, onPostUpdated }: PostDetailsMod
               </span>
             </div>
           </Link>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-             <MoreHorizontal size={20} />
-          </Button>
+          {myUsername === post.ownerUsername ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                   <MoreHorizontal size={20} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsUpdateModalOpen(true)}>
+                  Update
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDelete} className="text-red-500">
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+               <MoreHorizontal size={20} />
+            </Button>
+          )}
         </div>
 
         {/* Scrollable Content: Caption + Comments List */}
@@ -171,6 +211,13 @@ export default function PostDetailsModal({ post, onPostUpdated }: PostDetailsMod
           </div>
         </div>
       </div>
+
+      <UpdatePostModal 
+        post={post} 
+        isOpen={isUpdateModalOpen} 
+        onClose={() => setIsUpdateModalOpen(false)} 
+        onPostUpdated={onPostUpdated || (() => {})} 
+      />
     </div>
   );
 }

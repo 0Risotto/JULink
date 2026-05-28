@@ -10,9 +10,10 @@ import MediaRenderer from "./MediaRenderer";
 interface GridPostCardProps {
   post: PostResponseDTO;
   onPostUpdated?: (updatedPost: PostResponseDTO) => void;
+  onPostDeleted?: (postId: string) => void;
 }
 
-export default function GridPostCard({ post, onPostUpdated }: GridPostCardProps) {
+export default function GridPostCard({ post, onPostUpdated, onPostDeleted }: GridPostCardProps) {
   // Determine what to show in the grid thumbnail
   const hasAttachments = post.attachments && post.attachments.length > 0;
   const firstAttachment = hasAttachments ? post.attachments[0] : null;
@@ -75,7 +76,7 @@ export default function GridPostCard({ post, onPostUpdated }: GridPostCardProps)
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] md:max-w-[900px] lg:max-w-[1000px] p-0 bg-transparent border-none shadow-none focus:outline-none">
          {/* The PostDetailsModal inside dialog */}
-         <PostDetailsModal post={post} onPostUpdated={onPostUpdated} />
+         <PostDetailsModal post={post} onPostUpdated={onPostUpdated} onPostDeleted={onPostDeleted} />
       </DialogContent>
     </Dialog>
   );

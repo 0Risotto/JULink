@@ -6,6 +6,7 @@ import ViewedUserCard from "./ViewedUserCard";
 import { useUser } from "../hooks/useUser";
 import { Spinner } from "@/components/ui/spinner";
 import UserPosts from "@/domain/posts/components/UserPosts";
+import { Grid } from "lucide-react";
 
 interface ViewedProfilePageProps {
   username: string;
@@ -46,12 +47,21 @@ export default function ViewedProfilePage({ username }: ViewedProfilePageProps) 
   }
 
   if (viewedUser) {
-  return (
-    <div className="w-full">
-      <ViewedUserCard user={viewedUser} />
+    return (
+      <div className="w-full">
+        <ViewedUserCard user={viewedUser} />
         
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Posts</h2>
+        {/* Tabs Header */}
+        <div className="flex justify-center mt-8">
+          <div className="flex gap-12">
+            <div className="flex items-center gap-2 pb-4 px-2 text-sm font-semibold tracking-wider uppercase border-b-2 border-black dark:border-white text-black dark:text-white">
+              <Grid className="w-4 h-4" />
+              Posts
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6">
           <UserPosts username={viewedUser.username} />
         </div>
       </div>

@@ -54,6 +54,9 @@ public final class PostEntities {
 
         @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true)
         private List<PostComment> comments = new ArrayList<>();
+
+        @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true)
+        private List<PostImpression> impressions = new ArrayList<>();
     }
 
     @Entity(name = "PostAttachment")
