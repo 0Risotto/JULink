@@ -20,6 +20,8 @@ import CommentInput from "./CommentInput";
 import Link from "next/link";
 import MediaRenderer from "./MediaRenderer";
 import DoubleTapToLike from "./DoubleTapToLike";
+import PostCarousel from "./PostCarousel";
+import { renderHashtags } from "../utils/hashtagUtils";
 
 interface PostDetailsModalProps {
   post: PostResponseDTO;
@@ -91,11 +93,7 @@ export default function PostDetailsModal({ post, onPostUpdated, onPostDeleted }:
       <div className={`w-full md:w-[60%] lg:w-[65%] bg-black flex items-center justify-center ${hasAttachments ? '' : 'bg-gray-100 dark:bg-zinc-900'}`}>
         <DoubleTapToLike onDoubleTap={handleDoubleTap} className="w-full h-full flex items-center justify-center">
           {hasAttachments ? (
-            <MediaRenderer 
-              attachmentUrl={post.attachments[0].attachmentUrl} 
-              attachmentType={post.attachments[0].attachmentType}
-              className="max-w-full max-h-full object-contain"
-            />
+            <PostCarousel attachments={post.attachments} />
           ) : (
             <div className="p-8 text-center w-full max-w-lg">
                <p className="text-xl md:text-2xl font-medium text-gray-800 dark:text-gray-200 break-words">
@@ -159,7 +157,7 @@ export default function PostDetailsModal({ post, onPostUpdated, onPostDeleted }:
                <Link href={`/${post.ownerUsername}`}>
                  <span className="font-semibold mr-2 cursor-pointer hover:underline">{post.ownerUsername}</span>
                </Link>
-               <span className="whitespace-pre-wrap">{post.description}</span>
+               <span className="whitespace-pre-wrap">{renderHashtags(post.description)}</span>
             </div>
           </div>
 

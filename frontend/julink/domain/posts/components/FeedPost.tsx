@@ -20,6 +20,8 @@ import PostDetailsModal from "./PostDetailsModal";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import MediaRenderer from "./MediaRenderer";
 import DoubleTapToLike from "./DoubleTapToLike";
+import PostCarousel from "./PostCarousel";
+import { renderHashtags } from "../utils/hashtagUtils";
 
 interface FeedPostProps {
   post: PostResponseDTO;
@@ -175,12 +177,7 @@ export default function FeedPost({ post, onPostUpdated, onPostDeleted }: FeedPos
           <div className="w-full relative rounded-sm md:rounded-[10px] overflow-hidden bg-muted border border-border">
             <DoubleTapToLike onDoubleTap={handleDoubleTap} className="w-full h-full">
               {hasAttachments ? (
-                <MediaRenderer 
-                  attachmentUrl={post.attachments[0].attachmentUrl} 
-                  attachmentType={post.attachments[0].attachmentType}
-                  className="w-full h-auto max-h-[650px] object-cover"
-                  isModalOpen={isModalOpen}
-                />
+                <PostCarousel attachments={post.attachments} isModalOpen={isModalOpen} />
               ) : (
                  <div className="w-full aspect-[4/5] flex items-center justify-center p-8 text-center bg-muted">
                    <p className="text-xl md:text-2xl font-medium break-words">
@@ -241,7 +238,7 @@ export default function FeedPost({ post, onPostUpdated, onPostDeleted }: FeedPos
               <Link href={`/${post.ownerUsername}`}>
                 <span className="font-semibold mr-2 cursor-pointer hover:underline">{post.ownerUsername}</span>
               </Link>
-              <span className="whitespace-pre-wrap">{displayCaption}</span>
+              <span className="whitespace-pre-wrap">{renderHashtags(displayCaption)}</span>
               {showMoreButton && (
                 <button 
                   onClick={() => setIsExpanded(true)}

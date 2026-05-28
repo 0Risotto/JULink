@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { searchApi } from "../api/searchApi";
 import {
   SearchAllResponse,
@@ -11,9 +12,22 @@ import {
 export type SearchTab = "all" | "users" | "posts" | "hashtags";
 
 export const useSearch = () => {
-  const [query, setQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<SearchTab>("all");
+  const searchParams = useSearchParams();
+  const urlQuery = searchParams.get("q") || "";
+  const urlTab = (searchParams.get("tab") as SearchTab) || "all";
+
+  const [query, setQuery] = useState(urlQuery);
+  const [debouncedQuery, setDebouncedQuery] = useState(urlQuery);
+  const [activeTab, setActiveTab] = useState<SearchTab>(urlTab);
+
+  // Update query and tab if URL search params change
+  useEffect(() => {
+    const q = searchParams.get("q") || "";
+    const tab = (searchParams.get("tab") as SearchTab) || "all";
+    setQuery(q);
+    setDebouncedQuery(q);
+    setActiveTab(tab);
+  }, [searchParams]);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

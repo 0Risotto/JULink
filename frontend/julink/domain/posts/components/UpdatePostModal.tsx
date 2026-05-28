@@ -2,11 +2,10 @@
 
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { PostResponseDTO } from "../types";
 import { updatePost } from "../services/postServices";
-import { Spinner } from "@/components/ui/spinner";
 import { Image as ImageIcon, Video, X } from "lucide-react";
 import { useImageUpload } from "@/domain/common/hooks/useImageUpload";
 
@@ -23,32 +22,31 @@ export default function UpdatePostModal({ post, isOpen, onClose, onPostUpdated }
   const { uploadImage, isUploading } = useImageUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(
-    post.attachments && post.attachments.length > 0
-      ? post.attachments[0].attachmentUrl
-      : null
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>(
+    post.attachments ? post.attachments.map(att => att.attachmentUrl) : []
   );
-  const [existingAttachment, setExistingAttachment] = useState<any | null>(
-    post.attachments && post.attachments.length > 0
-      ? post.attachments[0]
-      : null
+  const [existingAttachments, setExistingAttachments] = useState<any[]>(
+    post.attachments ? post.attachments : []
   );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
 
-    setFile(selectedFile);
-    setPreview(URL.createObjectURL(selectedFile));
-    setExistingAttachment(null); // Clear existing attachment since we're replacing it
+    setFiles((prev) => [...prev, ...selectedFiles]);
+    const newPreviews = selectedFiles.map((file) => URL.createObjectURL(file));
+    setPreviews((prev) => [...prev, ...newPreviews]);
   };
 
-  const removeAttachment = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setFile(null);
-    setPreview(null);
-    setExistingAttachment(null);
+  const removeAttachmentAtIndex = (index: number) => {
+    if (index < existingAttachments.length) {
+      setExistingAttachments((prev) => prev.filter((_, i) => i !== index));
+    } else {
+      const fileIndex = index - existingAttachments.length;
+      setFiles((prev) => prev.filter((_, i) => i !== fileIndex));
+    }
+    setPreviews((prev) => prev.filter((_, i) => i !== index));
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -56,28 +54,34 @@ export default function UpdatePostModal({ post, isOpen, onClose, onPostUpdated }
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!description.trim() && !file && !existingAttachment) return;
+    if (!description.trim() && files.length === 0 && existingAttachments.length === 0) return;
 
     setLoading(true);
     try {
       const attachments = [];
 
-      if (existingAttachment) {
-        // Kept the old attachment
-        attachments.push({
-          attachmentType: existingAttachment.attachmentType,
-          attachmentUrl: existingAttachment.attachmentUrl
+      if (existingAttachments.length > 0) {
+        attachments.push(...existingAttachments.map(att => ({
+          attachmentType: att.attachmentType,
+          attachmentUrl: att.attachmentUrl
+        })));
+      }
+
+      if (files.length > 0) {
+        const uploadPromises = files.map(async (file) => {
+          const uploadedUrl = await uploadImage(file);
+          if (uploadedUrl) {
+            const isVideo = file.type.startsWith("video/");
+            return {
+              attachmentType: isVideo ? "VIDEO" : "IMAGE",
+              attachmentUrl: uploadedUrl
+            };
+          }
+          return null;
         });
-      } else if (file) {
-        // Uploaded a new file
-        const uploadedUrl = await uploadImage(file);
-        if (uploadedUrl) {
-          const isVideo = file.type.startsWith("video/");
-          attachments.push({
-            attachmentType: isVideo ? "VIDEO" : "IMAGE",
-            attachmentUrl: uploadedUrl
-          });
-        }
+
+        const uploadedAttachments = await Promise.all(uploadPromises);
+        attachments.push(...uploadedAttachments.filter((att): att is any => att !== null));
       }
 
       const payload = {
@@ -95,17 +99,17 @@ export default function UpdatePostModal({ post, isOpen, onClose, onPostUpdated }
     }
   };
 
-  const isVideoAttachment = () => {
-    if (file) {
-      return file.type.startsWith("video/");
-    }
-    if (existingAttachment) {
+  const isVideoAttachment = (index: number) => {
+    if (index < existingAttachments.length) {
+      const att = existingAttachments[index];
       return (
-        existingAttachment.attachmentType === "VIDEO" ||
-        existingAttachment.attachmentUrl.match(/\.(mp4|webm|ogg)$/i)
+        att.attachmentType === "VIDEO" ||
+        att.attachmentUrl.match(/\.(mp4|webm|ogg)$/i)
       );
     }
-    return false;
+    const fileIndex = index - existingAttachments.length;
+    const currentFile = files[fileIndex];
+    return currentFile?.type.startsWith("video/");
   };
 
   return (
@@ -126,42 +130,51 @@ export default function UpdatePostModal({ post, isOpen, onClose, onPostUpdated }
             />
           </div>
 
-          {/* Media Upload Area (Styled like CreatePost) */}
+          {/* Previews Row */}
+          {previews.length > 0 && (
+            <div className="flex gap-3 overflow-x-auto py-2 custom-scrollbar">
+              {previews.map((prev, idx) => {
+                const isVideo = isVideoAttachment(idx);
+                return (
+                  <div key={idx} className="relative w-32 h-32 shrink-0 bg-black/5 rounded-xl overflow-hidden border border-border">
+                    {isVideo ? (
+                      <video src={prev} className="w-full h-full object-cover" />
+                    ) : (
+                      <img src={prev} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeAttachmentAtIndex(idx)}
+                      className="absolute top-1.5 right-1.5 bg-black/60 hover:bg-black text-white rounded-full p-1 transition-colors"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Media Upload Area */}
           <div className="space-y-2">
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="relative w-full h-48 bg-muted rounded-xl border-2 border-dashed border-border flex items-center justify-center cursor-pointer overflow-hidden hover:opacity-90 transition-opacity"
+              className="relative w-full h-32 bg-muted rounded-xl border-2 border-dashed border-border flex items-center justify-center cursor-pointer overflow-hidden hover:opacity-90 transition-opacity"
             >
-              {preview ? (
-                <>
-                  {isVideoAttachment() ? (
-                    <video src={preview} className="w-full h-full object-contain bg-black/5" controls />
-                  ) : (
-                    <img src={preview} alt="Attachment Preview" className="w-full h-full object-contain bg-black/5" />
-                  )}
-                  <button
-                    type="button"
-                    onClick={removeAttachment}
-                    className="absolute top-2 right-2 bg-black/60 hover:bg-black text-white rounded-full p-1.5 transition-colors"
-                  >
-                    <X size={16} />
-                  </button>
-                </>
-              ) : (
-                <div className="flex flex-col items-center text-muted-foreground gap-2">
-                  <div className="flex items-center gap-2">
-                    <ImageIcon className="w-8 h-8" />
-                    <Video className="w-8 h-8" />
-                  </div>
-                  <span className="text-sm font-medium">Click to upload photo or video</span>
+              <div className="flex flex-col items-center text-muted-foreground gap-1.5">
+                <div className="flex items-center gap-2">
+                  <ImageIcon className="w-6 h-6" />
+                  <Video className="w-6 h-6" />
                 </div>
-              )}
+                <span className="text-xs font-medium">Click to upload photo or video</span>
+              </div>
             </div>
             <input 
               type="file" 
               ref={fileInputRef} 
               className="hidden" 
               accept="image/*,video/*" 
+              multiple
               onChange={handleFileChange} 
             />
           </div>
@@ -178,7 +191,7 @@ export default function UpdatePostModal({ post, isOpen, onClose, onPostUpdated }
             </Button>
             <Button 
               type="submit" 
-              disabled={(!description.trim() && !file && !existingAttachment) || loading || isUploading}
+              disabled={(!description.trim() && files.length === 0 && existingAttachments.length === 0) || loading || isUploading}
               className="rounded-full px-8 py-2 font-medium bg-[#1a73e8] hover:bg-[#1557b0] text-white"
             >
               {isUploading ? "Uploading Media..." : loading ? "Saving..." : "Save"}

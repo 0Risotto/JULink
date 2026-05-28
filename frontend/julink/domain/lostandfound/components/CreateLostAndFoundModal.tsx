@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -32,39 +32,51 @@ export default function CreateLostAndFoundModal({ open, onOpenChange, onSuccess 
   const [phoneNumber, setPhoneNumber] = useState("");
   const [type, setType] = useState<"LOST" | "FOUND">("LOST");
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { uploadImage, isUploading, uploadError } = useImageUpload();
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedImage(file);
-      setImagePreview(URL.createObjectURL(file));
-    }
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
+
+    setSelectedImages((prev) => [...prev, ...selectedFiles]);
+    const newPreviews = selectedFiles.map((file) => URL.createObjectURL(file));
+    setImagePreviews((prev) => [...prev, ...newPreviews]);
   };
 
-  const handleRemoveImage = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
+  const handleRemoveImageAtIndex = (index: number) => {
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!description || !college || !selectedImage) return;
+    if (!description || !college || selectedImages.length === 0) return;
 
     try {
       setLoading(true);
-      // 1. Upload image
-      const imageUrl = await uploadImage(selectedImage);
-      if (!imageUrl) throw new Error("Image upload failed");
+      // 1. Upload all images concurrently
+      const uploadPromises = selectedImages.map(async (file) => {
+        const url = await uploadImage(file);
+        return url || "";
+      });
 
-      // 2. Create post
+      const uploadedUrls = await Promise.all(uploadPromises);
+      const filteredUrls = uploadedUrls.filter(url => url !== "");
+
+      if (filteredUrls.length === 0) throw new Error("Image uploads failed");
+
+      // 2. Create post with comma-separated URLs
       const data: CreateLostAndFoundRequest = {
         description,
         college: college as CollegeEnum,
-        imageURL: imageUrl,
+        imageURL: filteredUrls.join(","),
         phoneNumber: phoneNumber || undefined,
         type: type,
       };
@@ -84,7 +96,8 @@ export default function CreateLostAndFoundModal({ open, onOpenChange, onSuccess 
     setCollege("");
     setPhoneNumber("");
     setType("LOST");
-    handleRemoveImage();
+    setSelectedImages([]);
+    setImagePreviews([]);
     onOpenChange(false);
   };
 
@@ -166,28 +179,38 @@ export default function CreateLostAndFoundModal({ open, onOpenChange, onSuccess 
             />
           </div>
 
+          {/* Previews Row */}
+          {imagePreviews.length > 0 && (
+            <div className="flex gap-3 overflow-x-auto py-2 custom-scrollbar">
+              {imagePreviews.map((prev, idx) => (
+                <div key={idx} className="relative w-24 h-24 shrink-0 bg-black/5 rounded-lg overflow-hidden border">
+                  <img src={prev} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImageAtIndex(idx)}
+                    className="absolute top-1 right-1 bg-black/60 hover:bg-black text-white rounded-full p-1 transition-colors"
+                  >
+                    <X size={10} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="flex flex-col gap-2">
-            <Label>Image *</Label>
-            {!imagePreview ? (
-              <label className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors">
-                <input type="file" className="hidden" accept="image/*" onChange={handleImageSelect} />
-                <ImagePlus className="w-8 h-8 text-muted-foreground mb-2" />
-                <span className="text-sm font-medium text-muted-foreground">Click to upload image</span>
-              </label>
-            ) : (
-              <div className="relative w-full rounded-lg overflow-hidden bg-muted flex items-center justify-center max-h-48 border">
-                <img src={imagePreview} alt="Preview" className="object-contain max-h-48 w-full" />
-                <Button 
-                  type="button"
-                  variant="destructive" 
-                  size="icon" 
-                  className="absolute top-2 right-2 w-8 h-8 rounded-full shadow-md"
-                  onClick={handleRemoveImage}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
+            <Label>Images *</Label>
+            <label className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors">
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*" 
+                multiple 
+                onChange={handleImageSelect} 
+              />
+              <ImagePlus className="w-8 h-8 text-muted-foreground mb-2" />
+              <span className="text-sm font-medium text-muted-foreground">Click to upload images</span>
+            </label>
             {uploadError && <p className="text-red-500 text-sm mt-1">{uploadError}</p>}
           </div>
 
@@ -195,7 +218,7 @@ export default function CreateLostAndFoundModal({ open, onOpenChange, onSuccess 
             <Button type="button" variant="outline" onClick={handleReset} disabled={loading || isUploading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!description || !college || !selectedImage || loading || isUploading}>
+            <Button type="submit" disabled={!description || !college || selectedImages.length === 0 || loading || isUploading}>
               {loading || isUploading ? <Spinner className="mr-2" /> : null}
               {isUploading ? "Uploading..." : "Post Item"}
             </Button>

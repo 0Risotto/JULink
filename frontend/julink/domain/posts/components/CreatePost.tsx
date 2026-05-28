@@ -24,21 +24,21 @@ export default function CreatePost({ currentUser, onPostCreated }: CreatePostPro
   const { uploadImage, isUploading } = useImageUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
 
-    setFile(selectedFile);
-    setPreview(URL.createObjectURL(selectedFile));
+    setFiles((prev) => [...prev, ...selectedFiles]);
+    const newPreviews = selectedFiles.map((file) => URL.createObjectURL(file));
+    setPreviews((prev) => [...prev, ...newPreviews]);
   };
 
-  const removeAttachment = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setFile(null);
-    setPreview(null);
+  const removeAttachmentAtIndex = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => prev.filter((_, i) => i !== index));
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -46,28 +46,29 @@ export default function CreatePost({ currentUser, onPostCreated }: CreatePostPro
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim() && !file) return;
+    if (!content.trim() && files.length === 0) return;
 
-    console.log(`[CreatePost] Starting submission. Content: "${content}", Has File: ${!!file}`);
+    console.log(`[CreatePost] Starting submission. Content: "${content}", Files count: ${files.length}`);
     setLoading(true);
     try {
       const attachments = [];
       
-      if (file) {
-        console.log(`[CreatePost] Uploading file to Cloudinary via useImageUpload...`);
-        const uploadedUrl = await uploadImage(file);
-        if (uploadedUrl) {
-          // Determine type roughly based on file object type
-          const isVideo = file.type.startsWith("video/");
-          const attachmentPayload = {
-            attachmentType: isVideo ? "VIDEO" : "IMAGE",
-            attachmentUrl: uploadedUrl
-          };
-          console.log(`[CreatePost] Cloudinary upload complete. Adding to payload:`, attachmentPayload);
-          attachments.push(attachmentPayload);
-        } else {
-          console.warn(`[CreatePost] uploadImage returned null. No attachment will be added.`);
-        }
+      if (files.length > 0) {
+        console.log(`[CreatePost] Uploading files to Cloudinary...`);
+        const uploadPromises = files.map(async (file) => {
+          const uploadedUrl = await uploadImage(file);
+          if (uploadedUrl) {
+            const isVideo = file.type.startsWith("video/");
+            return {
+              attachmentType: isVideo ? "VIDEO" : "IMAGE",
+              attachmentUrl: uploadedUrl
+            };
+          }
+          return null;
+        });
+
+        const uploadedAttachments = await Promise.all(uploadPromises);
+        attachments.push(...uploadedAttachments.filter((att): att is any => att !== null));
       }
 
       const payload = {
@@ -81,8 +82,8 @@ export default function CreatePost({ currentUser, onPostCreated }: CreatePostPro
       console.log(`[CreatePost] Backend response success:`, response);
       
       setContent("");
-      setFile(null);
-      setPreview(null);
+      setFiles([]);
+      setPreviews([]);
       
       if (onPostCreated && response) {
         onPostCreated(response);
@@ -109,42 +110,52 @@ export default function CreatePost({ currentUser, onPostCreated }: CreatePostPro
           />
         </div>
 
-        {/* Media Upload Area (Styled like EditProfileDialog) */}
+        {/* Previews Row */}
+        {previews.length > 0 && (
+          <div className="flex gap-3 overflow-x-auto py-2 custom-scrollbar">
+            {previews.map((prev, idx) => {
+              const currentFile = files[idx];
+              const isVideo = currentFile?.type.startsWith("video/");
+              return (
+                <div key={idx} className="relative w-32 h-32 shrink-0 bg-black/5 rounded-xl overflow-hidden border border-border">
+                  {isVideo ? (
+                    <video src={prev} className="w-full h-full object-cover" />
+                  ) : (
+                    <img src={prev} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeAttachmentAtIndex(idx)}
+                    className="absolute top-1.5 right-1.5 bg-black/60 hover:bg-black text-white rounded-full p-1 transition-colors"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Media Upload Area */}
         <div className="space-y-2">
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="relative w-full h-48 bg-muted rounded-xl border-2 border-dashed border-border flex items-center justify-center cursor-pointer overflow-hidden hover:opacity-90 transition-opacity"
+            className="relative w-full h-32 bg-muted rounded-xl border-2 border-dashed border-border flex items-center justify-center cursor-pointer overflow-hidden hover:opacity-90 transition-opacity"
           >
-            {preview ? (
-              <>
-                {file?.type.startsWith("video/") ? (
-                  <video src={preview} className="w-full h-full object-contain bg-black/5" controls />
-                ) : (
-                  <img src={preview} alt="Attachment Preview" className="w-full h-full object-contain bg-black/5" />
-                )}
-                <button
-                  type="button"
-                  onClick={removeAttachment}
-                  className="absolute top-2 right-2 bg-black/60 hover:bg-black text-white rounded-full p-1.5 transition-colors"
-                >
-                  <X size={16} />
-                </button>
-              </>
-            ) : (
-              <div className="flex flex-col items-center text-muted-foreground gap-2">
-                <div className="flex items-center gap-2">
-                  <ImageIcon className="w-8 h-8" />
-                  <Video className="w-8 h-8" />
-                </div>
-                <span className="text-sm font-medium">Click to upload photo or video</span>
+            <div className="flex flex-col items-center text-muted-foreground gap-1.5">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="w-6 h-6" />
+                <Video className="w-6 h-6" />
               </div>
-            )}
+              <span className="text-xs font-medium">Click to upload photo or video</span>
+            </div>
           </div>
           <input 
             type="file" 
             ref={fileInputRef} 
             className="hidden" 
             accept="image/*,video/*" 
+            multiple
             onChange={handleFileChange} 
           />
         </div>
@@ -152,7 +163,7 @@ export default function CreatePost({ currentUser, onPostCreated }: CreatePostPro
         <div className="flex justify-end pt-2">
           <Button 
             type="submit" 
-            disabled={(!content.trim() && !file) || loading || isUploading}
+            disabled={(!content.trim() && files.length === 0) || loading || isUploading}
             className="rounded-full px-8 py-2 font-medium bg-[#1a73e8] hover:bg-[#1557b0] text-white"
           >
             {isUploading ? "Uploading Media..." : loading ? "Posting..." : "Post"}

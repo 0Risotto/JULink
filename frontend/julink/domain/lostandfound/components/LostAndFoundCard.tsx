@@ -13,6 +13,7 @@ import { setActiveConversation, fetchConversations } from "@/domain/chat/store/c
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import PostCarousel from "@/domain/posts/components/PostCarousel";
 
 interface Props {
   item: LostAndFoundResponse;
@@ -132,11 +133,13 @@ export default function LostAndFoundCard({ item, onUpdate }: Props) {
         <p className="whitespace-pre-wrap text-sm mb-4">{item.description}</p>
         
         {item.imageURL && (
-          <div className="relative w-full rounded-md overflow-hidden bg-muted flex items-center justify-center max-h-[400px]">
-            <img 
-              src={item.imageURL} 
-              alt="Lost item" 
-              className="object-contain max-h-[400px] w-full"
+          <div className="relative w-full rounded-md overflow-hidden bg-muted flex items-center justify-center border">
+            <PostCarousel 
+              attachments={item.imageURL.split(",").map((url, idx) => ({
+                attachmentId: idx.toString(),
+                attachmentType: "IMAGE",
+                attachmentUrl: url
+              }))} 
             />
           </div>
         )}
