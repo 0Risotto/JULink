@@ -87,6 +87,24 @@ public class FollowService {
         });
     }
 
+    public Page<FollowDTOs.FollowerListDto> getFriends(String username, Pageable pageable) {
+        if (!authRepository.existsByUsername(username)) {
+            throw new IllegalArgumentException("User not found: " + username);
+        }
+
+        Page<String> friendUsernames = followRepository.getFriends(username, pageable);
+
+        return friendUsernames.map(friendUsername -> {
+            return authRepository.findByUsername(friendUsername)
+                    .map(user -> new FollowDTOs.FollowerListDto(
+                            user.getUsername(),
+                            user.getFirstName() + " " + user.getLastName(),
+                            user.getProfilePictureUrl()
+                    ))
+                    .orElseGet(() -> new FollowDTOs.FollowerListDto(friendUsername, "Unknown User", null));
+        });
+    }
+
     public Page<String> getMutualFollowings(String username1, String username2, Pageable pageable) {
         if (!authRepository.existsByUsername(username1)) {
             throw new IllegalArgumentException("User not found: " + username1);

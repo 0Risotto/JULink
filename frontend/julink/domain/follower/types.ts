@@ -9,6 +9,7 @@ export interface PaginatedFollowersResponse {
   message?: string;
   followers?: FollowerUser[];
   followings?: FollowerUser[];
+  friends?: FollowerUser[];
   mutualFollowers?: string[];
   mutualFollowings?: string[];
   totalPages?: number;

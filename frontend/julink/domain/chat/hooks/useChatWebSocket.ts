@@ -4,6 +4,7 @@ import SockJS from "sockjs-client";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { wsMessageReceived, wsTypingReceived, wsReadReceived } from "../store/chatSlice";
 import { MessageType } from "../types";
+import * as chatApi from "../api/chatApi";
 
 export const useChatWebSocket = (myUsername: string | null) => {
   const dispatch = useAppDispatch();
@@ -74,7 +75,7 @@ export const useChatWebSocket = (myUsername: string | null) => {
   }, [connected, conversations, dispatch, myUsername]);
 
   // Methods to emit frames
-  const sendMessage = (conversationId: number, content: string, messageType: MessageType = "TEXT") => {
+  const sendMessage = async (conversationId: number, content: string, messageType: MessageType = "TEXT") => {
     if (clientRef.current && clientRef.current.connected && myUsername) {
       clientRef.current.publish({
         destination: "/app/chat.send",
@@ -85,6 +86,15 @@ export const useChatWebSocket = (myUsername: string | null) => {
           senderUsername: myUsername,
         }),
       });
+    } else {
+      // Fallback/Direct call to REST API when WebSocket is offline or connecting
+      try {
+        const response = await chatApi.sendMessage(conversationId, content, messageType);
+        // Dispatch locally to update UI immediately
+        dispatch(wsMessageReceived({ eventType: "NEW_MESSAGE", message: response }));
+      } catch (err) {
+        console.error("Failed to send message via REST API", err);
+      }
     }
   };
 

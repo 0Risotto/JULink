@@ -190,6 +190,42 @@ public class FollowRepository {
                 .all();
     }
 
+    public Page<String> getFriends(String username, Pageable pageable) {
+        String query = """
+            MATCH (me:User {username: $username})-[:FOLLOWS]->(friend:User), (friend)-[:FOLLOWS]->(me)
+            WHERE NOT (me)-[:BLOCKED]->(friend)
+              AND NOT (friend)-[:BLOCKED]->(me)
+            RETURN friend.username AS username
+            ORDER BY friend.username
+            SKIP $skip
+            LIMIT $limit
+            """;
+        String countQuery = """
+            MATCH (me:User {username: $username})-[:FOLLOWS]->(friend:User), (friend)-[:FOLLOWS]->(me)
+            WHERE NOT (me)-[:BLOCKED]->(friend)
+              AND NOT (friend)-[:BLOCKED]->(me)
+            RETURN count(friend) AS total
+            """;
+
+        Long total = neo4jClient.query(countQuery)
+                .bind(username).to("username")
+                .fetchAs(Long.class)
+                .mappedBy((typeSystem, record) -> record.get("total").asLong())
+                .one()
+                .orElse(0L);
+
+        List<String> friends = neo4jClient.query(query)
+                .bind(username).to("username")
+                .bind(pageable.getOffset()).to("skip")
+                .bind(pageable.getPageSize()).to("limit")
+                .fetchAs(String.class)
+                .mappedBy((typeSystem, record) -> record.get("username").asString())
+                .all()
+                .stream().toList();
+
+        return new PageImpl<>(friends, pageable, total);
+    }
+
     public Page<String> getMutualFollowings(String username1, String username2, Pageable pageable) {
         String query = """
         MATCH (u1:User {username: $username1})-[:FOLLOWS]->(common:User)<-[:FOLLOWS]-(u2:User {username: $username2})

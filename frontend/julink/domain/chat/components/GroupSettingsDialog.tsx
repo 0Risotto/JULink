@@ -52,17 +52,17 @@ export default function GroupSettingsDialog({ conversation, trigger }: GroupSett
       setShowAddMembers(false);
       setSelectedUsernames([]);
       if (myUsername) {
-        FollowerServices.getFollowings(myUsername, 0, 100)
+        FollowerServices.getFriends(0, 100)
           .then((res) => {
             if (res.status === "success") {
               const existingUsernames = conversation.members.map((m) => m.username);
-              const nonMembers = (res.followings || []).filter(
+              const nonMembers = (res.friends || []).filter(
                 (f) => !existingUsernames.includes(f.username)
               );
               setFollowers(nonMembers);
             }
           })
-          .catch((err) => console.error("Failed to fetch followings:", err));
+          .catch((err) => console.error("Failed to fetch friends:", err));
       }
     }
   }, [open, conversation, myUsername]);

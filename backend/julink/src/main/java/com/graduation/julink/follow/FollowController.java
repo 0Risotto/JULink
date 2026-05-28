@@ -79,6 +79,27 @@ public class FollowController {
             return Map.of("status", "error", "message", e.getMessage());
         }
     }
+    @GetMapping("/friends")
+    public Map<String, Object> getFriends(Principal principal,
+                                          @PageableDefault(size = 100, sort = "username", direction = Sort.Direction.ASC) Pageable pageable) {
+        String email = principal.getName();
+        String currentUser = getUsernameFromEmail(email);
+        try {
+            Page<FollowDTOs.FollowerListDto> friendsDtos = followService.getFriends(currentUser, pageable);
+
+            return Map.of(
+                    "status", "success",
+                    "friends", friendsDtos.getContent(),
+                    "totalPages", friendsDtos.getTotalPages(),
+                    "totalElements", friendsDtos.getTotalElements(),
+                    "currentPage", friendsDtos.getNumber(),
+                    "pageSize", friendsDtos.getSize()
+            );
+        } catch (Exception e) {
+            return Map.of("status", "error", "message", e.getMessage());
+        }
+    }
+
     @GetMapping("/mutual-followings/{otherUsername}")
     public Map<String, Object> getMutualFollowings(Principal principal, @PathVariable String otherUsername,
                                                    @PageableDefault(size = 20, sort = "username", direction = Sort.Direction.ASC) Pageable pageable) {
