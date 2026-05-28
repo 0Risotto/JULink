@@ -144,4 +144,52 @@ class NotificationServiceTest {
         assertThrows(EntityNotFoundException.class,
                 () -> notificationService.markAsRead("recipient@ju.edu.jo", notificationId));
     }
+
+    @Test
+    void markAsRead_MessageNotificationMarksRelatedConversationNotificationsRead() {
+        notification.setType(NotificationType.NEW_MESSAGE);
+        notification.setTargetType("CONVERSATION");
+        notification.setTargetId("10");
+        notification.setRead(false);
+        NotificationResponse readResponse = new NotificationResponse(
+                notification.getId(),
+                "recipient",
+                "actor",
+                null,
+                NotificationType.NEW_MESSAGE,
+                "actor sent you a message",
+                "CONVERSATION",
+                "10",
+                true,
+                null,
+                notification.getCreatedAt()
+        );
+
+        when(authRepository.findByEmail("recipient@ju.edu.jo")).thenReturn(Optional.of(recipient));
+        when(notificationRepository.findByIdAndRecipient_Id(notification.getId(), 1L)).thenReturn(Optional.of(notification));
+        when(notificationRepository.save(notification)).thenReturn(notification);
+        when(notificationMapper.toResponse(notification)).thenReturn(readResponse);
+
+        NotificationResponse result = notificationService.markAsRead("recipient@ju.edu.jo", notification.getId());
+
+        assertEquals(readResponse, result);
+        assertTrue(notification.isRead());
+        verify(notificationRepository).markUnreadTargetAsRead(
+                1L,
+                "CONVERSATION",
+                "10",
+                NotificationType.NEW_MESSAGE
+        );
+    }
+
+    @Test
+    void markConversationMessageNotificationsAsRead_UsesConversationTarget() {
+        when(authRepository.findByUsername("recipient")).thenReturn(Optional.of(recipient));
+        when(notificationRepository.markUnreadTargetAsRead(1L, "CONVERSATION", "10", NotificationType.NEW_MESSAGE))
+                .thenReturn(2);
+
+        int updated = notificationService.markConversationMessageNotificationsAsRead("recipient", 10L);
+
+        assertEquals(2, updated);
+    }
 }

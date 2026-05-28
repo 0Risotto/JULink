@@ -95,12 +95,25 @@ public class NotificationService {
         Notification notification = notificationRepository.findByIdAndRecipient_Id(notificationId, user.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Notification not found"));
         notification.setRead(true);
-        return notificationMapper.toResponse(notificationRepository.save(notification));
+        Notification saved = notificationRepository.save(notification);
+        markRelatedUnreadNotificationsAsRead(user, saved);
+        return notificationMapper.toResponse(saved);
     }
 
     @Transactional
     public int markAllAsRead(String email) {
         return notificationRepository.markAllUnreadAsRead(getUserByEmail(email).getId());
+    }
+
+    @Transactional
+    public int markConversationMessageNotificationsAsRead(String username, Long conversationId) {
+        AuthEntities.User user = getUserByUsername(username);
+        return notificationRepository.markUnreadTargetAsRead(
+                user.getId(),
+                "CONVERSATION",
+                conversationId.toString(),
+                NotificationType.NEW_MESSAGE
+        );
     }
 
     @Transactional
@@ -114,5 +127,23 @@ public class NotificationService {
     private AuthEntities.User getUserByEmail(String email) {
         return authRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("Authenticated user was not found"));
+    }
+
+    private AuthEntities.User getUserByUsername(String username) {
+        return authRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Authenticated user was not found"));
+    }
+
+    private void markRelatedUnreadNotificationsAsRead(AuthEntities.User user, Notification notification) {
+        if (notification.getType() == NotificationType.NEW_MESSAGE
+                && "CONVERSATION".equals(notification.getTargetType())
+                && notification.getTargetId() != null) {
+            notificationRepository.markUnreadTargetAsRead(
+                    user.getId(),
+                    notification.getTargetType(),
+                    notification.getTargetId(),
+                    notification.getType()
+            );
+        }
     }
 }

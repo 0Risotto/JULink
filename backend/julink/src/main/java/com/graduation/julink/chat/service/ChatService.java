@@ -494,6 +494,7 @@ public class ChatService {
                 .lastReadMessageId(lastReadMessageId)
                 .build();
         messagingTemplate.convertAndSend("/topic/conversations/" + conversationId + "/read", event);
+        notificationService.markConversationMessageNotificationsAsRead(username, conversationId);
     }
 
     // ─────────────────────────────────────────────────────────────

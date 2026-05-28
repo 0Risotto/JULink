@@ -481,6 +481,7 @@ class ChatServiceTest {
         verify(receiptRepo, times(1)).save(any(MessageReadReceipt.class));
         verify(messageRepo, times(1)).markAsRead(1L, 101L, 10L);
         verify(messagingTemplate, times(1)).convertAndSend(eq("/topic/conversations/1/read"), any(WsReadEvent.class));
+        verify(notificationService).markConversationMessageNotificationsAsRead("user1", 1L);
     }
 
     private void makeGroup() {
