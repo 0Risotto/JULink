@@ -72,6 +72,9 @@ class ProfileServiceImplementation implements ProfileService {
                     ImageVariant.BANNER
             ));
         }
+        if (dto.themePreference() != null) {
+            user.setThemePreference(dto.themePreference());
+        }
         authRepository.save(user);
         return ProfileMapper.toDTO(user);
     }
@@ -92,6 +95,9 @@ class ProfileServiceImplementation implements ProfileService {
         user.setBio(dto.bio());
         user.setProfilePictureUrl(resolveProfilePicture(dto));
         user.setBannerPhotoUrl(resolveBannerPhoto(dto));
+        if (dto.themePreference() != null) {
+            user.setThemePreference(dto.themePreference());
+        }
         user.setFirstLogin(false); // The important flip!
 
         authRepository.save(user);

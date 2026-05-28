@@ -100,6 +100,7 @@ public class AuthController {
                     "status", "success",
                     "token", token,
                     "isFirstLogin", user.isFirstLogin(),
+                    "themePreference", user.getThemePreference(),
                     "message", "Login successful"
             );
 

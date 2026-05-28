@@ -2,6 +2,7 @@ package com.graduation.julink.profile;
 
 import com.graduation.julink.auth.AuthEntities.User;
 import com.graduation.julink.auth.Repository.AuthRepository;
+import com.graduation.julink.auth.ThemePreference;
 import com.graduation.julink.common.media.MediaUploadService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -79,7 +80,7 @@ class ProfileServiceTest {
     @Test
     void updateProfile_Success() {
         when(authRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        ProfileDTOs.UpdateProfile req = new ProfileDTOs.UpdateProfile("bio", "pfp", "banner");
+        ProfileDTOs.UpdateProfile req = new ProfileDTOs.UpdateProfile("bio", "pfp", "banner", ThemePreference.DARK);
         ProfileDTOs.UserProfile profile = new ProfileDTOs.UserProfile("testuser", "Test", "User", "KASIT", "bio", "pfp", "banner", java.util.Collections.emptyList(), java.util.Collections.emptyList(), 0);
         when(profileMapper.toDTO(user)).thenReturn(profile);
 
@@ -87,6 +88,7 @@ class ProfileServiceTest {
 
         assertNotNull(result);
         assertEquals("bio", user.getBio());
+        assertEquals(ThemePreference.DARK, user.getThemePreference());
         verify(authRepository, times(1)).save(user);
     }
 
@@ -102,12 +104,13 @@ class ProfileServiceTest {
     @Test
     void completeOnboarding_Success() {
         when(authRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        ProfileDTOs.OnboardingRequest req = new ProfileDTOs.OnboardingRequest("bio", "pfp", "banner");
+        ProfileDTOs.OnboardingRequest req = new ProfileDTOs.OnboardingRequest("bio", "pfp", "banner", ThemePreference.LIGHT);
 
         profileService.completeOnboarding(email, req);
 
         assertEquals("bio", user.getBio());
         assertEquals("pfp", user.getProfilePictureUrl());
+        assertEquals(ThemePreference.LIGHT, user.getThemePreference());
         assertFalse(user.isFirstLogin());
         verify(authRepository, times(1)).save(user);
     }

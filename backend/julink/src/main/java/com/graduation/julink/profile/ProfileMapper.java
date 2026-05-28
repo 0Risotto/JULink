@@ -21,6 +21,7 @@ class ProfileMapperImplementation implements ProfileMapper {
                 user.getBio(),
                 user.getProfilePictureUrl(),
                 user.getBannerPhotoUrl(),
+                user.getThemePreference(),
                 new ArrayList<>(),
                 new ArrayList<>(),
                 0

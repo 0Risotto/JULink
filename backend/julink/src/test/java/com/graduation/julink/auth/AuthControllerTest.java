@@ -102,6 +102,7 @@ class AuthControllerTest {
         AuthEntities.User user = new AuthEntities.User();
         user.setEmail("test@ju.edu.jo");
         user.setFirstLogin(true);
+        user.setThemePreference(ThemePreference.DARK);
 
         when(authService.loginUser(loginUserDTO)).thenReturn(authentication);
         when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
@@ -112,6 +113,7 @@ class AuthControllerTest {
         assertEquals("success", response.get("status"));
         assertEquals("mock-jwt-token", response.get("token"));
         assertEquals(true, response.get("isFirstLogin"));
+        assertEquals(ThemePreference.DARK, response.get("themePreference"));
         assertEquals("Login successful", response.get("message"));
     }
 
