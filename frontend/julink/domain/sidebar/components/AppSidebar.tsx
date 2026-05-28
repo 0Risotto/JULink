@@ -52,7 +52,7 @@ export function AppSidebar() {
                           <span>{item.title}</span>
                         </span>
                         {item.title === "Notifications" && unreadCount > 0 && (
-                          <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-5 h-5 flex items-center justify-center shadow-sm">
+                          <span className="bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-5 h-5 flex items-center justify-center shadow-sm">
                             {unreadCount}
                           </span>
                         )}
