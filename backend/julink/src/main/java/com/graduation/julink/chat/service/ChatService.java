@@ -9,6 +9,9 @@ import com.graduation.julink.chat.repo.*;
 import com.graduation.julink.notification.NotificationService;
 import com.graduation.julink.notification.NotificationType;
 import com.graduation.julink.post.PostRepository;
+import com.graduation.julink.video.VideoDTOs;
+import com.graduation.julink.video.VideoEntities;
+import com.graduation.julink.video.VideoService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +27,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -44,6 +45,7 @@ public class ChatService {
     private final SimpMessagingTemplate messagingTemplate;
     private final PostRepository postRepository;
     private final NotificationService notificationService;
+    private final VideoService videoService;
 
     // ─────────────────────────────────────────────────────────────
     // Conversations
@@ -242,44 +244,20 @@ public class ChatService {
     public GroupCallResponse startGroupCall(Long conversationId,
                                             String requesterUsername,
                                             StartGroupCallRequest req) {
-        User requester = loadUser(requesterUsername);
-        Conversation conv = loadConversation(conversationId);
-
-        assertGroup(conv);
-        assertMember(conv, requester);
-        assertAdmin(conv, requester);
-
-        String roomName = "JuLink-Group-" + conversationId + "-" + UUID.randomUUID().toString().substring(0, 8);
-        String videoUrl = "https://meet.opensuse.org/" + roomName;
-        boolean videoCall = req == null || req.isVideoCall();
-
-        List<String> invitedUsernames = conv.getMembers()
-                .stream()
-                .map(ConversationMember::getUser)
-                .filter(user -> !user.getId().equals(requester.getId()))
-                .map(User::getUsername)
-                .toList();
-        for (String targetUsername : invitedUsernames) {
-            Map<String, Object> payload = Map.of(
-                    "type", "INVITE_TO_GROUP_VIDEO",
-                    "conversationId", conversationId,
-                    "groupName", groupDisplayName(conv),
-                    "callerUsername", requester.getUsername(),
-                    "targetUsername", targetUsername,
-                    "videoUrl", videoUrl,
-                    "videoCall", videoCall
-            );
-
-            messagingTemplate.convertAndSend("/topic/video-calls", (Object) payload);
-
-        }
+        VideoDTOs.GroupCallRequest request = new VideoDTOs.GroupCallRequest();
+        request.setConversationId(conversationId);
+        request.setCallType(req == null || req.isVideoCall() ? VideoEntities.CallType.VIDEO : VideoEntities.CallType.AUDIO);
+        VideoDTOs.CallSessionResponse call = videoService.startGroupCall(requesterUsername, request);
 
         return GroupCallResponse.builder()
                 .conversationId(conversationId)
-                .roomName(roomName)
-                .videoUrl(videoUrl)
-                .videoCall(videoCall)
-                .invitedUsernames(invitedUsernames)
+                .roomName(call.getRoomName())
+                .videoUrl(call.getVideoUrl())
+                .videoCall(call.getCallType() == VideoEntities.CallType.VIDEO)
+                .invitedUsernames(call.getParticipants().stream()
+                        .filter(participant -> participant.getRole() == VideoEntities.ParticipantRole.INVITEE)
+                        .map(VideoDTOs.CallParticipantResponse::getUsername)
+                        .toList())
                 .build();
     }
 

@@ -9,6 +9,9 @@ import com.graduation.julink.chat.repo.*;
 import com.graduation.julink.notification.NotificationService;
 import com.graduation.julink.post.PostEntities.Post;
 import com.graduation.julink.post.PostRepository;
+import com.graduation.julink.video.VideoDTOs;
+import com.graduation.julink.video.VideoEntities;
+import com.graduation.julink.video.VideoService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,6 +50,7 @@ class ChatServiceTest {
     @Mock private SimpMessagingTemplate messagingTemplate;
     @Mock private PostRepository postRepository;
     @Mock private NotificationService notificationService;
+    @Mock private VideoService videoService;
 
     @InjectMocks
     private ChatService chatService;
@@ -287,17 +291,31 @@ class ChatServiceTest {
         makeGroupWithThreeMembers();
         StartGroupCallRequest req = new StartGroupCallRequest();
         req.setVideoCall(true);
-
-        when(userRepo.findByUsername("user1")).thenReturn(Optional.of(user1));
-        when(conversationRepo.findById(1L)).thenReturn(Optional.of(conversation));
+        VideoDTOs.CallSessionResponse call = VideoDTOs.CallSessionResponse.builder()
+                .roomName("JuLink-GROUP-test")
+                .videoUrl("https://meet.opensuse.org/JuLink-GROUP-test")
+                .callType(VideoEntities.CallType.VIDEO)
+                .participants(List.of(
+                        VideoDTOs.CallParticipantResponse.builder()
+                                .username("user2")
+                                .role(VideoEntities.ParticipantRole.INVITEE)
+                                .build(),
+                        VideoDTOs.CallParticipantResponse.builder()
+                                .username("user3")
+                                .role(VideoEntities.ParticipantRole.INVITEE)
+                                .build()
+                ))
+                .build();
+        when(videoService.startGroupCall(eq("user1"), any(VideoDTOs.GroupCallRequest.class))).thenReturn(call);
 
         GroupCallResponse response = chatService.startGroupCall(1L, "user1", req);
 
         assertEquals(1L, response.getConversationId());
-        assertTrue(response.getRoomName().startsWith("JuLink-Group-1-"));
-        assertTrue(response.getVideoUrl().contains(response.getRoomName()));
+        assertEquals("JuLink-GROUP-test", response.getRoomName());
+        assertEquals("https://meet.opensuse.org/JuLink-GROUP-test", response.getVideoUrl());
         assertEquals(List.of("user2", "user3"), response.getInvitedUsernames().stream().sorted().toList());
-        verify(messagingTemplate, times(2)).convertAndSend(eq("/topic/video-calls"), any(Object.class));
+        verify(videoService).startGroupCall(eq("user1"), argThat(request ->
+                request.getConversationId().equals(1L) && request.getCallType() == VideoEntities.CallType.VIDEO));
     }
 
     @Test
