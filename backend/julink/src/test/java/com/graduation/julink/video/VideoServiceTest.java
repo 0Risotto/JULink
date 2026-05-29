@@ -107,7 +107,7 @@ class VideoServiceTest {
     }
 
     @Test
-    void startGroupCall_InvitesMembersExceptCaller() {
+    void startGroupCall_InvitesMembers() {
         GroupCallRequest req = new GroupCallRequest();
         req.setConversationId(1L);
         req.setCallType(CallType.AUDIO);
@@ -123,7 +123,7 @@ class VideoServiceTest {
         assertEquals(3, response.getParticipants().size());
         verify(messagingTemplate).convertAndSend(eq("/queue/video-calls/targetUser"), any(Object.class));
         verify(messagingTemplate).convertAndSend(eq("/queue/video-calls/thirdUser"), any(Object.class));
-        verify(messagingTemplate, never()).convertAndSend(eq("/queue/video-calls/callerUser"), any(Object.class));
+        verify(messagingTemplate).convertAndSend(eq("/queue/video-calls/callerUser"), any(Object.class));
     }
 
     @Test
