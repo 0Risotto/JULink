@@ -86,9 +86,9 @@ Once your first run turns green, you can incrementally add the following stages 
 - [x] **Step 4.1: Initial Empty Jenkinsfile**
   * Script Location: `pipeline/Jenkinsfile`
   * Status: **Succeeds Trivially** (Verified)
-- [ ] **Step 4.2: Add Checkout & Init Stages**
+- [x] **Step 4.2: Add Checkout & Init Stages**
   * Add git checkout confirmation.
-- [ ] **Step 4.3: Add Backend Compilation & Tests Stage**
+- [x] **Step 4.3: Add Backend Compilation & Tests Stage**
   * Inside `pipeline/Jenkinsfile`, add:
     ```groovy
     stage('Test & Build Backend') {
@@ -114,7 +114,7 @@ Once your first run turns green, you can incrementally add the following stages 
         }
     }
     ```
-- [ ] **Step 4.5: Add Docker Packaging Stage**
+- [x] **Step 4.5: Add Docker Packaging Stage (Backend Part)**
   * Inside `pipeline/Jenkinsfile`, add:
     ```groovy
     stage('Build Docker Images') {

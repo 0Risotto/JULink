@@ -13,6 +13,7 @@ import { getUserProfile } from "@/domain/profile/services/profileServices";
 import { UserProfileDTO } from "@/domain/profile/types";
 import { JitsiMeetingComponent } from "./JitsiMeetingComponent";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CardAction } from "@/components/ui/card";
+import { getWsBaseUrl } from "@/util/api/axios";
 
 export function GlobalCallListener() {
   const { myUsername, loadMyUsername } = useUser();
@@ -82,7 +83,7 @@ export function GlobalCallListener() {
     }
 
     const client = new Client({
-      brokerURL: "ws://localhost:8080/ws",
+      brokerURL: `${getWsBaseUrl()}/ws`,
       connectHeaders: {
         Authorization: `Bearer ${token}`,
       },

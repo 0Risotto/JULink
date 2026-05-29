@@ -1,8 +1,23 @@
 import axios, { AxiosResponse, InternalAxiosRequestConfig, Method } from "axios";
 
+export const getApiBaseUrl = (): string => {
+  if (typeof window !== "undefined") {
+    return `${window.location.protocol}//${window.location.hostname}:8080`;
+  }
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+};
+
+export const getWsBaseUrl = (): string => {
+  if (typeof window !== "undefined") {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${window.location.hostname}:8080`;
+  }
+  return "ws://localhost:8080";
+};
+
 // Create and configure axios instance
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://192.168.1.22:8080",
+  baseURL: getApiBaseUrl(),
   headers: {
     "Content-Type": "application/json",
   },

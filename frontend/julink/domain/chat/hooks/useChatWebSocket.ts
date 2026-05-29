@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { wsMessageReceived, wsTypingReceived, wsReadReceived } from "../store/chatSlice";
 import { MessageType } from "../types";
 import * as chatApi from "../api/chatApi";
+import { getApiBaseUrl } from "@/util/api/axios";
 
 export const useChatWebSocket = (myUsername: string | null) => {
   const dispatch = useAppDispatch();
@@ -16,7 +17,7 @@ export const useChatWebSocket = (myUsername: string | null) => {
     if (!myUsername) return;
 
     const token = localStorage.getItem("token");
-    const socket = new SockJS(`http://localhost:8080/ws?token=${token}`);
+    const socket = new SockJS(`${getApiBaseUrl()}/ws?token=${token}`);
     const client = new Client({
       webSocketFactory: () => socket,
       reconnectDelay: 5000,

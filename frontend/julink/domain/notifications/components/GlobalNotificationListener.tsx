@@ -5,6 +5,7 @@ import { Client } from "@stomp/stompjs";
 import { useAppDispatch } from "@/store/hooks";
 import { useUser } from "@/domain/profile/hooks/useUser";
 import { newNotificationReceived, fetchUnreadCount } from "../store/notificationSlice";
+import { getWsBaseUrl } from "@/util/api/axios";
 
 export function GlobalNotificationListener() {
   const dispatch = useAppDispatch();
@@ -33,7 +34,7 @@ export function GlobalNotificationListener() {
     dispatch(fetchUnreadCount());
 
     const client = new Client({
-      brokerURL: "ws://localhost:8080/ws",
+      brokerURL: `${getWsBaseUrl()}/ws`,
       connectHeaders: {
         Authorization: `Bearer ${token}`,
       },
