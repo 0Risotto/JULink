@@ -6,6 +6,7 @@ services:
     ports:
       - "5433:5432"
     environment:
+      TZ: Asia/Amman
       POSTGRES_DB: julink
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "1221"
@@ -25,6 +26,7 @@ services:
       - "7474:7474"
       - "7687:7687"
     environment:
+      TZ: Asia/Amman
       NEO4J_AUTH: neo4j/12212004
     volumes:
       - neo4jdata:/data
@@ -43,6 +45,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      TZ: Asia/Amman
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/julink
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: "1221"
@@ -66,6 +69,7 @@ services:
     ports:
       - "3000:3000"
     environment:
+      TZ: Asia/Amman
       NEXT_PUBLIC_API_URL: http://localhost:8080
     depends_on:
       - backend
