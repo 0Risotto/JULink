@@ -54,4 +54,4 @@ USER nextjs
 
 EXPOSE 3000
 
-CMD ["npx", "next", "start"]
+CMD ["npx", "next", "start", "-H", "0.0.0.0"]

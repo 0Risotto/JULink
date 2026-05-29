@@ -13,7 +13,7 @@ import { getUserProfile } from "@/domain/profile/services/profileServices";
 import { UserProfileDTO } from "@/domain/profile/types";
 import { JitsiMeetingComponent } from "./JitsiMeetingComponent";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CardAction } from "@/components/ui/card";
-import { getWsBaseUrl } from "@/util/api/axios";
+import * as chatApi from "@/domain/chat/api/chatApi";
 
 export function GlobalCallListener() {
   const { myUsername, loadMyUsername } = useUser();
@@ -80,10 +80,11 @@ export function GlobalCallListener() {
     // Fetch username if missing so that we can match incoming calls
     if (!myUsername) {
       loadMyUsername().catch(console.error);
+      return; // Wait for username to load before connecting
     }
 
     const client = new Client({
-      brokerURL: `${getWsBaseUrl()}/ws`,
+      brokerURL: "ws://localhost:8080/ws",
       connectHeaders: {
         Authorization: `Bearer ${token}`,
       },
@@ -94,15 +95,27 @@ export function GlobalCallListener() {
       onConnect: () => {
         console.log("Connected to STOMP server globally");
 
-        // Subscribe to video-calls topic
-        client.subscribe("/topic/video-calls", (message) => {
+        // Subscribe to user's specific video-calls queue
+        client.subscribe(`/queue/video-calls/${myUsername}`, (message) => {
           try {
             const payload = JSON.parse(message.body);
-            if (payload.type === "INVITE_TO_VIDEO" || payload.type === "INVITE_TO_GROUP_VIDEO") {
-              const isGroup = payload.type === "INVITE_TO_GROUP_VIDEO";
+            if (payload.type === "CALL_INVITED") {
+              const isGroup = payload.scope === "GROUP";
               console.log(`Received a ${isGroup ? "group " : ""}call payload for:`, payload.targetUsername, "from:", payload.callerUsername);
+              
+              // Check if the current user is the caller (to join the room they just initiated)
+              if (payload.callerUsername === myUsername) {
+                console.log(`[Outgoing Call] You initiated a call to ${payload.targetUsername}. Joining room...`);
+                const roomName = payload.videoUrl.split("/").pop() as string;
+                const callType = sessionStorage.getItem("callType") || "video";
+                setActiveCall({ roomName, isVideoCall: callType === "video" });
+                setIsMinimized(false);
+                if (payload.callId) {
+                  sessionStorage.setItem("activeCallId", payload.callId);
+                }
+              } 
               // Check if the call is for the current user
-              if (payload.targetUsername === myUsername) {
+              else if (payload.targetUsername === myUsername) {
                 console.log(`[Incoming Call] You are being called by ${payload.callerUsername}!`);
                 
                 // Fetch caller profile info
@@ -125,15 +138,22 @@ export function GlobalCallListener() {
                   audioRef.current.currentTime = 0;
                   audioRef.current.play().catch(console.error);
                 }
-              } 
-              // Check if the current user is the caller (to join the room they just initiated)
-              else if (payload.callerUsername === myUsername) {
-                console.log(`[Outgoing Call] You initiated a call to ${payload.targetUsername}. Joining room...`);
-                const roomName = payload.videoUrl.split("/").pop() as string;
-                const callType = sessionStorage.getItem("callType") || "video";
-                setActiveCall({ roomName, isVideoCall: callType === "video" });
-                setIsMinimized(false);
+                if (payload.callId) {
+                  sessionStorage.setItem("activeCallId", payload.callId);
+                }
               }
+            } else if (
+              payload.type === "CALL_DECLINED" ||
+              payload.type === "CALL_CANCELLED" ||
+              payload.type === "CALL_ENDED" ||
+              payload.type === "CALL_MISSED"
+            ) {
+              console.log(`[Call Closed Event] Type: ${payload.type}`);
+              stopRingtone();
+              setIncomingCall(null);
+              setCallerProfile(null);
+              setActiveCall(null);
+              sessionStorage.removeItem("activeCallId");
             }
           } catch (e) {
             console.error("Error parsing video call message", e);
@@ -163,6 +183,12 @@ export function GlobalCallListener() {
   const handleAccept = () => {
     const roomName = incomingCall!.videoUrl.split("/").pop() as string;
     stopRingtone();
+    
+    const activeCallId = sessionStorage.getItem("activeCallId");
+    if (activeCallId) {
+      chatApi.acceptCall(activeCallId).catch(console.error);
+    }
+
     setActiveCall({ roomName, isVideoCall: true });
     setIsMinimized(false);
     setIncomingCall(null);
@@ -171,12 +197,28 @@ export function GlobalCallListener() {
 
   const handleDecline = () => {
     stopRingtone();
+    
+    const activeCallId = sessionStorage.getItem("activeCallId");
+    if (activeCallId) {
+      chatApi.declineCall(activeCallId).catch(console.error);
+    }
+
     if (incomingCall) {
       const roomName = incomingCall.videoUrl.split("/").pop() as string;
       setDecliningCallRoomName(roomName);
     }
     setIncomingCall(null);
     setCallerProfile(null);
+    sessionStorage.removeItem("activeCallId");
+  };
+
+  const handleHangUp = () => {
+    const activeCallId = sessionStorage.getItem("activeCallId");
+    if (activeCallId) {
+      chatApi.endCall(activeCallId).catch(console.error);
+    }
+    setActiveCall(null);
+    sessionStorage.removeItem("activeCallId");
   };
 
   return (
@@ -283,7 +325,7 @@ export function GlobalCallListener() {
                 variant="ghost" 
                 size="sm" 
                 className="h-8 w-8 p-0 text-red-500 hover:bg-zinc-700 hover:text-red-400" 
-                onClick={() => setActiveCall(null)}
+                onClick={handleHangUp}
               >
                 <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M3.5 3.5L11.5 11.5M11.5 3.5L3.5 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>

@@ -54,7 +54,7 @@ public class VideoService {
         addParticipant(session, target, ParticipantRole.INVITEE, ParticipantStatus.INVITED);
 
         CallSession saved = videoRepository.save(session);
-        sendEvent(saved, target, "CALL_INVITED");
+        sendEventToParticipants(saved, "CALL_INVITED");
         return toResponse(saved);
     }
 
@@ -75,9 +75,7 @@ public class VideoService {
                 .forEach(user -> addParticipant(session, user, ParticipantRole.INVITEE, ParticipantStatus.INVITED));
 
         CallSession saved = videoRepository.save(session);
-        saved.getParticipants().stream()
-                .filter(participant -> participant.getRole() == ParticipantRole.INVITEE)
-                .forEach(participant -> sendEvent(saved, participant.getUser(), "CALL_INVITED"));
+        sendEventToParticipants(saved, "CALL_INVITED");
         return toResponse(saved);
     }
 

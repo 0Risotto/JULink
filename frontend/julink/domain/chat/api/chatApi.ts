@@ -100,3 +100,19 @@ export const sendMediaBytesMessage = (conversationId: number, req: MediaBytesReq
 export const sharePost = (conversationId: number, req: SharePostRequest): Promise<MessageResponse> => {
   return post<MessageResponse>(`/api/chat/conversations/${conversationId}/messages/share-post`, req);
 };
+
+export const acceptCall = (callId: string): Promise<any> => {
+  return post<any>(`/api/video/calls/${callId}/accept`, {});
+};
+
+export const declineCall = (callId: string): Promise<any> => {
+  return post<any>(`/api/video/calls/${callId}/decline`, {});
+};
+
+export const cancelCall = (callId: string): Promise<any> => {
+  return post<any>(`/api/video/calls/${callId}/cancel`, {});
+};
+
+export const endCall = (callId: string): Promise<any> => {
+  return post<any>(`/api/video/calls/${callId}/end`, {});
+};
