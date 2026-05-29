@@ -14,6 +14,7 @@ import { UserProfileDTO } from "@/domain/profile/types";
 import { JitsiMeetingComponent } from "./JitsiMeetingComponent";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CardAction } from "@/components/ui/card";
 import * as chatApi from "@/domain/chat/api/chatApi";
+import { getWsBaseUrl } from "@/util/api/axios";
 
 export function GlobalCallListener() {
   const { myUsername, loadMyUsername } = useUser();
@@ -84,7 +85,7 @@ export function GlobalCallListener() {
     }
 
     const client = new Client({
-      brokerURL: "ws://localhost:8080/ws",
+      brokerURL: `${getWsBaseUrl()}/ws`,
       connectHeaders: {
         Authorization: `Bearer ${token}`,
       },
