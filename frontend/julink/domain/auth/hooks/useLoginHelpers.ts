@@ -15,7 +15,7 @@ export const handleLoginSuccess = async (router: AppRouterInstance, loginPayload
     
     if (typedResponse.Status === "Success" && typedResponse.username) {
       console.log("Username fetched:", typedResponse.username);
-      router.push(`/${typedResponse.username}`);
+      router.push(`/`);
     } else {
       console.error("Username not found in response");
       router.push("/login");
