@@ -11,6 +11,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.security.Principal;
 import java.util.Collections;
@@ -22,6 +24,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 class FollowControllerTest {
@@ -126,5 +131,19 @@ class FollowControllerTest {
         Map<String, Object> response = followController.getSuggestions(principal);
 
         assertEquals("success", response.get("status"));
+    }
+
+    @Test
+    void postSuggestionsRouteDoesNotFollowSuggestionUser() throws Exception {
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(followController).build();
+        when(authRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(followService.getSuggestions(username)).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(post("/follow/suggestion").principal(() -> email))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"));
+
+        verify(followService).getSuggestions(username);
+        verify(followService, never()).followUser(any(), eq("suggestion"));
     }
 }

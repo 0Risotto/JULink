@@ -34,6 +34,17 @@ PostRepository extends JpaRepository<Post, UUID> {
             @Param("postIds") Collection<UUID> postIds,
             Pageable pageable
     );
+
+    @Query("""
+            SELECT i.post.postId
+            FROM PostImpression i
+            WHERE i.user.id = :userId
+            AND i.post.postId IN :postIds
+            """)
+    List<UUID> findSeenPostIdsByUserIdAndPostIds(
+            @Param("userId") Long userId,
+            @Param("postIds") Collection<UUID> postIds
+    );
 }
 
 interface PostAttachmentRepository extends JpaRepository<PostAttachment, UUID> {

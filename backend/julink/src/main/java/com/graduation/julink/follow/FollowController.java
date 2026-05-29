@@ -135,7 +135,7 @@ public class FollowController {
         return Map.of("status", "success", "mutual", mutual);
     }
 
-    @GetMapping("/suggestion")
+    @RequestMapping(value = "/suggestion", method = {RequestMethod.GET, RequestMethod.POST})
     public Map<String, Object> getSuggestions(Principal principal) {
         String email = principal.getName();
         String username = getUsernameFromEmail(email);

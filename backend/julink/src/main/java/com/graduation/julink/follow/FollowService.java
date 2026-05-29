@@ -1,27 +1,44 @@
 package com.graduation.julink.follow;
 
+import com.graduation.julink.auth.AuthEntities.User;
 import com.graduation.julink.auth.Repository.AuthRepository;
 import com.graduation.julink.block.BlockService;
 import com.graduation.julink.notification.NotificationService;
 import com.graduation.julink.notification.NotificationType;
+import com.graduation.julink.post.PostEntities.Post;
+import com.graduation.julink.post.PostRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class FollowService {
+    private static final int SUGGESTION_CANDIDATE_POOL_SIZE = 100;
+    private static final int MAX_SUGGESTIONS = 15;
 
     private final FollowRepository followRepository;
     private final AuthRepository authRepository;
     private final NotificationService notificationService;
     private final BlockService blockService;
+    private final PostRepository postRepository;
 
 //    FollowService(){};
 
@@ -123,20 +140,51 @@ public class FollowService {
         return followRepository.isMutual(username1, username2);
     }
 
+    @Transactional(readOnly = true)
     public List<FollowDTOs.FollowerListDto> getSuggestions(String userName) {
-        Collection<String> suggestionsList = followRepository.fetchSuggestions(userName);
+        User currentUser = authRepository.findByUsername(userName)
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + userName));
+        Set<String> followingUsernames = followingUsernamesFor(userName);
+        Set<Long> blockedUserIds = blockService.blockedUserIdsFor(currentUser.getId());
 
-        if (suggestionsList.isEmpty()) {
+        Pageable candidatePage = PageRequest.of(
+                0,
+                SUGGESTION_CANDIDATE_POOL_SIZE,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+        List<Post> candidates = postRepository.findAllByOrderByCreatedAtDesc(candidatePage).getContent();
+        if (candidates.isEmpty()) {
             return List.of();
         }
-        return authRepository.findByUsernameIn(suggestionsList).stream()
-                .map(user -> new FollowDTOs.FollowerListDto(
-                        user.getUsername(),
-                        user.getFirstName() + " " + user.getLastName(),
-                        user.getProfilePictureUrl()
-                ))
-                .toList();
 
+        List<UUID> candidatePostIds = candidates.stream().map(Post::getPostId).toList();
+        Set<UUID> seenPostIds = candidatePostIds.isEmpty()
+                ? Set.of()
+                : new HashSet<>(postRepository.findSeenPostIdsByUserIdAndPostIds(currentUser.getId(), candidatePostIds));
+
+        Map<String, SuggestionCandidate> candidatesByUsername = new HashMap<>();
+        for (Post post : candidates) {
+            User owner = post.getOwner();
+            if (owner == null
+                    || owner.getId().equals(currentUser.getId())
+                    || blockedUserIds.contains(owner.getId())
+                    || followingUsernames.contains(owner.getUsername())) {
+                continue;
+            }
+
+            SuggestionCandidate candidate = candidatesByUsername.computeIfAbsent(
+                    owner.getUsername(),
+                    ignored -> new SuggestionCandidate(owner)
+            );
+            candidate.addPost(feedScore(post, currentUser, seenPostIds), post.getCreatedAt());
+        }
+
+        return candidatesByUsername.values()
+                .stream()
+                .sorted(SuggestionCandidate.ORDERING)
+                .limit(MAX_SUGGESTIONS)
+                .map(candidate -> toFollowerListDto(candidate.user()))
+                .toList();
     }
 
     private void notifyFollow(String followerUsername, String followeeUsername) {
@@ -159,6 +207,78 @@ public class FollowService {
             );
         } catch (RuntimeException ignored) {
             // Notifications should not break the follow action.
+        }
+    }
+
+    private Set<String> followingUsernamesFor(String username) {
+        try {
+            return new HashSet<>(followRepository.getFollowingUsernames(username));
+        } catch (RuntimeException ignored) {
+            return Set.of();
+        }
+    }
+
+    private double feedScore(Post post, User currentUser, Set<UUID> seenPostIds) {
+        double sameSchoolScore = Objects.equals(post.getOwner().getCollege(), currentUser.getCollege()) ? 40.0 : 0.0;
+        double recencyScore = recencyScore(post.getCreatedAt()) * 20.0;
+        double seenPenalty = seenPostIds.contains(post.getPostId()) ? 15.0 : 0.0;
+        return sameSchoolScore + recencyScore - seenPenalty;
+    }
+
+    private double recencyScore(LocalDateTime createdAt) {
+        if (createdAt == null) {
+            return 0.0;
+        }
+        long hours = Math.max(0, ChronoUnit.HOURS.between(createdAt, LocalDateTime.now()));
+        return Math.exp(-hours / 72.0);
+    }
+
+    private FollowDTOs.FollowerListDto toFollowerListDto(User user) {
+        return new FollowDTOs.FollowerListDto(
+                user.getUsername(),
+                user.getFirstName() + " " + user.getLastName(),
+                user.getProfilePictureUrl()
+        );
+    }
+
+    private static final class SuggestionCandidate {
+        private static final Comparator<SuggestionCandidate> ORDERING = Comparator
+                .comparingInt(SuggestionCandidate::occurrences).reversed()
+                .thenComparing(Comparator.comparingDouble(SuggestionCandidate::score).reversed())
+                .thenComparing(SuggestionCandidate::latestPostAt, Comparator.nullsLast(Comparator.reverseOrder()))
+                .thenComparing(candidate -> candidate.user().getUsername());
+
+        private final User user;
+        private int occurrences;
+        private double score;
+        private LocalDateTime latestPostAt;
+
+        private SuggestionCandidate(User user) {
+            this.user = user;
+        }
+
+        private void addPost(double postScore, LocalDateTime postCreatedAt) {
+            occurrences++;
+            score += postScore;
+            if (latestPostAt == null || (postCreatedAt != null && postCreatedAt.isAfter(latestPostAt))) {
+                latestPostAt = postCreatedAt;
+            }
+        }
+
+        private User user() {
+            return user;
+        }
+
+        private int occurrences() {
+            return occurrences;
+        }
+
+        private double score() {
+            return score;
+        }
+
+        private LocalDateTime latestPostAt() {
+            return latestPostAt;
         }
     }
 }
