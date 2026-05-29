@@ -2,7 +2,9 @@
 
 import { usePathname } from "next/navigation"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
+import { cn } from "@/lib/utils"
 import { AppSidebar } from "./AppSidebar"
+import { BottomNavbar } from "./BottomNavbar"
 import { AuthGuard } from "@/domain/auth/components/AuthGuard"
 import { useAppSelector, useAppDispatch } from "@/store/hooks"
 import { setSidebarOpen } from "../store/sidebarSlice"
@@ -46,16 +48,22 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
         <GlobalCallListener />
         <GlobalNotificationListener />
         <AppSidebar />
-        <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+        <SidebarInset className={pathname.startsWith("/chat") ? "h-[100dvh] overflow-hidden flex flex-col" : ""}>
+          <header className="hidden md:flex h-16 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger className="-ml-1" />
             <div className="w-full">
               {/* Optional: Add Breadcrumbs or Search bar here in the future */}
             </div>
           </header>
-          <main className="flex-1 overflow-auto bg-background">
+          <main className={cn(
+            "flex-1 bg-background min-h-0",
+            pathname.startsWith("/chat") 
+              ? "overflow-hidden flex flex-col" 
+              : "overflow-auto pb-16 md:pb-0"
+          )}>
             {children}
           </main>
+          <BottomNavbar />
         </SidebarInset>
       </SidebarProvider>
     </AuthGuard>

@@ -1,5 +1,16 @@
 import { get, post, patch, del, api } from "@/util/api/axios";
-import { ConversationResponse, MessageResponse, Page, MessageType } from "../types";
+import {
+  ConversationResponse,
+  MessageResponse,
+  Page,
+  MessageType,
+  UpdateGroupRequest,
+  UpdateMemberAdminRequest,
+  StartGroupCallRequest,
+  MediaBytesRequest,
+  SharePostRequest,
+  GroupCallResponse,
+} from "../types";
 
 export const getConversations = (): Promise<ConversationResponse[]> => {
   return get<ConversationResponse[]>("/api/chat/conversations");
@@ -56,4 +67,36 @@ export const markReadRest = (conversationId: number, lastReadMessageId: number, 
     lastReadMessageId,
     username,
   });
+};
+
+export const updateGroup = (conversationId: number, req: UpdateGroupRequest): Promise<ConversationResponse> => {
+  return patch<ConversationResponse>(`/api/chat/conversations/${conversationId}/group`, req);
+};
+
+export const removeMember = (conversationId: number, memberUsername: string): Promise<ConversationResponse> => {
+  return del<ConversationResponse>(`/api/chat/conversations/${conversationId}/members/${memberUsername}`);
+};
+
+export const leaveGroup = (conversationId: number): Promise<ConversationResponse> => {
+  return post<ConversationResponse>(`/api/chat/conversations/${conversationId}/leave`, {});
+};
+
+export const updateMemberAdmin = (
+  conversationId: number,
+  memberUsername: string,
+  req: UpdateMemberAdminRequest
+): Promise<ConversationResponse> => {
+  return patch<ConversationResponse>(`/api/chat/conversations/${conversationId}/members/${memberUsername}/admin`, req);
+};
+
+export const startGroupCall = (conversationId: number, req?: StartGroupCallRequest): Promise<GroupCallResponse> => {
+  return post<GroupCallResponse>(`/api/chat/conversations/${conversationId}/call`, req || {});
+};
+
+export const sendMediaBytesMessage = (conversationId: number, req: MediaBytesRequest): Promise<MessageResponse> => {
+  return post<MessageResponse>(`/api/chat/conversations/${conversationId}/messages/media-bytes`, req);
+};
+
+export const sharePost = (conversationId: number, req: SharePostRequest): Promise<MessageResponse> => {
+  return post<MessageResponse>(`/api/chat/conversations/${conversationId}/messages/share-post`, req);
 };

@@ -30,13 +30,13 @@ export default function CreateGroupDialog({ trigger }: CreateGroupDialogProps) {
   useEffect(() => {
     if (open && myUsername) {
       setLoading(true);
-      FollowerServices.getFollowings(myUsername, 0, 100)
+      FollowerServices.getFriends(0, 100)
         .then((res) => {
           if (res.status === "success") {
-            setList(res.followings || []);
+            setList(res.friends || []);
           }
         })
-        .catch((err) => console.error("Failed to fetch followings:", err))
+        .catch((err) => console.error("Failed to fetch friends:", err))
         .finally(() => setLoading(false));
     } else {
       setList([]);

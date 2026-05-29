@@ -18,6 +18,9 @@ export const getFollowers = (username: string, page = 0, size = 20) =>
 export const getFollowings = (username: string, page = 0, size = 20) =>
   get<PaginatedFollowersResponse>(`/follow/${username}/followings?page=${page}&size=${size}&sort=username,asc`);
 
+export const getFriends = (page = 0, size = 100) =>
+  get<PaginatedFollowersResponse>(`/follow/friends?page=${page}&size=${size}`);
+
 export const getMutualFollowers = (username: string, page = 0, size = 20) =>
   get<PaginatedFollowersResponse>(`/follow/mutual-followers/${username}?page=${page}&size=${size}&sort=username,asc`);
 
