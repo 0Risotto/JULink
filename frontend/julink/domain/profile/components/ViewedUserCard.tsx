@@ -13,6 +13,14 @@ import { useAppDispatch } from "@/store/hooks";
 import { setActiveConversation } from "@/domain/chat/store/chatSlice";
 import * as chatApi from "@/domain/chat/api/chatApi";
 import * as FollowerServices from "@/domain/follower/services/followerServices";
+import { useBlock } from "@/domain/block/hooks/useBlock";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, ShieldAlert } from "lucide-react";
 
 interface ViewedUserCardProps {
   user: UserProfileDTO;
@@ -22,6 +30,21 @@ export default function ViewedUserCard({ user }: ViewedUserCardProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [isMutual, setIsMutual] = useState(false);
+  const { block } = useBlock();
+
+  const handleBlockUser = async () => {
+    const confirmed = window.confirm(
+      `Are you sure you want to block @${user.username}? They will no longer be able to see your posts or message you.`
+    );
+    if (!confirmed) return;
+
+    const success = await block(user.username);
+    if (success) {
+      router.push("/settings");
+    } else {
+      alert("Failed to block user. Please try again.");
+    }
+  };
 
   const {
     isFollowing,
@@ -95,6 +118,23 @@ export default function ViewedUserCard({ user }: ViewedUserCardProps) {
                 initialIsFollowing={isFollowing} 
                 onToggle={toggleFollow} 
               />
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                    <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem
+                    onClick={handleBlockUser}
+                    className="text-red-500 hover:text-red-600 cursor-pointer"
+                  >
+                    <ShieldAlert className="w-4 h-4 mr-2" />
+                    Block User
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 

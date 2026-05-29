@@ -10,8 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Sun, Moon, Monitor, Check, Loader2, Camera } from "lucide-react";
+import { Sun, Moon, Monitor, Check, Loader2, Camera, ShieldAlert } from "lucide-react";
 import { Colleges } from "@/domain/auth/types";
+import { useBlock } from "@/domain/block/hooks/useBlock";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function SettingsForm() {
   const { currentUser, updateUserProfile, loadMyProfile } = useUser();
@@ -46,6 +48,12 @@ export function SettingsForm() {
       loadMyProfile().catch(console.error);
     }
   }, [currentUser, loadMyProfile]);
+
+  const { blockedUsers, loading: blocksLoading, fetchBlockedUsers, unblock } = useBlock();
+
+  useEffect(() => {
+    fetchBlockedUsers();
+  }, [fetchBlockedUsers]);
 
   // Synchronize form states when currentUser is loaded or updated
   useEffect(() => {
@@ -309,6 +317,57 @@ export function SettingsForm() {
               })}
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Blocked Users Card */}
+      <Card className="shadow-sm">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-5 h-5 text-red-500" />
+            <CardTitle>Blocked Users</CardTitle>
+          </div>
+          <CardDescription>
+            Manage the accounts that you have blocked. Blocked users cannot see your posts, send you messages, or find your profile.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {blocksLoading && blockedUsers.length === 0 ? (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : blockedUsers.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center border-2 border-dashed rounded-lg">
+              You haven't blocked any accounts yet.
+            </p>
+          ) : (
+            <div className="divide-y divide-border rounded-lg border border-border bg-background max-h-80 overflow-y-auto">
+              {blockedUsers.map((user) => (
+                <div key={user.username} className="flex items-center justify-between p-4 first:rounded-t-lg last:rounded-b-lg hover:bg-accent/5 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-10 h-10 border border-muted">
+                      <AvatarImage src={user.profilePictureUrl || undefined} alt={user.fullName} />
+                      <AvatarFallback>
+                        {user.fullName?.[0] || user.username?.[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold">{user.fullName}</span>
+                      <span className="text-xs text-muted-foreground">@{user.username}</span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => unblock(user.username)}
+                    className="text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400"
+                  >
+                    Unblock
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
