@@ -2,7 +2,7 @@ import axios, { AxiosResponse, InternalAxiosRequestConfig, Method } from "axios"
 
 // Create and configure axios instance
 export const api = axios.create({
-  baseURL: "http://192.168.1.22:8080",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://192.168.1.22:8080",
   headers: {
     "Content-Type": "application/json",
   },

@@ -1,0 +1,19 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Initialize') {
+            steps {
+                echo 'Initializing Jenkins Pipeline...'
+                echo 'Checking Docker availability on agent...'
+                sh 'docker --version || true'
+            }
+        }
+        stage('Succeed Trivially') {
+            steps {
+                echo 'This initial stage succeeds trivially as requested!'
+                echo 'Ready to start incrementally adding stages after this build succeeds.'
+            }
+        }
+    }
+}
