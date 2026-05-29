@@ -27,7 +27,7 @@ export default function ChatPage() {
   }, [dispatch, myUsername]);
 
   return (
-    <div className="flex h-[calc(100vh-theme(spacing.16))] w-full overflow-hidden border rounded-lg mt-4">
+    <div className="flex h-full md:h-[calc(100dvh-6rem)] w-full overflow-hidden md:border md:rounded-2xl md:mt-4 bg-background">
       {/* Sidebar: Conversation List */}
       <ChatSidebar />
 

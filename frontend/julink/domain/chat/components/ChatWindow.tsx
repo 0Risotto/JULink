@@ -2,14 +2,14 @@
 
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchMessages } from "../store/chatSlice";
+import { fetchMessages, setActiveConversation } from "../store/chatSlice";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/domain/profile/hooks/useUser";
-import { Phone, Video, Settings } from "lucide-react";
+import { Phone, Video, Settings, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import * as chatApi from "../api/chatApi";
 import { MessageResponse } from "../types";
@@ -54,14 +54,14 @@ export default function ChatWindow({ onSendMessage, onSendTyping, onMarkRead, on
 
   if (!activeConv || !myUsername) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-muted/30">
-        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-          <svg className="w-8 h-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      <div className="hidden md:flex flex-1 flex-col items-center justify-center bg-background/50 p-6 text-center select-none">
+        <div className="w-20 h-20 rounded-full bg-secondary/60 flex items-center justify-center mb-5 animate-in fade-in zoom-in duration-300">
+          <svg className="w-10 h-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
         </div>
-        <h2 className="text-xl font-bold">Your Messages</h2>
-        <p className="text-muted-foreground mt-2">Select a chat or start a new conversation</p>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">Your Messages</h2>
+        <p className="text-muted-foreground/80 mt-2 text-sm max-w-xs">Select an existing chat or create a new conversation to start messaging.</p>
       </div>
     );
   }
@@ -114,35 +114,47 @@ export default function ChatWindow({ onSendMessage, onSendTyping, onMarkRead, on
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-background">
+    <div className={`flex-1 flex flex-col h-full bg-background transition-all ${
+      activeConversationId === null ? "hidden md:flex" : "flex"
+    }`}>
       {/* Header */}
-      <div className="p-4 border-b flex items-center justify-between bg-card">
-        <div className="flex items-center gap-3">
+      <div className="px-4 py-3 border-b flex items-center justify-between bg-background/95 backdrop-blur-sm sticky top-0 z-10 select-none h-16">
+        <div className="flex items-center gap-2.5 min-w-0">
+          {/* Back button on mobile */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="md:hidden h-9 w-9 rounded-full hover:bg-muted/65 shrink-0" 
+            onClick={() => dispatch(setActiveConversation(null))}
+          >
+            <ChevronLeft className="w-6 h-6 text-primary" />
+          </Button>
+
           {!activeConv.group && otherUser ? (
             <>
-              <Link href={`/${otherUser.username}`}>
-                <Avatar className="hover:opacity-80 transition-opacity cursor-pointer">
-                  <AvatarImage src={image || undefined} />
-                  <AvatarFallback>{title ? title[0].toUpperCase() : "?"}</AvatarFallback>
+              <Link href={`/${otherUser.username}`} className="shrink-0">
+                <Avatar className="h-10 w-10 hover:opacity-85 transition-opacity cursor-pointer border border-muted-foreground/10">
+                  <AvatarImage src={image || undefined} className="object-cover" />
+                  <AvatarFallback className="font-semibold text-sm">{title ? title[0].toUpperCase() : "?"}</AvatarFallback>
                 </Avatar>
               </Link>
-              <div className="flex flex-col">
-                <h2 className="font-bold">{title}</h2>
-                <span className="text-xs text-muted-foreground">{subtitle}</span>
+              <div className="flex flex-col min-w-0">
+                <h2 className="font-semibold text-sm text-foreground truncate leading-tight">{title}</h2>
+                <span className="text-[11px] text-muted-foreground truncate">{subtitle}</span>
               </div>
             </>
           ) : (
             <GroupSettingsDialog
               conversation={activeConv}
               trigger={
-                <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
-                  <Avatar>
-                    <AvatarImage src={image || undefined} />
-                    <AvatarFallback>{title ? title[0].toUpperCase() : "?"}</AvatarFallback>
+                <div className="flex items-center gap-2.5 cursor-pointer hover:opacity-85 transition-all min-w-0 text-left">
+                  <Avatar className="h-10 w-10 shrink-0 border border-muted-foreground/10">
+                    <AvatarImage src={image || undefined} className="object-cover" />
+                    <AvatarFallback className="font-semibold text-sm">{title ? title[0].toUpperCase() : "?"}</AvatarFallback>
                   </Avatar>
-                  <div className="flex flex-col text-left">
-                    <h2 className="font-bold">{title}</h2>
-                    <span className="text-xs text-muted-foreground">{subtitle}</span>
+                  <div className="flex flex-col min-w-0">
+                    <h2 className="font-semibold text-sm text-foreground truncate leading-tight">{title}</h2>
+                    <span className="text-[11px] text-muted-foreground truncate">{subtitle}</span>
                   </div>
                 </div>
               }
@@ -150,23 +162,23 @@ export default function ChatWindow({ onSendMessage, onSendTyping, onMarkRead, on
           )}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex items-center gap-1 shrink-0">
           {!activeConv.group ? (
             <>
-              <Button variant="ghost" size="icon" title="Audio Call" onClick={handleAudioCall}>
-                <Phone className="w-5 h-5" />
+              <Button variant="ghost" size="icon" title="Audio Call" onClick={handleAudioCall} className="h-9 w-9 rounded-full text-primary hover:bg-muted/65 hover:text-primary">
+                <Phone className="w-4.5 h-4.5" />
               </Button>
-              <Button variant="ghost" size="icon" title="Video Call" onClick={handleVideoCall}>
-                <Video className="w-5 h-5" />
+              <Button variant="ghost" size="icon" title="Video Call" onClick={handleVideoCall} className="h-9 w-9 rounded-full text-primary hover:bg-muted/65 hover:text-primary">
+                <Video className="w-4.5 h-4.5" />
               </Button>
             </>
           ) : (
             <>
-              <Button variant="ghost" size="icon" title="Group Audio Call" onClick={handleGroupAudioCall}>
-                <Phone className="w-5 h-5" />
+              <Button variant="ghost" size="icon" title="Group Audio Call" onClick={handleGroupAudioCall} className="h-9 w-9 rounded-full text-primary hover:bg-muted/65 hover:text-primary">
+                <Phone className="w-4.5 h-4.5" />
               </Button>
-              <Button variant="ghost" size="icon" title="Group Video Call" onClick={handleGroupVideoCall}>
-                <Video className="w-5 h-5" />
+              <Button variant="ghost" size="icon" title="Group Video Call" onClick={handleGroupVideoCall} className="h-9 w-9 rounded-full text-primary hover:bg-muted/65 hover:text-primary">
+                <Video className="w-4.5 h-4.5" />
               </Button>
             </>
           )}

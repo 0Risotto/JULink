@@ -18,38 +18,40 @@ export default function ChatSidebar() {
 
   if (loadingConversations && conversations.length === 0) {
     return (
-      <div className="w-80 border-r flex flex-col h-full bg-card">
-        <div className="p-4 border-b">
-          <h2 className="text-xl font-bold">Chats</h2>
+      <div className="w-full md:w-80 border-r flex flex-col h-full bg-background">
+        <div className="p-4 border-b flex items-center justify-between">
+          <h2 className="text-2xl font-bold tracking-tight">Chats</h2>
         </div>
-        <div className="p-4 text-center text-muted-foreground">Loading...</div>
+        <div className="p-8 text-center text-muted-foreground">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="w-80 border-r flex flex-col h-full bg-card">
-      <div className="p-4 border-b flex justify-between items-center">
-        <h2 className="text-xl font-bold">Chats</h2>
-        <div className="flex gap-2">
+    <div className={`w-full md:w-80 border-r flex flex-col h-full bg-background shrink-0 transition-all ${
+      activeConversationId !== null ? "hidden md:flex" : "flex"
+    }`}>
+      <div className="p-4 border-b flex justify-between items-center bg-background">
+        <h2 className="text-2xl font-bold tracking-tight">Chats</h2>
+        <div className="flex gap-1">
           <CreateDMDialog
             trigger={
-              <Button variant="ghost" size="icon" title="New Direct Message">
-                <PlusCircle className="w-5 h-5" />
+              <Button variant="ghost" size="icon" title="New Direct Message" className="rounded-full hover:bg-muted/60">
+                <PlusCircle className="w-5.5 h-5.5 text-primary" />
               </Button>
             }
           />
           <CreateGroupDialog
             trigger={
-              <Button variant="ghost" size="icon" title="New Group">
-                <Users className="w-5 h-5" />
+              <Button variant="ghost" size="icon" title="New Group" className="rounded-full hover:bg-muted/60">
+                <Users className="w-5.5 h-5.5 text-primary" />
               </Button>
             }
           />
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pt-2 pb-20 md:pb-2 bg-background space-y-0.5">
         {conversations.map((conv) => {
           // Determine title and image
           let title = conv.groupName || "Group";
@@ -68,26 +70,32 @@ export default function ChatSidebar() {
             <div
               key={conv.id}
               onClick={() => dispatch(setActiveConversation(conv.id))}
-              className={`p-3 border-b flex items-center gap-3 cursor-pointer transition-colors ${
-                isActive ? "bg-accent" : "hover:bg-accent/50"
+              className={`mx-2 my-1 rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-all duration-200 select-none ${
+                isActive 
+                  ? "bg-secondary text-secondary-foreground" 
+                  : "hover:bg-muted/45 active:scale-[0.98]"
               }`}
             >
-              <Avatar>
-                <AvatarImage src={image || undefined} />
-                <AvatarFallback>{title ? title[0].toUpperCase() : "?"}</AvatarFallback>
+              <Avatar className="h-11 w-11 border-2 border-transparent">
+                <AvatarImage src={image || undefined} className="object-cover" />
+                <AvatarFallback className="bg-muted-foreground/10 text-sm font-semibold">
+                  {title ? title[0].toUpperCase() : "?"}
+                </AvatarFallback>
               </Avatar>
 
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-baseline">
-                  <p className={`text-sm truncate ${unread ? "font-bold" : "font-medium"}`}>{title}</p>
+                  <p className={`text-sm truncate leading-tight ${unread ? "font-semibold text-foreground" : "font-medium text-foreground/90"}`}>
+                    {title}
+                  </p>
                   {lastMsg && (
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2">
+                    <span className="text-[10px] text-muted-foreground/80 whitespace-nowrap ml-2">
                       {formatDistanceToNow(new Date(lastMsg.sentAt), { addSuffix: false })}
                     </span>
                   )}
                 </div>
                 <div className="flex justify-between items-center mt-1">
-                  <p className={`text-xs truncate ${unread ? "font-bold text-foreground" : "text-muted-foreground"}`}>
+                  <p className={`text-xs truncate ${unread ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
                     {lastMsg ? (
                       lastMsg.messageType === "TEXT" ? lastMsg.content : `[${lastMsg.messageType}]`
                     ) : (
@@ -95,9 +103,7 @@ export default function ChatSidebar() {
                     )}
                   </p>
                   {unread && (
-                    <Badge className="ml-2 h-5 min-w-5 rounded-full px-1.5 text-[10px]">
-                      {conv.unreadCount}
-                    </Badge>
+                    <span className="ml-2 w-2.5 h-2.5 rounded-full bg-primary shrink-0 animate-in fade-in" />
                   )}
                 </div>
               </div>
