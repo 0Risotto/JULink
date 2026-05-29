@@ -1,18 +1,35 @@
 pipeline {
     agent any
 
+    environment {
+        BACKEND_DIR = 'backend/julink'
+    }
+
     stages {
         stage('Initialize') {
             steps {
                 echo 'Initializing Jenkins Pipeline...'
                 echo 'Checking Docker availability on agent...'
                 sh 'docker --version || true'
+                sh 'docker compose version || true'
             }
         }
-        stage('Succeed Trivially') {
+
+        stage('Test & Compile Backend') {
             steps {
-                echo 'This initial stage succeeds trivially as requested!'
-                echo 'Ready to start incrementally adding stages after this build succeeds.'
+                dir("${env.BACKEND_DIR}") {
+                    echo 'Running unit tests and compiling Maven project...'
+                    sh 'chmod +x mvnw'
+                    sh './mvnw clean test'
+                }
+            }
+        }
+
+        stage('Build Backend Docker Image') {
+            steps {
+                echo 'Building backend Docker image...'
+                sh 'docker build -t julink-backend:latest ./backend/julink'
+                echo 'Backend Docker image successfully built!'
             }
         }
     }
