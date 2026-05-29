@@ -201,6 +201,10 @@ export default function ChatWindow({ onSendMessage, onSendTyping, onMarkRead, on
               console.error("Failed to delete message", err);
             }
           }}
+          title={title}
+          image={image}
+          subtitle={subtitle}
+          otherUser={otherUser}
         />
       )}
 

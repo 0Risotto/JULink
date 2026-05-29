@@ -23,14 +23,42 @@ interface MessageListProps {
   typingUsers: string[];
   onEditMessage?: (msg: MessageResponse) => void;
   onDeleteMessage?: (msgId: number) => void;
+  title?: string;
+  image?: string | null;
+  subtitle?: string;
+  otherUser?: any;
 }
 
-export default function MessageList({ messages, myUsername, typingUsers, onEditMessage, onDeleteMessage }: MessageListProps) {
+export default function MessageList({ 
+  messages, 
+  myUsername, 
+  typingUsers, 
+  onEditMessage, 
+  onDeleteMessage,
+  title,
+  image,
+  subtitle,
+  otherUser
+}: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const lastMessagesRef = useRef<MessageResponse[]>([]);
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      const isNewMessage = messages.length > 0 && 
+        lastMessagesRef.current.length > 0 && 
+        messages[messages.length - 1].id !== lastMessagesRef.current[lastMessagesRef.current.length - 1].id;
+
+      if (isNewMessage) {
+        scrollRef.current.scrollTo({
+          top: scrollRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      } else {
+        // Instant scroll to bottom on initial load / conversation change
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+      lastMessagesRef.current = messages;
     }
   }, [messages, typingUsers]);
 
@@ -38,9 +66,18 @@ export default function MessageList({ messages, myUsername, typingUsers, onEditM
     const container = scrollRef.current;
     if (!container) return;
 
+    let lastHeight = container.scrollHeight;
+
     const observer = new ResizeObserver(() => {
-      // Auto scroll to bottom when container dimensions change (e.g., mobile keyboard pops up)
-      container.scrollTop = container.scrollHeight;
+      const currentHeight = container.scrollHeight;
+      const heightDifference = currentHeight - lastHeight;
+      lastHeight = currentHeight;
+
+      // Only force scroll to bottom if user is already near bottom, or height did not change (so they don't get yanked back down while reading history)
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 200;
+      if (isNearBottom || heightDifference === 0) {
+        container.scrollTop = container.scrollHeight;
+      }
     });
 
     observer.observe(container);
@@ -50,7 +87,7 @@ export default function MessageList({ messages, myUsername, typingUsers, onEditM
   }, []);
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col h-full bg-background select-none scroll-smooth" ref={scrollRef}>
+    <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col h-full bg-background select-none" ref={scrollRef}>
       {messages.length === 0 && (
         <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground text-center animate-in fade-in duration-300">
           <div className="p-4 bg-muted/40 rounded-full mb-3 text-primary">
@@ -62,6 +99,27 @@ export default function MessageList({ messages, myUsername, typingUsers, onEditM
       )}
 
       <div className="space-y-0.5 mt-auto">
+        {/* Premium Profile Header Card at the very top of messages list with generous spacing */}
+        {messages.length > 0 && title && (
+          <div className="flex flex-col items-center justify-center text-center pt-16 pb-12 px-4 mb-16 bg-gradient-to-b from-muted/5 to-transparent rounded-3xl animate-in fade-in duration-300 select-none">
+            <Avatar className="h-24 w-24 border-4 border-background shadow-md mb-4 transition-transform hover:scale-105 duration-300">
+              <AvatarImage src={image || undefined} className="object-cover" />
+              <AvatarFallback className="bg-muted-foreground/10 text-3xl font-bold">
+                {title ? title[0].toUpperCase() : "?"}
+              </AvatarFallback>
+            </Avatar>
+            <h3 className="text-xl font-extrabold text-foreground leading-tight tracking-tight">{title}</h3>
+            <p className="text-sm text-muted-foreground/80 mt-1">{subtitle}</p>
+            {otherUser && (
+              <Link href={`/${otherUser.username}`} className="mt-5">
+                <Button variant="outline" size="sm" className="rounded-full text-xs font-semibold px-5 py-2 h-9 hover:bg-muted/70 transition-all shadow-xs">
+                  View Profile
+                </Button>
+              </Link>
+            )}
+          </div>
+        )}
+
         {messages.map((msg, idx) => {
           const isMe = msg.sender.username === myUsername;
 
