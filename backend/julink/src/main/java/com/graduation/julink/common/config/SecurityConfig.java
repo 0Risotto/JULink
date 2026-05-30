@@ -62,7 +62,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 1. ADD THIS: Ensure the socket handshake is explicitly permitted
                         .requestMatchers("/ws/**", "/websocket/**").permitAll()
-                        .requestMatchers("/*/*").permitAll()
+                        .requestMatchers("/*/*","/*/*/*/*" ).permitAll()
                         .anyRequest().authenticated()
                 )
                 // 2. ADD THIS: This allows the SockJS internal iframe to load
