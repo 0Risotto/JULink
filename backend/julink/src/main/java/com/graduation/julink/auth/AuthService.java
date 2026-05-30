@@ -1,21 +1,25 @@
 package com.graduation.julink.auth;
-import com.graduation.julink.auth.Repository.OTPRepository;
+
 import com.graduation.julink.auth.Repository.AuthRepository;
+import com.graduation.julink.auth.Repository.OTPRepository;
 import com.graduation.julink.block.BlockService;
 import com.graduation.julink.follow.FollowRepository;
+import jakarta.mail.internet.MimeMessage;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +30,8 @@ public interface AuthService {
     void verifyOTP(String otp, String email);
     Authentication loginUser(AuthDTOs.LoginUserDTO loginUserDTO);
     void kill(Principal principal);
+    void sendDeleteOTP(Principal principal);
+    void killWithOTP(Principal principal, AuthDTOs.DeleteAccountOTPDTO dto);
 }
 
 @Service
@@ -46,41 +52,48 @@ class AuthServiceImplementation implements AuthService {
     private static final String JU_EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@ju\\.edu\\.jo$";
     private static final int OTP_EXPIRY_MINUTES = 3;
     private static final String FROM_EMAIL = "julink2026@gmail.com";
+    private static final String OTP_TEMPLATE_PATH = "templates/email/otp.html";
 
     @Override
     public void createUser(AuthDTOs.CreateUserRequestDTO dto) {
         validateCreateUserRequest(dto);
 
         AuthEntities.User user = authMapper.toEntity(dto);
+        user.setEmailVerified(false);
         userRepository.save(user);
-        // user gets created here for neo4j
         followRepository.createUser(user.getUsername());
+        sendOTP(user.getEmail());
         System.out.println("User created successfully: " + user.getEmail());
     }
 
-   @Override
-   public void sendOTP(String email) {
-       String cleanedEmail = cleanEmail(email);
-       String otpCode = generateOTP();
+    @Override
+    public void sendOTP(String email) {
+        String cleanedEmail = cleanEmail(email);
+        String otpCode = generateOTP();
 
-       deleteExistingOTP(cleanedEmail);
-       saveOTP(cleanedEmail, otpCode);
-       sendOtpEmail(cleanedEmail, otpCode);
+        deleteExistingOTP(cleanedEmail);
+        saveOTP(cleanedEmail, otpCode);
+        sendOtpEmail(
+                cleanedEmail,
+                otpCode,
+                "JUlink Account Verification OTP",
+                "Verify your email address",
+                "Use the verification code below to complete your JUlink account verification."
+        );
 
-       System.out.println("OTP sent successfully to: " + cleanedEmail);
-   }
+        System.out.println("OTP sent successfully to: " + cleanedEmail);
+    }
 
     @Override
     public void verifyOTP(String otp, String email) {
         String cleanedEmail = cleanEmail(email);
 
-        AuthEntities.OTP otpEntity = findValidOTP(cleanedEmail);
-        validateOTP(otpEntity, otp);
+        validateAndDeleteOTP(cleanedEmail, otp);
 
-        // Mark user as verified if needed
-        // userRepository.verifyEmail(cleanedEmail);
+        AuthEntities.User user = findUserByEmail(cleanedEmail);
+        user.setEmailVerified(true);
+        userRepository.save(user);
 
-        deleteVerifiedOTP(cleanedEmail);
         System.out.println("OTP verified successfully for: " + cleanedEmail);
     }
 
@@ -90,18 +103,42 @@ class AuthServiceImplementation implements AuthService {
 
         AuthEntities.User user = findUserForLogin(identifier);
         validatePassword(loginUserDTO.password(), user.getPasswordHash());
+        validateEmailVerified(user);
 
         return createAuthenticationToken(user);
     }
 
     @Override
     public void kill(Principal principal) {
-        if (principal == null) {
-            throw new RuntimeException("Authenticated user is required");
-        }
+        deleteAccount(authenticatedUser(principal));
+    }
 
-        String email = principal.getName();
-        AuthEntities.User user = findUserByEmail(email);
+    @Override
+    public void sendDeleteOTP(Principal principal) {
+        AuthEntities.User user = authenticatedUser(principal);
+        String email = cleanEmail(user.getEmail());
+        String otpCode = generateOTP();
+
+        deleteExistingOTP(email);
+        saveOTP(email, otpCode);
+        sendOtpEmail(
+                email,
+                otpCode,
+                "JUlink Account Deletion OTP",
+                "Confirm account deletion",
+                "Use the verification code below to confirm your JULink account deletion request."
+        );
+    }
+
+    @Override
+    public void killWithOTP(Principal principal, AuthDTOs.DeleteAccountOTPDTO dto) {
+        AuthEntities.User user = authenticatedUser(principal);
+        validateAndDeleteOTP(cleanEmail(user.getEmail()), dto.otp());
+        deleteAccount(user);
+    }
+
+    private void deleteAccount(AuthEntities.User user) {
+        String email = cleanEmail(user.getEmail());
         Long userId = user.getId();
         String username = user.getUsername();
 
@@ -114,7 +151,6 @@ class AuthServiceImplementation implements AuthService {
         userRepository.delete(user);
     }
 
-    // Private helper methods
     private void validateCreateUserRequest(AuthDTOs.CreateUserRequestDTO dto) {
         String username = dto.username().toLowerCase();
         String email = dto.email().toLowerCase();
@@ -150,109 +186,30 @@ class AuthServiceImplementation implements AuthService {
         }
     }
 
-
-    private void sendOtpEmail(String email, String otp) {
+    private void sendOtpEmail(String email, String otp, String subject, String purposeTitle, String purposeText) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setFrom(FROM_EMAIL);
             helper.setTo(email);
-            helper.setSubject("JUlink Account Verification OTP");
-
-            String htmlContent = String.format("""
-<!DOCTYPE html>
-<html>
-<body style="margin:0; padding:0; background-color:#f3f6fb; font-family:Arial, Helvetica, sans-serif;">
-
-    <table width="100%%" cellpadding="0" cellspacing="0" style="background-color:#f3f6fb; padding:40px 0;">
-        <tr>
-            <td align="center">
-
-                <table width="620" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:18px; overflow:hidden; box-shadow:0 8px 28px rgba(0,0,0,0.08);">
-                    
-                    <!-- Header -->
-                    <tr>
-                        <td style="background:linear-gradient(135deg,#004aad,#0077ff); padding:30px 36px; text-align:left;">
-                            <div style="color:#ffffff; font-size:26px; font-weight:bold; letter-spacing:0.5px;">
-                                JUlink
-                            </div>
-                            <div style="color:#dbeafe; font-size:14px; margin-top:6px;">
-                                University account verification
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Content -->
-                    <tr>
-                        <td style="padding:42px 38px 34px; color:#1f2937;">
-                            
-                            <div style="font-size:24px; font-weight:bold; color:#111827; margin-bottom:14px;">
-                                Verify your email address
-                            </div>
-
-                            <div style="font-size:16px; line-height:1.7; color:#4b5563; margin-bottom:26px;">
-                                Hello,<br>
-                                Use the verification code below to complete your JUlink account verification.
-                            </div>
-
-                            <!-- OTP Box -->
-                            <table width="100%%" cellpadding="0" cellspacing="0" style="margin:28px 0;">
-                                <tr>
-                                    <td align="center" style="background-color:#f0f6ff; border:1px solid #bfdbfe; border-radius:14px; padding:28px;">
-                                        <div style="font-size:13px; color:#2563eb; font-weight:bold; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:12px;">
-                                            Your OTP Code
-                                        </div>
-
-                                        <div style="font-size:42px; font-weight:bold; color:#004aad; letter-spacing:10px;">
-                                            %s
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <div style="font-size:15px; line-height:1.7; color:#4b5563;">
-                                This code will expire in 
-                                <strong style="color:#111827;">%d minutes</strong>.
-                                <br>
-                                If you did not request this code, you can safely ignore this email.
-                            </div>
-
-                        </td>
-                    </tr>
-
-                    <!-- Footer -->
-                    <tr>
-                        <td style="background-color:#f9fafb; padding:22px 36px; border-top:1px solid #e5e7eb; text-align:center;">
-                            <div style="font-size:13px; color:#6b7280; line-height:1.6;">
-                                This is an automated message from JUlink.<br>
-                                Please do not reply to this email.
-                            </div>
-                        </td>
-                    </tr>
-
-                </table>
-
-                <div style="font-size:12px; color:#9ca3af; margin-top:18px;">
-                    © 2026 JUlink. All rights reserved.
-                </div>
-
-            </td>
-        </tr>
-    </table>
-
-</body>
-</html>
-""", otp, OTP_EXPIRY_MINUTES);
-
-            helper.setText(htmlContent, true);
+            helper.setSubject(subject);
+            helper.setText(renderOtpTemplate(otp, purposeTitle, purposeText), true);
 
             mailSender.send(message);
-
         } catch (Exception e) {
             throw new RuntimeException("Failed to send OTP email: " + e.getMessage());
         }
+    }
+
+    private String renderOtpTemplate(String otp, String purposeTitle, String purposeText) throws Exception {
+        ClassPathResource template = new ClassPathResource(OTP_TEMPLATE_PATH);
+        String html = StreamUtils.copyToString(template.getInputStream(), StandardCharsets.UTF_8);
+        return html
+                .replace("{{purposeTitle}}", purposeTitle)
+                .replace("{{purposeText}}", purposeText)
+                .replace("{{otp}}", otp)
+                .replace("{{expiryMinutes}}", String.valueOf(OTP_EXPIRY_MINUTES));
     }
 
     private void saveOTP(String email, String otpCode) {
@@ -264,6 +221,12 @@ class AuthServiceImplementation implements AuthService {
     private AuthEntities.OTP findValidOTP(String email) {
         return otpRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("No OTP found for email: " + email));
+    }
+
+    private void validateAndDeleteOTP(String email, String providedOtp) {
+        AuthEntities.OTP otpEntity = findValidOTP(email);
+        validateOTP(otpEntity, providedOtp);
+        deleteVerifiedOTP(email);
     }
 
     private void validateOTP(AuthEntities.OTP otpEntity, String providedOtp) {
@@ -413,6 +376,13 @@ class AuthServiceImplementation implements AuthService {
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
     }
 
+    private AuthEntities.User authenticatedUser(Principal principal) {
+        if (principal == null) {
+            throw new RuntimeException("Authenticated user is required");
+        }
+        return findUserByEmail(cleanEmail(principal.getName()));
+    }
+
     private AuthEntities.User findUserForLogin(String identifier) {
         return userRepository.findByEmail(identifier)
                 .or(() -> userRepository.findByUsername(identifier))
@@ -422,6 +392,12 @@ class AuthServiceImplementation implements AuthService {
     private void validatePassword(String rawPassword, String encodedPassword) {
         if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
             throw new RuntimeException("Invalid password");
+        }
+    }
+
+    private void validateEmailVerified(AuthEntities.User user) {
+        if (Boolean.FALSE.equals(user.getEmailVerified())) {
+            throw new RuntimeException("Please verify your email before logging in");
         }
     }
 

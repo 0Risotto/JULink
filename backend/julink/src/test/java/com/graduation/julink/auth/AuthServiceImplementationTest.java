@@ -94,11 +94,16 @@ class AuthServiceImplementationTest {
         when(userRepository.existsByUsername("testuser")).thenReturn(false);
         when(userRepository.existsByEmail("test@ju.edu.jo")).thenReturn(false);
         when(authMapper.toEntity(createUserRequestDTO)).thenReturn(user);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+        when(authMapper.toOTP(any())).thenReturn(new AuthEntities.OTP());
 
         authService.createUser(createUserRequestDTO);
 
+        assertEquals(false, user.getEmailVerified());
         verify(userRepository).save(user);
         verify(followRepository).createUser("testuser");
+        verify(otpRepository).save(any(AuthEntities.OTP.class));
+        verify(mailSender).send(mimeMessage);
     }
 
     @Test
@@ -128,9 +133,12 @@ class AuthServiceImplementationTest {
     @Test
     void verifyOTP_Success() {
         when(otpRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(otpEntity));
+        when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
 
         authService.verifyOTP("123456", "test@ju.edu.jo");
 
+        assertEquals(true, user.getEmailVerified());
+        verify(userRepository).save(user);
         verify(otpRepository).deleteByEmailIgnoreCase("test@ju.edu.jo");
     }
 
@@ -157,6 +165,7 @@ class AuthServiceImplementationTest {
     @Test
     void loginUser_Success() {
         AuthDTOs.LoginUserDTO loginUserDTO = new AuthDTOs.LoginUserDTO("test@ju.edu.jo", "Password123!");
+        user.setEmailVerified(true);
         when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("Password123!", "encodedPassword")).thenReturn(true);
 
@@ -169,6 +178,7 @@ class AuthServiceImplementationTest {
     @Test
     void loginUser_WithUsername_Success() {
         AuthDTOs.LoginUserDTO loginUserDTO = new AuthDTOs.LoginUserDTO("testuser", "Password123!");
+        user.setEmailVerified(true);
         when(userRepository.findByEmail("testuser")).thenReturn(Optional.empty());
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("Password123!", "encodedPassword")).thenReturn(true);
@@ -182,12 +192,79 @@ class AuthServiceImplementationTest {
     @Test
     void loginUser_InvalidPassword() {
         AuthDTOs.LoginUserDTO loginUserDTO = new AuthDTOs.LoginUserDTO("test@ju.edu.jo", "WrongPassword!");
+        user.setEmailVerified(true);
         when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("WrongPassword!", "encodedPassword")).thenReturn(false);
 
         RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> authService.loginUser(loginUserDTO));
         assertEquals("Invalid password", exception.getMessage());
+    }
+
+    @Test
+    void loginUser_UnverifiedUser() {
+        AuthDTOs.LoginUserDTO loginUserDTO = new AuthDTOs.LoginUserDTO("test@ju.edu.jo", "Password123!");
+        user.setEmailVerified(false);
+        when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("Password123!", "encodedPassword")).thenReturn(true);
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> authService.loginUser(loginUserDTO));
+        assertEquals("Please verify your email before logging in", exception.getMessage());
+    }
+
+    @Test
+    void loginUser_NullVerificationAllowedForExistingUsers() {
+        AuthDTOs.LoginUserDTO loginUserDTO = new AuthDTOs.LoginUserDTO("test@ju.edu.jo", "Password123!");
+        user.setEmailVerified(null);
+        when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("Password123!", "encodedPassword")).thenReturn(true);
+
+        Authentication auth = authService.loginUser(loginUserDTO);
+
+        assertNotNull(auth);
+        assertEquals("test@ju.edu.jo", auth.getName());
+    }
+
+    @Test
+    void sendDeleteOTP_Success() {
+        when(principal.getName()).thenReturn("test@ju.edu.jo");
+        when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+        when(authMapper.toOTP(any())).thenReturn(new AuthEntities.OTP());
+
+        authService.sendDeleteOTP(principal);
+
+        verify(otpRepository).save(any(AuthEntities.OTP.class));
+        verify(mailSender).send(mimeMessage);
+    }
+
+    @Test
+    void killWithOTP_InvalidOTP() {
+        when(principal.getName()).thenReturn("test@ju.edu.jo");
+        when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
+        when(otpRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(otpEntity));
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> authService.killWithOTP(principal, new AuthDTOs.DeleteAccountOTPDTO("654321")));
+        assertEquals("Invalid OTP code", exception.getMessage());
+        verify(userRepository, never()).delete(user);
+    }
+
+    @Test
+    void killWithOTP_Success() {
+        when(principal.getName()).thenReturn("test@ju.edu.jo");
+        when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
+        when(otpRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(otpEntity));
+        when(entityManager.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter("userId", 101L)).thenReturn(query);
+        when(query.executeUpdate()).thenReturn(1);
+
+        authService.killWithOTP(principal, new AuthDTOs.DeleteAccountOTPDTO("123456"));
+
+        verify(otpRepository, atLeastOnce()).deleteByEmailIgnoreCase("test@ju.edu.jo");
+        verify(followRepository).deleteUser("testuser");
+        verify(userRepository).delete(user);
     }
 
     @Test

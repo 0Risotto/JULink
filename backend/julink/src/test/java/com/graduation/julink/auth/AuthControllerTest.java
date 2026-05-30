@@ -136,4 +136,28 @@ class AuthControllerTest {
         assertEquals("Account deleted successfully", response.getBody().get("message"));
         verify(authService, times(1)).kill(principal);
     }
+
+    @Test
+    void sendDeleteOTP_Success() {
+        doNothing().when(authService).sendDeleteOTP(principal);
+
+        Map<String, Object> response = authController.sendDeleteOTP(principal);
+
+        assertEquals("success", response.get("status"));
+        assertEquals("Delete account OTP sent successfully", response.get("message"));
+        verify(authService, times(1)).sendDeleteOTP(principal);
+    }
+
+    @Test
+    void killWithOTP_Success() {
+        AuthDTOs.DeleteAccountOTPDTO dto = new AuthDTOs.DeleteAccountOTPDTO("123456");
+        doNothing().when(authService).killWithOTP(principal, dto);
+
+        ResponseEntity<Map<String, String>> response = authController.killWithOTP(principal, dto);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("success", response.getBody().get("status"));
+        assertEquals("Account deleted successfully", response.getBody().get("message"));
+        verify(authService, times(1)).killWithOTP(principal, dto);
+    }
 }

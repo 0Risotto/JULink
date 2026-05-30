@@ -54,11 +54,12 @@ public final class AuthEntities {
         @Column(nullable = false, columnDefinition = "boolean default true")
         private boolean isFirstLogin = true;
 
+        @Column(name = "email_verified")
+        private Boolean emailVerified;
+
 
         // @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
         // private OTP otp;
-        // @Column(nullable = false)
-        // private boolean verified = false;
     }
 
     @Entity

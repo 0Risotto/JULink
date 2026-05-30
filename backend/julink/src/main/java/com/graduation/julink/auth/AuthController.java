@@ -105,6 +105,12 @@ public class AuthController {
             );
 
         } catch (RuntimeException e) {
+            if ("Please verify your email before logging in".equals(e.getMessage())) {
+                return Map.of(
+                        "status", "error",
+                        "message", e.getMessage()
+                );
+            }
             return Map.of(
                     "status", "error",
                     "message", "Login failed : incorrect email, username, or password."
@@ -120,6 +126,34 @@ public class AuthController {
     @DeleteMapping("/kill")
     public ResponseEntity<Map<String, String>> kill(Principal principal) {
         authService.kill(principal);
+        return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "message", "Account deleted successfully"
+        ));
+    }
+
+    @PostMapping("/delete/send-otp")
+    public Map<String, Object> sendDeleteOTP(Principal principal) {
+        try {
+            authService.sendDeleteOTP(principal);
+            return Map.of(
+                    "status", "success",
+                    "message", "Delete account OTP sent successfully"
+            );
+        } catch (Exception e) {
+            return Map.of(
+                    "status", "error",
+                    "message", "Failed to send delete account OTP: " + e.getMessage()
+            );
+        }
+    }
+
+    @DeleteMapping("/delete/verify")
+    public ResponseEntity<Map<String, String>> killWithOTP(
+            Principal principal,
+            @RequestBody AuthDTOs.DeleteAccountOTPDTO dto
+    ) {
+        authService.killWithOTP(principal, dto);
         return ResponseEntity.ok(Map.of(
                 "status", "success",
                 "message", "Account deleted successfully"

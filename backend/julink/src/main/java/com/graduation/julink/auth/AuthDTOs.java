@@ -38,4 +38,6 @@ public final class AuthDTOs {
 
     public record SendOTPDTO(String email){}
 
+    public record DeleteAccountOTPDTO(String otp){}
+
 }
