@@ -1,7 +1,16 @@
 import { z } from "zod";
 
 export const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.string().refine(
+    (val) => {
+      const isEmail = z.string().email().safeParse(val).success;
+      if (isEmail) return true;
+      return val.length >= 3 && val.length <= 50;
+    },
+    {
+      message: "Please enter a valid email or username (at least 3 characters)",
+    }
+  ),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 

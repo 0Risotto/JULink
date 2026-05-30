@@ -59,11 +59,10 @@ export function LoginCard() {
         <CardContent>
           <div className="flex flex-col gap-6">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Username or Email</Label>
               <Input
                 id="email"
-                type="email"
-                placeholder="user@ju.edu.jo"
+                type="text"
                 onChange={handleChange}
                 value={form.email}
                 required
