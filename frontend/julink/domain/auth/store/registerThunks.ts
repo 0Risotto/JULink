@@ -11,9 +11,9 @@ export const registerUserThunk = createAsyncThunk<
   try {
     const response = await createUserService(userData);
     
-    // Backend returns "success" string on success
-    if (response !== "success") {
-      return rejectWithValue("Registration failed");
+    // Backend returns an object with { status: "success", message: "..." }
+    if (response?.status !== "success") {
+      return rejectWithValue(response?.message || "Registration failed");
     }
     
     return response;
@@ -34,8 +34,8 @@ export const sendOtpThunk = createAsyncThunk<
   try {
     const response = await sendOtpService(email);
     
-    if (response !== "success") {
-      return rejectWithValue("Failed to send OTP");
+    if (response?.status !== "success") {
+      return rejectWithValue(response?.message || "Failed to send OTP");
     }
     
     return response;
@@ -56,8 +56,8 @@ export const verifyOtpThunk = createAsyncThunk<
   try {
     const response = await verifyOtpService(data);
     
-    if (response !== "success") {
-      return rejectWithValue("OTP verification failed");
+    if (response?.status !== "success") {
+      return rejectWithValue(response?.message || "OTP verification failed");
     }
     
     return response;

@@ -9,11 +9,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useRegister } from "../hooks/useRegister";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 
 export function OtpVerificationForm() {
   const router = useRouter();
@@ -30,13 +35,9 @@ export function OtpVerificationForm() {
   const [otp, setOtp] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
 
-  const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setOtp(e.target.value);
-  };
-
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otp) return;
+    if (!otp || otp.length !== 6) return;
     const success = await verifyOtp(otp);
     if (success) {
       setOtp("");
@@ -79,16 +80,26 @@ export function OtpVerificationForm() {
           <div className="flex flex-col gap-6">
             <div className="grid gap-2">
               <Label htmlFor="otp">OTP Code</Label>
-              <Input
-                id="otp"
-                type="text"
-                value={otp}
-                onChange={handleOtpChange}
-                placeholder="Enter 6-digit OTP"
-                maxLength={6}
-                required
-                autoFocus
-              />
+              <div className="flex justify-center py-2">
+                <InputOTP
+                  id="otp"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(val) => setOtp(val)}
+                  required
+                  autoFocus
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSeparator />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
             </div>
 
             {isOtpExpired && (

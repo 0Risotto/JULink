@@ -19,8 +19,11 @@ export interface RegisterUserDTO {
   password: string;
 }
 
-// For createUser and OTP endpoints that return simple strings
-export type SimpleResponse = string;
+// For createUser and OTP endpoints that return JSON responses
+export interface SimpleResponse {
+  status: string;
+  message?: string;
+}
 
 export interface OtpVerificationDTO {
   email: string;
@@ -29,6 +32,20 @@ export interface OtpVerificationDTO {
 
 export interface SendOtpDTO {
   email: string;
+}
+
+export interface ForgotPasswordOtpDTO {
+  email: string;
+}
+
+export interface ResetPasswordDTO {
+  email: string;
+  otp: string;
+  newPassword: string;
+}
+
+export interface DeleteAccountOtpDTO {
+  otp: string;
 }
 
 export const Colleges = {

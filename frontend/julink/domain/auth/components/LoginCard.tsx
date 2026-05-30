@@ -16,6 +16,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { validateLoginForm } from "../schemas/loginSchema";
 import { Eye, EyeOff } from "lucide-react";
+import { ForgotPasswordDialog } from "./ForgotPasswordDialog";
 
 export function LoginCard() {
   const { login, loading, error } = useLogin();
@@ -77,8 +78,18 @@ export function LoginCard() {
             </div>
 
             <div className="grid gap-2">
-              <div className="flex items-center">
+              <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
+                <ForgotPasswordDialog
+                  trigger={
+                    <button
+                      type="button"
+                      className="text-xs text-primary hover:underline font-medium"
+                    >
+                      Forgot password?
+                    </button>
+                  }
+                />
               </div>
               <div className="relative">
                 <Input

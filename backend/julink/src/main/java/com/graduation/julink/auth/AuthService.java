@@ -324,6 +324,16 @@ class AuthServiceImplementation implements AuthService {
 
     private void deleteUserPostData(Long userId) {
         executeUpdate("""
+                DELETE FROM post_impressions
+                WHERE user_id = :userId
+                """, userId);
+        executeUpdate("""
+                DELETE FROM post_impressions
+                WHERE post_id IN (
+                    SELECT post_id FROM posts WHERE owner_id = :userId
+                )
+                """, userId);
+        executeUpdate("""
                 DELETE FROM comment_likes
                 WHERE user_id = :userId
                 """, userId);

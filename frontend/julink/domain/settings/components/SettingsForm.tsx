@@ -14,7 +14,7 @@ import { Sun, Moon, Monitor, Check, Loader2, Camera, ShieldAlert } from "lucide-
 import { Colleges } from "@/domain/auth/types";
 import { useBlock } from "@/domain/block/hooks/useBlock";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { deleteAccountService } from "@/domain/auth/services/authServices";
+import { DeleteAccountDialog } from "./DeleteAccountDialog";
 
 export function SettingsForm() {
   const { currentUser, updateUserProfile, loadMyProfile } = useUser();
@@ -55,38 +55,6 @@ export function SettingsForm() {
   useEffect(() => {
     fetchBlockedUsers();
   }, [fetchBlockedUsers]);
-
-  const handleDeleteAccount = async () => {
-    const confirm1 = window.confirm(
-      "Are you sure you want to permanently delete your JULink account? This will erase all your posts, messages, and profile information. This action cannot be undone."
-    );
-    if (!confirm1) return;
-
-    const confirm2 = window.confirm(
-      "This is your final warning. Click OK and then type 'DELETE' in the next prompt if you are absolutely sure you want to destroy this account."
-    );
-    if (!confirm2) return;
-
-    const finalConfirm = window.prompt("To confirm deletion, please type 'DELETE':");
-    if (finalConfirm !== "DELETE") {
-      alert("Account deletion canceled. Input did not match 'DELETE'.");
-      return;
-    }
-
-    try {
-      const response = await deleteAccountService();
-      if (response.status === "success") {
-        alert("Your account has been successfully deleted. Thank you for using JULink.");
-        localStorage.removeItem("token");
-        window.location.href = "/login";
-      } else {
-        alert(response.message || "Failed to delete account. Please try again.");
-      }
-    } catch (err: unknown) {
-      const errorResponse = err as { response?: { data?: { message?: string } }; message?: string };
-      alert(errorResponse.response?.data?.message || errorResponse.message || "An error occurred while deleting your account.");
-    }
-  };
 
   // Synchronize form states when currentUser is loaded or updated
   useEffect(() => {
@@ -424,13 +392,16 @@ export function SettingsForm() {
                 Permanently delete your account, posts, messages, and all associated data from JULink.
               </p>
             </div>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteAccount}
-              className="w-full md:w-fit bg-red-600 hover:bg-red-700 text-white"
-            >
-              Delete Account
-            </Button>
+            <DeleteAccountDialog
+              trigger={
+                <Button
+                  variant="destructive"
+                  className="w-full md:w-fit bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Delete Account
+                </Button>
+              }
+            />
           </div>
         </CardContent>
       </Card>

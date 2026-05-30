@@ -1,5 +1,5 @@
 // services/authServices.ts
-import { post, del } from "@/util/api/axios";
+import { post, del, request } from "@/util/api/axios";
 import {
   LoginUserDTO,
   LoginResponse,
@@ -7,6 +7,9 @@ import {
   SimpleResponse,
   OtpVerificationDTO,
   SendOtpDTO,
+  ForgotPasswordOtpDTO,
+  ResetPasswordDTO,
+  DeleteAccountOtpDTO,
 } from "../types";
 
 export const loginService = (data: LoginUserDTO) =>
@@ -25,3 +28,17 @@ export const verifyOtpService = (data: OtpVerificationDTO) =>
 
 export const deleteAccountService = () =>
   del<{ status: string; message: string }>("/auth/kill");
+
+export const sendForgotPasswordOtpService = (email: string) => {
+  const dto: ForgotPasswordOtpDTO = { email };
+  return post<{ status: string; message?: string }>("/auth/password/forgot/send-otp", dto);
+};
+
+export const resetPasswordWithOtpService = (data: ResetPasswordDTO) =>
+  post<{ status: string; message?: string }>("/auth/password/forgot/reset", data);
+
+export const sendDeleteOtpService = () =>
+  post<{ status: string; message?: string }>("/auth/delete/send-otp", {});
+
+export const deleteAccountWithOtpService = (data: DeleteAccountOtpDTO) =>
+  request<{ status: string; message?: string }>("DELETE", "/auth/delete/verify", data);
