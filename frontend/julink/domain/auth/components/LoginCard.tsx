@@ -15,6 +15,7 @@ import { useLogin } from "../hooks/useLogin";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { validateLoginForm } from "../schemas/loginSchema";
+import { Eye, EyeOff } from "lucide-react";
 
 export function LoginCard() {
   const { login, loading, error } = useLogin();
@@ -24,6 +25,7 @@ export function LoginCard() {
     password: "",
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.id]: e.target.value });
@@ -34,14 +36,18 @@ export function LoginCard() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const validation = validateLoginForm(form);
+    const trimmedForm = {
+      email: form.email.trim(),
+      password: form.password,
+    };
+    const validation = validateLoginForm(trimmedForm);
     
     if (!validation.success && validation.errors) {
       setFormErrors(validation.errors);
       return;
     }
     
-    login(form.email, form.password);
+    login(trimmedForm.email, trimmedForm.password);
   };
   const handleBackToRegister = () => {
     router.push("/register");
@@ -74,13 +80,27 @@ export function LoginCard() {
               <div className="flex items-center">
                 <Label htmlFor="password">Password</Label>
               </div>
-              <Input
-                id="password"
-                type="password"
-                onChange={handleChange}
-                value={form.password}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  onChange={handleChange}
+                  value={form.password}
+                  className="pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
               {formErrors.password && <p className="text-red-500 text-sm">{formErrors.password}</p>}
             </div>
 
