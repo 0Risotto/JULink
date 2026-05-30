@@ -160,6 +160,57 @@ public class AuthController {
         ));
     }
 
+    @PostMapping("/password/change")
+    public Map<String, Object> changePassword(
+            Principal principal,
+            @RequestBody AuthDTOs.ChangePasswordDTO dto
+    ) {
+        try {
+            authService.changePassword(principal, dto);
+            return Map.of(
+                    "status", "success",
+                    "message", "Password changed successfully"
+            );
+        } catch (Exception e) {
+            return Map.of(
+                    "status", "error",
+                    "message", e.getMessage()
+            );
+        }
+    }
+
+    @PostMapping("/password/forgot/send-otp")
+    public Map<String, Object> sendForgotPasswordOTP(@RequestBody AuthDTOs.ForgotPasswordOTPDTO dto) {
+        try {
+            authService.sendForgotPasswordOTP(dto);
+            return Map.of(
+                    "status", "success",
+                    "message", "Password reset OTP sent successfully"
+            );
+        } catch (Exception e) {
+            return Map.of(
+                    "status", "error",
+                    "message", e.getMessage()
+            );
+        }
+    }
+
+    @PostMapping("/password/forgot/reset")
+    public Map<String, Object> resetPasswordWithOTP(@RequestBody AuthDTOs.ResetPasswordDTO dto) {
+        try {
+            authService.resetPasswordWithOTP(dto);
+            return Map.of(
+                    "status", "success",
+                    "message", "Password reset successfully"
+            );
+        } catch (Exception e) {
+            return Map.of(
+                    "status", "error",
+                    "message", e.getMessage()
+            );
+        }
+    }
+
 
     @GetMapping("/health")
     public Map<String, String> healthCheck() {

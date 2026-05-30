@@ -32,6 +32,9 @@ public interface AuthService {
     void kill(Principal principal);
     void sendDeleteOTP(Principal principal);
     void killWithOTP(Principal principal, AuthDTOs.DeleteAccountOTPDTO dto);
+    void changePassword(Principal principal, AuthDTOs.ChangePasswordDTO dto);
+    void sendForgotPasswordOTP(AuthDTOs.ForgotPasswordOTPDTO dto);
+    void resetPasswordWithOTP(AuthDTOs.ResetPasswordDTO dto);
 }
 
 @Service
@@ -137,6 +140,45 @@ class AuthServiceImplementation implements AuthService {
         deleteAccount(user);
     }
 
+    @Override
+    public void changePassword(Principal principal, AuthDTOs.ChangePasswordDTO dto) {
+        AuthEntities.User user = authenticatedUser(principal);
+        validatePassword(dto.currentPassword(), user.getPasswordHash());
+        validateNewPassword(dto.newPassword());
+        user.setPasswordHash(passwordEncoder.encode(dto.newPassword()));
+        userRepository.save(user);
+    }
+
+    @Override
+    public void sendForgotPasswordOTP(AuthDTOs.ForgotPasswordOTPDTO dto) {
+        String email = cleanEmail(dto.email());
+        validateJuEmail(email);
+        findUserByEmail(email);
+
+        String otpCode = generateOTP();
+        deleteExistingOTP(email);
+        saveOTP(email, otpCode);
+        sendOtpEmail(
+                email,
+                otpCode,
+                "JUlink Password Reset OTP",
+                "Reset your password",
+                "Use the verification code below to reset your JUlink account password."
+        );
+    }
+
+    @Override
+    public void resetPasswordWithOTP(AuthDTOs.ResetPasswordDTO dto) {
+        String email = cleanEmail(dto.email());
+        validateJuEmail(email);
+        validateNewPassword(dto.newPassword());
+        validateAndDeleteOTP(email, dto.otp());
+
+        AuthEntities.User user = findUserByEmail(email);
+        user.setPasswordHash(passwordEncoder.encode(dto.newPassword()));
+        userRepository.save(user);
+    }
+
     private void deleteAccount(AuthEntities.User user) {
         String email = cleanEmail(user.getEmail());
         Long userId = user.getId();
@@ -155,9 +197,7 @@ class AuthServiceImplementation implements AuthService {
         String username = dto.username().toLowerCase();
         String email = dto.email().toLowerCase();
 
-        if (!email.matches(JU_EMAIL_REGEX)) {
-            throw new IllegalArgumentException("Email must end with @ju.edu.jo");
-        }
+        validateJuEmail(email);
 
         if (userRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username '" + username + "' already exists");
@@ -169,11 +209,20 @@ class AuthServiceImplementation implements AuthService {
     }
 
     private String cleanEmail(String email) {
+        if (email == null) {
+            return "";
+        }
         return email.toLowerCase().trim();
     }
 
     private String cleanLoginIdentifier(String identifier) {
         return identifier.toLowerCase().trim();
+    }
+
+    private void validateJuEmail(String email) {
+        if (email == null || !email.matches(JU_EMAIL_REGEX)) {
+            throw new IllegalArgumentException("Email must end with @ju.edu.jo");
+        }
     }
 
     private String generateOTP() {
@@ -392,6 +441,12 @@ class AuthServiceImplementation implements AuthService {
     private void validatePassword(String rawPassword, String encodedPassword) {
         if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
             throw new RuntimeException("Invalid password");
+        }
+    }
+
+    private void validateNewPassword(String newPassword) {
+        if (newPassword == null || newPassword.isBlank() || newPassword.length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters");
         }
     }
 

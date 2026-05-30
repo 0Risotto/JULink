@@ -40,4 +40,10 @@ public final class AuthDTOs {
 
     public record DeleteAccountOTPDTO(String otp){}
 
+    public record ChangePasswordDTO(String currentPassword, String newPassword){}
+
+    public record ForgotPasswordOTPDTO(String email){}
+
+    public record ResetPasswordDTO(String email, String otp, String newPassword){}
+
 }

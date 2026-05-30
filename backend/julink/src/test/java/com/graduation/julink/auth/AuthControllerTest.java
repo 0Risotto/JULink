@@ -160,4 +160,40 @@ class AuthControllerTest {
         assertEquals("Account deleted successfully", response.getBody().get("message"));
         verify(authService, times(1)).killWithOTP(principal, dto);
     }
+
+    @Test
+    void changePassword_Success() {
+        AuthDTOs.ChangePasswordDTO dto = new AuthDTOs.ChangePasswordDTO("Password123!", "NewPassword123!");
+        doNothing().when(authService).changePassword(principal, dto);
+
+        Map<String, Object> response = authController.changePassword(principal, dto);
+
+        assertEquals("success", response.get("status"));
+        assertEquals("Password changed successfully", response.get("message"));
+        verify(authService, times(1)).changePassword(principal, dto);
+    }
+
+    @Test
+    void sendForgotPasswordOTP_Success() {
+        AuthDTOs.ForgotPasswordOTPDTO dto = new AuthDTOs.ForgotPasswordOTPDTO("test@ju.edu.jo");
+        doNothing().when(authService).sendForgotPasswordOTP(dto);
+
+        Map<String, Object> response = authController.sendForgotPasswordOTP(dto);
+
+        assertEquals("success", response.get("status"));
+        assertEquals("Password reset OTP sent successfully", response.get("message"));
+        verify(authService, times(1)).sendForgotPasswordOTP(dto);
+    }
+
+    @Test
+    void resetPasswordWithOTP_Success() {
+        AuthDTOs.ResetPasswordDTO dto = new AuthDTOs.ResetPasswordDTO("test@ju.edu.jo", "123456", "NewPassword123!");
+        doNothing().when(authService).resetPasswordWithOTP(dto);
+
+        Map<String, Object> response = authController.resetPasswordWithOTP(dto);
+
+        assertEquals("success", response.get("status"));
+        assertEquals("Password reset successfully", response.get("message"));
+        verify(authService, times(1)).resetPasswordWithOTP(dto);
+    }
 }

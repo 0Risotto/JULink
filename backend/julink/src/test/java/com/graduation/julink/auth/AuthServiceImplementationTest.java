@@ -268,6 +268,78 @@ class AuthServiceImplementationTest {
     }
 
     @Test
+    void changePassword_Success() {
+        when(principal.getName()).thenReturn("test@ju.edu.jo");
+        when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("Password123!", "encodedPassword")).thenReturn(true);
+        when(passwordEncoder.encode("NewPassword123!")).thenReturn("encodedNewPassword");
+
+        authService.changePassword(
+                principal,
+                new AuthDTOs.ChangePasswordDTO("Password123!", "NewPassword123!")
+        );
+
+        assertEquals("encodedNewPassword", user.getPasswordHash());
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void changePassword_InvalidCurrentPassword() {
+        when(principal.getName()).thenReturn("test@ju.edu.jo");
+        when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("WrongPassword!", "encodedPassword")).thenReturn(false);
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> authService.changePassword(
+                        principal,
+                        new AuthDTOs.ChangePasswordDTO("WrongPassword!", "NewPassword123!")
+                ));
+
+        assertEquals("Invalid password", exception.getMessage());
+        verify(userRepository, never()).save(user);
+    }
+
+    @Test
+    void sendForgotPasswordOTP_Success() {
+        when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+        when(authMapper.toOTP(any())).thenReturn(new AuthEntities.OTP());
+
+        authService.sendForgotPasswordOTP(new AuthDTOs.ForgotPasswordOTPDTO("test@ju.edu.jo"));
+
+        verify(otpRepository).save(any(AuthEntities.OTP.class));
+        verify(mailSender).send(mimeMessage);
+    }
+
+    @Test
+    void resetPasswordWithOTP_InvalidOTP() {
+        when(otpRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(otpEntity));
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> authService.resetPasswordWithOTP(
+                        new AuthDTOs.ResetPasswordDTO("test@ju.edu.jo", "654321", "NewPassword123!")
+                ));
+
+        assertEquals("Invalid OTP code", exception.getMessage());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void resetPasswordWithOTP_Success() {
+        when(otpRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(otpEntity));
+        when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode("NewPassword123!")).thenReturn("encodedNewPassword");
+
+        authService.resetPasswordWithOTP(
+                new AuthDTOs.ResetPasswordDTO("test@ju.edu.jo", "123456", "NewPassword123!")
+        );
+
+        assertEquals("encodedNewPassword", user.getPasswordHash());
+        verify(otpRepository).deleteByEmailIgnoreCase("test@ju.edu.jo");
+        verify(userRepository).save(user);
+    }
+
+    @Test
     void kill_Success() {
         when(principal.getName()).thenReturn("test@ju.edu.jo");
         when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
