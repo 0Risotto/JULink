@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { getLostAndFounds } from "../service/lostAndFoundService";
 import { CollegeEnum, LostAndFoundResponse } from "../types";
 import LostAndFoundCard from "./LostAndFoundCard";
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export default function LostAndFoundFeed() {
   const [items, setItems] = useState<LostAndFoundResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchingMore, setFetchingMore] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
@@ -21,6 +22,7 @@ export default function LostAndFoundFeed() {
   const [collegeFilter, setCollegeFilter] = useState<string>("ALL");
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const observerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     fetchItems(0, true);
@@ -28,7 +30,11 @@ export default function LostAndFoundFeed() {
 
   const fetchItems = async (pageNum: number, reset: boolean = false) => {
     try {
-      if (pageNum === 0) setLoading(true);
+      if (pageNum === 0) {
+        setLoading(true);
+      } else {
+        setFetchingMore(true);
+      }
       
       let isResolvedParam: boolean | undefined = undefined;
       if (statusFilter === "RESOLVED") isResolvedParam = true;
@@ -54,14 +60,34 @@ export default function LostAndFoundFeed() {
       console.error("Failed to fetch lost and found items", error);
     } finally {
       setLoading(false);
+      setFetchingMore(false);
     }
   };
 
   const handleLoadMore = () => {
-    if (!loading && hasMore) {
+    if (!loading && !fetchingMore && hasMore) {
       fetchItems(page + 1);
     }
   };
+
+  useEffect(() => {
+    if (!hasMore || loading || fetchingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerRef.current) {
+      observer.observe(observerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loading, fetchingMore, page, statusFilter, typeFilter, collegeFilter]);
 
   const handleItemUpdated = (updatedItem: LostAndFoundResponse) => {
     setItems(prev => prev.map(p => p.id === updatedItem.id ? updatedItem : p));
@@ -174,15 +200,8 @@ export default function LostAndFoundFeed() {
             ))}
 
             {hasMore && (
-              <div className="text-center py-4">
-                <Button 
-                  variant="ghost"
-                  onClick={handleLoadMore}
-                  disabled={loading}
-                >
-                  {loading ? <Spinner className="mr-2" /> : null}
-                  {loading ? "Loading..." : "Load More"}
-                </Button>
+              <div ref={observerRef} className="text-center py-4 min-h-[50px] flex items-center justify-center">
+                {(loading || fetchingMore) && <Spinner />}
               </div>
             )}
           </div>

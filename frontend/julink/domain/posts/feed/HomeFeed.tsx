@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { getHomeFeed } from "../services/postServices";
 import { PostResponseDTO } from "../types";
 import FeedPost from "../components/FeedPost";
@@ -10,8 +10,10 @@ import AdCarousel from "@/domain/ads/components/AdCarousel";
 export default function HomeFeed() {
   const [posts, setPosts] = useState<PostResponseDTO[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchingMore, setFetchingMore] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const observerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     fetchFeed(0);
@@ -19,7 +21,11 @@ export default function HomeFeed() {
 
   const fetchFeed = async (pageNum: number) => {
     try {
-      if (pageNum === 0) setLoading(true);
+      if (pageNum === 0) {
+        setLoading(true);
+      } else {
+        setFetchingMore(true);
+      }
       const res = await getHomeFeed(pageNum, 10);
       
       if (pageNum === 0) {
@@ -34,14 +40,34 @@ export default function HomeFeed() {
       console.error("Failed to fetch home feed", error);
     } finally {
       setLoading(false);
+      setFetchingMore(false);
     }
   };
 
   const handleLoadMore = () => {
-    if (!loading && hasMore) {
+    if (!loading && !fetchingMore && hasMore) {
       fetchFeed(page + 1);
     }
   };
+
+  useEffect(() => {
+    if (!hasMore || loading || fetchingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerRef.current) {
+      observer.observe(observerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loading, fetchingMore, page]);
 
   const handlePostUpdated = (updatedPost: PostResponseDTO) => {
     setPosts(prev => prev.map(p => p.postId === updatedPost.postId ? updatedPost : p));
@@ -77,14 +103,8 @@ export default function HomeFeed() {
             ))}
 
             {hasMore && (
-              <div className="text-center py-4">
-                <button 
-                  onClick={handleLoadMore}
-                  disabled={loading}
-                  className="text-blue-500 hover:text-blue-600 font-medium disabled:opacity-50"
-                >
-                  {loading ? "Loading..." : "Load More"}
-                </button>
+              <div ref={observerRef} className="text-center py-4 min-h-[50px] flex items-center justify-center">
+                {(loading || fetchingMore) && <Spinner />}
               </div>
             )}
           </div>

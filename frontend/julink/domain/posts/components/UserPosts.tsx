@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { PostResponseDTO } from "../types";
 import { getUserPosts, getFavoritePosts } from "../services/postServices";
 import GridPostCard from "./GridPostCard";
@@ -27,11 +27,13 @@ interface UserPostsProps {
 export default function UserPosts({ username, isOwnProfile, currentUser, feedType = "posts" }: UserPostsProps) {
   const [posts, setPosts] = useState<PostResponseDTO[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchingMore, setFetchingMore] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [activePostIndex, setActivePostIndex] = useState<number | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  const observerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     fetchPosts(0);
@@ -39,7 +41,11 @@ export default function UserPosts({ username, isOwnProfile, currentUser, feedTyp
 
   const fetchPosts = async (pageNum: number) => {
     try {
-      if (pageNum === 0) setLoading(true);
+      if (pageNum === 0) {
+        setLoading(true);
+      } else {
+        setFetchingMore(true);
+      }
       const res = feedType === "favorites" 
         ? await getFavoritePosts(pageNum, 10)
         : await getUserPosts(username, pageNum, 10);
@@ -56,14 +62,34 @@ export default function UserPosts({ username, isOwnProfile, currentUser, feedTyp
       console.error("Failed to fetch user posts", error);
     } finally {
       setLoading(false);
+      setFetchingMore(false);
     }
   };
 
   const handleLoadMore = () => {
-    if (!loading && hasMore) {
+    if (!loading && !fetchingMore && hasMore) {
       fetchPosts(page + 1);
     }
   };
+
+  useEffect(() => {
+    if (!hasMore || loading || fetchingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerRef.current) {
+      observer.observe(observerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loading, fetchingMore, page, username, feedType]);
 
   const handlePostUpdated = (updatedPost: PostResponseDTO) => {
     setPosts(prev => prev.map(p => p.postId === updatedPost.postId ? updatedPost : p));
@@ -176,14 +202,8 @@ export default function UserPosts({ username, isOwnProfile, currentUser, feedTyp
       </div>
       
       {hasMore && posts.length > 0 && (
-        <div className="text-center py-4">
-          <button 
-            onClick={handleLoadMore}
-            disabled={loading}
-            className="text-blue-500 hover:text-blue-600 font-medium disabled:opacity-50"
-          >
-            {loading ? "Loading..." : "Load More"}
-          </button>
+        <div ref={observerRef} className="text-center py-4 min-h-[50px] flex items-center justify-center">
+          {(loading || fetchingMore) && <Spinner />}
         </div>
       )}
 

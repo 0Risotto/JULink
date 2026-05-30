@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchNotifications,
@@ -39,6 +39,7 @@ export default function NotificationsPage() {
 
   const [activeTab, setActiveTab] = useState<TabType>("ALL");
   const [loadingMore, setLoadingMore] = useState(false);
+  const observerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     dispatch(fetchNotifications({ page: 0, reset: true }));
@@ -51,6 +52,25 @@ export default function NotificationsPage() {
       setLoadingMore(false);
     }
   };
+
+  useEffect(() => {
+    if (!hasMore || loadingNotifications || loadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerRef.current) {
+      observer.observe(observerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loadingNotifications, loadingMore, page, activeTab]);
 
   const handleMarkAllRead = () => {
     dispatch(markAllNotificationsAsRead());
@@ -238,22 +258,8 @@ export default function NotificationsPage() {
 
           {/* Load More */}
           {hasMore && (
-            <div className="flex justify-center mt-6 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLoadMore}
-                disabled={loadingNotifications || loadingMore}
-              >
-                {loadingMore ? (
-                  <>
-                    <Spinner className="w-4 h-4 mr-2 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  "Load older notifications"
-                )}
-              </Button>
+            <div ref={observerRef} className="flex justify-center mt-6 pt-2 min-h-[50px] items-center">
+              {(loadingNotifications || loadingMore) && <Spinner />}
             </div>
           )}
         </div>
