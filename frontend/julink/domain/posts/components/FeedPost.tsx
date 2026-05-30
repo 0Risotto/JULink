@@ -300,8 +300,11 @@ export default function FeedPost({ post, onPostUpdated, onPostDeleted }: FeedPos
       </Card>
 
       {/* POST DETAILS MODAL */}
-      <DialogContent className="max-w-[95vw] md:max-w-[900px] lg:max-w-[1000px] p-0 bg-transparent border-none shadow-none focus:outline-none">
-         <PostDetailsModal post={post} onPostUpdated={onPostUpdated} onPostDeleted={onPostDeleted} />
+      <DialogContent 
+        className="w-full max-w-full md:max-w-[900px] lg:max-w-[1000px] h-[85vh] md:h-auto p-0 bg-transparent border-none shadow-none focus:outline-none top-auto bottom-0 left-0 right-0 translate-x-0 translate-y-0 md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 rounded-t-2xl rounded-b-none md:rounded-xl data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom-full duration-300 md:data-[state=open]:zoom-in-95" 
+        showCloseButton={false}
+      >
+         <PostDetailsModal post={post} onPostUpdated={onPostUpdated} onPostDeleted={onPostDeleted} commentsOnlyOnMobile={true} />
       </DialogContent>
 
       <UpdatePostModal 

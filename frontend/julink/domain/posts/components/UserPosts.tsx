@@ -6,6 +6,7 @@ import { getUserPosts, getFavoritePosts } from "../services/postServices";
 import GridPostCard from "./GridPostCard";
 import CreatePost from "./CreatePost";
 import PostDetailsModal from "./PostDetailsModal";
+import FeedPost from "./FeedPost";
 import { Spinner } from "@/components/ui/spinner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -189,7 +190,10 @@ export default function UserPosts({ username, isOwnProfile, currentUser, feedTyp
       {/* Traversal Details Dialog */}
       {activePostIndex !== null && posts[activePostIndex] && (
         <Dialog open={activePostIndex !== null} onOpenChange={(open) => !open && setActivePostIndex(null)}>
-          <DialogContent className="max-w-[95vw] md:max-w-[900px] lg:max-w-[1000px] p-0 bg-transparent border-none shadow-none focus:outline-none">
+          <DialogContent 
+            className="w-full max-w-full md:max-w-[900px] lg:max-w-[1000px] h-[85vh] md:h-auto p-0 bg-transparent border-none shadow-none focus:outline-none top-auto bottom-0 left-0 right-0 translate-x-0 translate-y-0 md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 rounded-t-2xl rounded-b-none md:rounded-xl data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom-full duration-300 md:data-[state=open]:zoom-in-95" 
+            showCloseButton={true}
+          >
             <div className="relative w-full h-full flex items-center justify-center">
               {/* Left Global Traversal Arrow */}
               {activePostIndex > 0 && (
@@ -203,11 +207,24 @@ export default function UserPosts({ username, isOwnProfile, currentUser, feedTyp
               )}
 
               <div className="w-full">
-                <PostDetailsModal 
-                  post={posts[activePostIndex]} 
-                  onPostUpdated={handlePostUpdated} 
-                  onPostDeleted={handleInnerPostDeleted} 
-                />
+                {/* Mobile view: Render FeedPost so it looks exactly like the main feed */}
+                <div className="block md:hidden bg-white dark:bg-zinc-950 p-4 rounded-t-2xl h-[85vh] overflow-y-auto">
+                  <FeedPost 
+                    post={posts[activePostIndex]} 
+                    onPostUpdated={handlePostUpdated} 
+                    onPostDeleted={handleInnerPostDeleted} 
+                  />
+                </div>
+
+                {/* Desktop view: Render standard PostDetailsModal */}
+                <div className="hidden md:block">
+                  <PostDetailsModal 
+                    post={posts[activePostIndex]} 
+                    onPostUpdated={handlePostUpdated} 
+                    onPostDeleted={handleInnerPostDeleted} 
+                    commentsOnlyOnMobile={false}
+                  />
+                </div>
               </div>
 
               {/* Right Global Traversal Arrow */}
