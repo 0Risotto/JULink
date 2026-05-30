@@ -14,6 +14,7 @@ import { Sun, Moon, Monitor, Check, Loader2, Camera, ShieldAlert } from "lucide-
 import { Colleges } from "@/domain/auth/types";
 import { useBlock } from "@/domain/block/hooks/useBlock";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { deleteAccountService } from "@/domain/auth/services/authServices";
 
 export function SettingsForm() {
   const { currentUser, updateUserProfile, loadMyProfile } = useUser();
@@ -54,6 +55,38 @@ export function SettingsForm() {
   useEffect(() => {
     fetchBlockedUsers();
   }, [fetchBlockedUsers]);
+
+  const handleDeleteAccount = async () => {
+    const confirm1 = window.confirm(
+      "Are you sure you want to permanently delete your JULink account? This will erase all your posts, messages, and profile information. This action cannot be undone."
+    );
+    if (!confirm1) return;
+
+    const confirm2 = window.confirm(
+      "This is your final warning. Click OK and then type 'DELETE' in the next prompt if you are absolutely sure you want to destroy this account."
+    );
+    if (!confirm2) return;
+
+    const finalConfirm = window.prompt("To confirm deletion, please type 'DELETE':");
+    if (finalConfirm !== "DELETE") {
+      alert("Account deletion canceled. Input did not match 'DELETE'.");
+      return;
+    }
+
+    try {
+      const response = await deleteAccountService();
+      if (response.status === "success") {
+        alert("Your account has been successfully deleted. Thank you for using JULink.");
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+      } else {
+        alert(response.message || "Failed to delete account. Please try again.");
+      }
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { message?: string } }; message?: string };
+      alert(errorResponse.response?.data?.message || errorResponse.message || "An error occurred while deleting your account.");
+    }
+  };
 
   // Synchronize form states when currentUser is loaded or updated
   useEffect(() => {
@@ -117,8 +150,9 @@ export function SettingsForm() {
       setProfileSuccess("Profile updated successfully!");
       setProfileFile(null);
       setBannerFile(null);
-    } catch (err: any) {
-      setProfileError(err.message || "Something went wrong while updating profile.");
+    } catch (err: unknown) {
+      const errorObj = err as { message?: string };
+      setProfileError(errorObj.message || "Something went wrong while updating profile.");
     } finally {
       setProfileSubmitting(false);
     }
@@ -368,6 +402,36 @@ export function SettingsForm() {
               ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone Card */}
+      <Card className="shadow-sm border-red-200 dark:border-red-900/30">
+        <CardHeader className="border-b border-red-100 dark:border-red-950/30">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-5 h-5 text-red-500" />
+            <CardTitle className="text-red-500">Danger Zone</CardTitle>
+          </div>
+          <CardDescription>
+            Irreversible actions for your account. Once you delete your account, there is no going back. Please be certain.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h4 className="text-sm font-semibold">Delete Account</h4>
+              <p className="text-xs text-muted-foreground">
+                Permanently delete your account, posts, messages, and all associated data from JULink.
+              </p>
+            </div>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              className="w-full md:w-fit bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete Account
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

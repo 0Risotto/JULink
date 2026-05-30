@@ -1,5 +1,5 @@
 // services/authServices.ts
-import { post } from "@/util/api/axios";
+import { post, del } from "@/util/api/axios";
 import {
   LoginUserDTO,
   LoginResponse,
@@ -22,3 +22,6 @@ export const sendOtpService = (email: string) => {
 
 export const verifyOtpService = (data: OtpVerificationDTO) =>
   post<SimpleResponse>("/auth/verify-otp", data);
+
+export const deleteAccountService = () =>
+  del<{ status: string; message: string }>("/auth/kill");
