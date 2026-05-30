@@ -166,7 +166,7 @@ class AuthServiceImplementationTest {
     void loginUser_Success() {
         AuthDTOs.LoginUserDTO loginUserDTO = new AuthDTOs.LoginUserDTO("test@ju.edu.jo", "Password123!");
         user.setEmailVerified(true);
-        when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmailOrUsername("test@ju.edu.jo", "test@ju.edu.jo")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("Password123!", "encodedPassword")).thenReturn(true);
 
         Authentication auth = authService.loginUser(loginUserDTO);
@@ -179,8 +179,7 @@ class AuthServiceImplementationTest {
     void loginUser_WithUsername_Success() {
         AuthDTOs.LoginUserDTO loginUserDTO = new AuthDTOs.LoginUserDTO("testuser", "Password123!");
         user.setEmailVerified(true);
-        when(userRepository.findByEmail("testuser")).thenReturn(Optional.empty());
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmailOrUsername("testuser", "testuser")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("Password123!", "encodedPassword")).thenReturn(true);
 
         Authentication auth = authService.loginUser(loginUserDTO);
@@ -193,7 +192,7 @@ class AuthServiceImplementationTest {
     void loginUser_InvalidPassword() {
         AuthDTOs.LoginUserDTO loginUserDTO = new AuthDTOs.LoginUserDTO("test@ju.edu.jo", "WrongPassword!");
         user.setEmailVerified(true);
-        when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmailOrUsername("test@ju.edu.jo", "test@ju.edu.jo")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("WrongPassword!", "encodedPassword")).thenReturn(false);
 
         RuntimeException exception = assertThrows(RuntimeException.class,
@@ -205,7 +204,7 @@ class AuthServiceImplementationTest {
     void loginUser_UnverifiedUser() {
         AuthDTOs.LoginUserDTO loginUserDTO = new AuthDTOs.LoginUserDTO("test@ju.edu.jo", "Password123!");
         user.setEmailVerified(false);
-        when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmailOrUsername("test@ju.edu.jo", "test@ju.edu.jo")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("Password123!", "encodedPassword")).thenReturn(true);
 
         RuntimeException exception = assertThrows(RuntimeException.class,
@@ -217,7 +216,7 @@ class AuthServiceImplementationTest {
     void loginUser_NullVerificationAllowedForExistingUsers() {
         AuthDTOs.LoginUserDTO loginUserDTO = new AuthDTOs.LoginUserDTO("test@ju.edu.jo", "Password123!");
         user.setEmailVerified(null);
-        when(userRepository.findByEmail("test@ju.edu.jo")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmailOrUsername("test@ju.edu.jo", "test@ju.edu.jo")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("Password123!", "encodedPassword")).thenReturn(true);
 
         Authentication auth = authService.loginUser(loginUserDTO);

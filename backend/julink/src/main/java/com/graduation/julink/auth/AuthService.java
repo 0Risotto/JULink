@@ -104,7 +104,15 @@ class AuthServiceImplementation implements AuthService {
     public Authentication loginUser(AuthDTOs.LoginUserDTO loginUserDTO) {
         String identifier = cleanLoginIdentifier(loginUserDTO.identifier());
 
-        AuthEntities.User user = findUserForLogin(identifier);
+        AuthEntities.User user;
+        try {
+            user = findUserForLogin(identifier);
+        } catch (RuntimeException e) {
+            // Perform dummy bcrypt check to prevent timing attacks when user is not found
+            passwordEncoder.matches(loginUserDTO.password(), "$2a$10$dXJ3ADSpYg16v3EXv15Cee6v1Pq75E6XGZQuz1/Rcx.R4X9C8rU/S");
+            throw e;
+        }
+
         validatePassword(loginUserDTO.password(), user.getPasswordHash());
         validateEmailVerified(user);
 
@@ -433,8 +441,7 @@ class AuthServiceImplementation implements AuthService {
     }
 
     private AuthEntities.User findUserForLogin(String identifier) {
-        return userRepository.findByEmail(identifier)
-                .or(() -> userRepository.findByUsername(identifier))
+        return userRepository.findByEmailOrUsername(identifier, identifier)
                 .orElseThrow(() -> new RuntimeException("User not found with email or username: " + identifier));
     }
 
