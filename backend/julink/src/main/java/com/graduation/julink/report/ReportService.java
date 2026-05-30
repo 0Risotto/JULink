@@ -63,6 +63,7 @@ public class ReportService {
             case USER -> resolveUserTarget(reporter, request.targetId());
             case POST -> resolvePostTarget(request.targetId());
             case MESSAGE -> resolveMessageTarget(reporter, request.targetId());
+            case AD -> new ResolvedTarget(ReportTargetType.AD, request.targetId(), "sponsored");
         };
     }
 
