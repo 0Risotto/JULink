@@ -39,7 +39,6 @@ public interface AuthService {
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 class AuthServiceImplementation implements AuthService {
     private final FollowRepository followRepository;
     private final BlockService blockService;
@@ -58,6 +57,7 @@ class AuthServiceImplementation implements AuthService {
     private static final String OTP_TEMPLATE_PATH = "templates/email/otp.html";
 
     @Override
+    @Transactional
     public void createUser(AuthDTOs.CreateUserRequestDTO dto) {
         validateCreateUserRequest(dto);
 
@@ -70,6 +70,7 @@ class AuthServiceImplementation implements AuthService {
     }
 
     @Override
+    @Transactional
     public void sendOTP(String email) {
         String cleanedEmail = cleanEmail(email);
         String otpCode = generateOTP();
@@ -88,6 +89,7 @@ class AuthServiceImplementation implements AuthService {
     }
 
     @Override
+    @Transactional
     public void verifyOTP(String otp, String email) {
         String cleanedEmail = cleanEmail(email);
 
@@ -120,11 +122,13 @@ class AuthServiceImplementation implements AuthService {
     }
 
     @Override
+    @Transactional
     public void kill(Principal principal) {
         deleteAccount(authenticatedUser(principal));
     }
 
     @Override
+    @Transactional
     public void sendDeleteOTP(Principal principal) {
         AuthEntities.User user = authenticatedUser(principal);
         String email = cleanEmail(user.getEmail());
@@ -142,6 +146,7 @@ class AuthServiceImplementation implements AuthService {
     }
 
     @Override
+    @Transactional
     public void killWithOTP(Principal principal, AuthDTOs.DeleteAccountOTPDTO dto) {
         AuthEntities.User user = authenticatedUser(principal);
         validateAndDeleteOTP(cleanEmail(user.getEmail()), dto.otp());
@@ -149,6 +154,7 @@ class AuthServiceImplementation implements AuthService {
     }
 
     @Override
+    @Transactional
     public void changePassword(Principal principal, AuthDTOs.ChangePasswordDTO dto) {
         AuthEntities.User user = authenticatedUser(principal);
         validatePassword(dto.currentPassword(), user.getPasswordHash());
@@ -158,6 +164,7 @@ class AuthServiceImplementation implements AuthService {
     }
 
     @Override
+    @Transactional
     public void sendForgotPasswordOTP(AuthDTOs.ForgotPasswordOTPDTO dto) {
         String email = cleanEmail(dto.email());
         validateJuEmail(email);
@@ -176,6 +183,7 @@ class AuthServiceImplementation implements AuthService {
     }
 
     @Override
+    @Transactional
     public void resetPasswordWithOTP(AuthDTOs.ResetPasswordDTO dto) {
         String email = cleanEmail(dto.email());
         validateJuEmail(email);
