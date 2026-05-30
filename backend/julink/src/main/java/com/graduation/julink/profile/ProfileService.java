@@ -6,6 +6,7 @@ import com.graduation.julink.block.BlockService;
 import com.graduation.julink.common.media.MediaUploadService;
 import com.graduation.julink.common.media.MediaUploadService.ImageVariant;
 import com.graduation.julink.common.media.MediaUploadService.MediaUploadRequest;
+import com.graduation.julink.post.PostRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,13 +29,14 @@ class ProfileServiceImplementation implements ProfileService {
     private final ProfileMapper ProfileMapper;
     private final MediaUploadService mediaUploadService;
     private final BlockService blockService;
+    private final PostRepository postRepository;
 
     @Override
     public ProfileDTOs.UserProfile getProfileByEmail(String email) {
         AuthEntities.User user = authRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found for the provided token"));
 
-        return ProfileMapper.toDTO(user);
+        return toProfileDTO(user);
     }
 
     @Override
@@ -46,7 +48,7 @@ class ProfileServiceImplementation implements ProfileService {
 
         blockService.assertNotBlocked(currentUser.getId(), user.getId());
 
-        return ProfileMapper.toDTO(user);
+        return toProfileDTO(user);
     }
 
     @Override
@@ -82,7 +84,7 @@ class ProfileServiceImplementation implements ProfileService {
             user.setThemePreference(dto.themePreference());
         }
         authRepository.save(user);
-        return ProfileMapper.toDTO(user);
+        return toProfileDTO(user);
     }
 
     @Override
@@ -153,5 +155,10 @@ class ProfileServiceImplementation implements ProfileService {
         } catch (IOException e) {
             throw new RuntimeException("Profile image upload failed", e);
         }
+    }
+
+    private ProfileDTOs.UserProfile toProfileDTO(AuthEntities.User user) {
+        long postsNumber = postRepository.countByOwner_Id(user.getId());
+        return ProfileMapper.toDTO(user, postsNumber);
     }
 }

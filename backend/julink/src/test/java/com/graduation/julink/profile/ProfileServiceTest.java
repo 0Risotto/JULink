@@ -5,6 +5,7 @@ import com.graduation.julink.auth.Repository.AuthRepository;
 import com.graduation.julink.auth.ThemePreference;
 import com.graduation.julink.block.BlockService;
 import com.graduation.julink.common.media.MediaUploadService;
+import com.graduation.julink.post.PostRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +34,9 @@ class ProfileServiceTest {
     @Mock
     private BlockService blockService;
 
+    @Mock
+    private PostRepository postRepository;
+
     @InjectMocks
     private ProfileServiceImplementation profileService;
 
@@ -42,6 +46,7 @@ class ProfileServiceTest {
     @BeforeEach
     void setUp() {
         user = new User();
+        user.setId(1L);
         user.setEmail(email);
         user.setUsername("testuser");
         user.setFirstName("Test");
@@ -51,13 +56,16 @@ class ProfileServiceTest {
     @Test
     void getProfileByEmail_Success() {
         when(authRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        ProfileDTOs.UserProfile profile = new ProfileDTOs.UserProfile("testuser", "Test", "User", "KASIT", null, null, null, java.util.Collections.emptyList(), java.util.Collections.emptyList(), 0);
-        when(profileMapper.toDTO(user)).thenReturn(profile);
+        when(postRepository.countByOwner_Id(user.getId())).thenReturn(3L);
+        ProfileDTOs.UserProfile profile = new ProfileDTOs.UserProfile("testuser", "Test", "User", "KASIT", null, null, null, java.util.Collections.emptyList(), java.util.Collections.emptyList(), 3);
+        when(profileMapper.toDTO(user, 3L)).thenReturn(profile);
 
         ProfileDTOs.UserProfile result = profileService.getProfileByEmail(email);
 
         assertNotNull(result);
         assertEquals("testuser", result.username());
+        assertEquals(3, result.postsNumber());
+        verify(postRepository).countByOwner_Id(user.getId());
     }
 
     @Test
@@ -73,29 +81,35 @@ class ProfileServiceTest {
     void getProfileByUsername_Success() {
         when(authRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(authRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
-        ProfileDTOs.UserProfile profile = new ProfileDTOs.UserProfile("testuser", "Test", "User", "KASIT", null, null, null, java.util.Collections.emptyList(), java.util.Collections.emptyList(), 0);
-        when(profileMapper.toDTO(user)).thenReturn(profile);
+        when(postRepository.countByOwner_Id(user.getId())).thenReturn(5L);
+        ProfileDTOs.UserProfile profile = new ProfileDTOs.UserProfile("testuser", "Test", "User", "KASIT", null, null, null, java.util.Collections.emptyList(), java.util.Collections.emptyList(), 5);
+        when(profileMapper.toDTO(user, 5L)).thenReturn(profile);
 
         ProfileDTOs.UserProfile result = profileService.getProfileByUsername(email, "testuser");
 
         assertNotNull(result);
         assertEquals("testuser", result.username());
+        assertEquals(5, result.postsNumber());
         verify(blockService).assertNotBlocked(user.getId(), user.getId());
+        verify(postRepository).countByOwner_Id(user.getId());
     }
 
     @Test
     void updateProfile_Success() {
         when(authRepository.findByEmail(email)).thenReturn(Optional.of(user));
         ProfileDTOs.UpdateProfile req = new ProfileDTOs.UpdateProfile("bio", "pfp", "banner", ThemePreference.DARK);
-        ProfileDTOs.UserProfile profile = new ProfileDTOs.UserProfile("testuser", "Test", "User", "KASIT", "bio", "pfp", "banner", java.util.Collections.emptyList(), java.util.Collections.emptyList(), 0);
-        when(profileMapper.toDTO(user)).thenReturn(profile);
+        when(postRepository.countByOwner_Id(user.getId())).thenReturn(2L);
+        ProfileDTOs.UserProfile profile = new ProfileDTOs.UserProfile("testuser", "Test", "User", "KASIT", "bio", "pfp", "banner", java.util.Collections.emptyList(), java.util.Collections.emptyList(), 2);
+        when(profileMapper.toDTO(user, 2L)).thenReturn(profile);
 
         ProfileDTOs.UserProfile result = profileService.updateProfile(email, req);
 
         assertNotNull(result);
+        assertEquals(2, result.postsNumber());
         assertEquals("bio", user.getBio());
         assertEquals(ThemePreference.DARK, user.getThemePreference());
         verify(authRepository, times(1)).save(user);
+        verify(postRepository).countByOwner_Id(user.getId());
     }
 
     @Test

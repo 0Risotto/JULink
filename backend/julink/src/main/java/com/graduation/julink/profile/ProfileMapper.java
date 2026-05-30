@@ -6,13 +6,13 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 
 public interface ProfileMapper {
-    ProfileDTOs.UserProfile toDTO(AuthEntities.User user);
+    ProfileDTOs.UserProfile toDTO(AuthEntities.User user, long postsNumber);
 }
 @Component
 class ProfileMapperImplementation implements ProfileMapper {
 
     @Override
-    public ProfileDTOs.UserProfile toDTO(AuthEntities.User user) {
+    public ProfileDTOs.UserProfile toDTO(AuthEntities.User user, long postsNumber) {
         return new ProfileDTOs.UserProfile(
                 user.getUsername(),
                 user.getFirstName(),
@@ -24,7 +24,7 @@ class ProfileMapperImplementation implements ProfileMapper {
                 user.getThemePreference(),
                 new ArrayList<>(),
                 new ArrayList<>(),
-                0
+                Math.toIntExact(postsNumber)
         );
     }
 }
