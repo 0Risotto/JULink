@@ -17,6 +17,7 @@ import { NavUser } from "./NavUser"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAppSelector } from "@/store/hooks"
+import AdCarousel from "@/domain/ads/components/AdCarousel"
 
 const items = [
   { title: "Home", url: "/home", icon: Home },
@@ -36,7 +37,7 @@ export function AppSidebar() {
       <SidebarHeader className="h-16 flex items-center px-4 border-b">
         <h2 className="text-2xl font-bold tracking-tight">JULink</h2>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="flex flex-col justify-between">
         <SidebarGroup>
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -64,6 +65,10 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <div className="p-4 mt-auto group-data-[state=collapsed]:hidden">
+          <AdCarousel />
+        </div>
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

@@ -5,6 +5,7 @@ import { getHomeFeed } from "../services/postServices";
 import { PostResponseDTO } from "../types";
 import FeedPost from "../components/FeedPost";
 import { Spinner } from "@/components/ui/spinner";
+import AdCarousel from "@/domain/ads/components/AdCarousel";
 
 export default function HomeFeed() {
   const [posts, setPosts] = useState<PostResponseDTO[]>([]);
@@ -64,8 +65,15 @@ export default function HomeFeed() {
           </div>
         ) : (
           <div className="flex flex-col">
-            {posts.map(post => (
-              <FeedPost key={post.postId} post={post} onPostUpdated={handlePostUpdated} onPostDeleted={handlePostDeleted} />
+            {posts.map((post, index) => (
+              <React.Fragment key={post.postId}>
+                <FeedPost post={post} onPostUpdated={handlePostUpdated} onPostDeleted={handlePostDeleted} />
+                {(index + 1) % 5 === 0 && (
+                  <div className="block md:hidden my-4 px-4">
+                    <AdCarousel />
+                  </div>
+                )}
+              </React.Fragment>
             ))}
 
             {hasMore && (

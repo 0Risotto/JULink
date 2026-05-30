@@ -32,7 +32,7 @@ export const deletePost = (postId: string) =>
 export const getUserPosts = (username: string, page = 0, size = 10) =>
   get<Page<PostResponseDTO>>(`/posts/user/${username}?page=${page}&size=${size}`);
 
-export const getHomeFeed = (page = 0, size = 10) =>
+export const getHomeFeed = (page = 0, size = 5) =>
   get<Page<PostResponseDTO>>(`/posts/feed?page=${page}&size=${size}`);
 
 export const getFavoritePosts = (page = 0, size = 10) =>
