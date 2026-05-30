@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle, Bookmark, Share, MoreHorizontal } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Share, MoreHorizontal, Flag } from "lucide-react";
 import { PostResponseDTO } from "../types";
+import ReportDialog from "@/domain/report/components/ReportDialog";
 import { toggleLike, toggleFavorite, markPostSeen, deletePost } from "../services/postServices";
 import { formatDistanceToNow } from "date-fns";
 import { useAppSelector } from "@/store/hooks";
@@ -167,9 +168,28 @@ export default function FeedPost({ post, onPostUpdated, onPostDeleted }: FeedPos
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <button className="p-2 hover:opacity-60 transition-opacity">
-               <MoreHorizontal size={20} />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2 hover:opacity-60 transition-opacity">
+                  <MoreHorizontal size={20} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <ReportDialog
+                  targetType="POST"
+                  targetId={post.postId}
+                  trigger={
+                    <DropdownMenuItem
+                      onSelect={(e) => e.preventDefault()}
+                      className="text-amber-600 dark:text-amber-500 hover:text-amber-700 cursor-pointer"
+                    >
+                      <Flag className="w-4 h-4 mr-2" />
+                      Report Post
+                    </DropdownMenuItem>
+                  }
+                />
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </CardHeader>
 

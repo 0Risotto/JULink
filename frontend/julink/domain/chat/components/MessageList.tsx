@@ -4,8 +4,9 @@ import { useEffect, useRef } from "react";
 import { MessageResponse } from "../types";
 import { format, isToday, isYesterday } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Check, CheckCheck, MoreHorizontal, Pencil, Trash2, MessageSquare } from "lucide-react";
+import { Check, CheckCheck, MoreHorizontal, Pencil, Trash2, MessageSquare, Flag } from "lucide-react";
 import MessageMedia from "./media";
+import ReportDialog from "@/domain/report/components/ReportDialog";
 import Link from "next/link";
 import { PostPreview } from "@/domain/notifications/components/PostPreview";
 import {
@@ -270,7 +271,7 @@ export default function MessageList({
                               <MoreHorizontal className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align={isMe ? "end" : "start"} className="rounded-xl min-w-[110px]">
+                          <DropdownMenuContent align="end" className="rounded-xl min-w-[110px]">
                             {msg.messageType === "TEXT" && (
                               <DropdownMenuItem onClick={() => onEditMessage?.(msg)} className="rounded-lg py-2">
                                 <Pencil className="mr-2 h-3.5 w-3.5" />
@@ -284,6 +285,33 @@ export default function MessageList({
                               <Trash2 className="mr-2 h-3.5 w-3.5" />
                               <span className="text-xs">Delete</span>
                             </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    )}
+
+                    {!isMe && !msg.deleted && (
+                      <div className="opacity-0 group-hover/msg:opacity-100 transition-opacity duration-200 shrink-0">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full hover:bg-muted/75">
+                              <MoreHorizontal className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" className="rounded-xl min-w-[115px]">
+                            <ReportDialog
+                              targetType="MESSAGE"
+                              targetId={msg.id.toString()}
+                              trigger={
+                                <DropdownMenuItem
+                                  onSelect={(e) => e.preventDefault()}
+                                  className="text-amber-600 dark:text-amber-500 hover:text-amber-700 cursor-pointer rounded-lg py-2"
+                                >
+                                  <Flag className="mr-2 h-3.5 w-3.5" />
+                                  <span className="text-xs">Report</span>
+                                </DropdownMenuItem>
+                              }
+                            />
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>

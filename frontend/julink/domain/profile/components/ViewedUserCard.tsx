@@ -20,7 +20,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, ShieldAlert } from "lucide-react";
+import { MoreHorizontal, ShieldAlert, Flag } from "lucide-react";
+import ReportDialog from "@/domain/report/components/ReportDialog";
 
 interface ViewedUserCardProps {
   user: UserProfileDTO;
@@ -128,11 +129,25 @@ export default function ViewedUserCard({ user }: ViewedUserCardProps) {
                 <DropdownMenuContent align="end" className="w-40">
                   <DropdownMenuItem
                     onClick={handleBlockUser}
-                    className="text-red-500 hover:text-red-600 cursor-pointer"
+                    className="text-red-500 hover:text-red-600 cursor-pointer border-b pb-2 mb-1"
                   >
                     <ShieldAlert className="w-4 h-4 mr-2" />
                     Block User
                   </DropdownMenuItem>
+
+                  <ReportDialog
+                    targetType="USER"
+                    targetId={user.username}
+                    trigger={
+                      <DropdownMenuItem
+                        onSelect={(e) => e.preventDefault()}
+                        className="text-amber-600 dark:text-amber-500 hover:text-amber-700 cursor-pointer"
+                      >
+                        <Flag className="w-4 h-4 mr-2" />
+                        Report User
+                      </DropdownMenuItem>
+                    }
+                  />
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

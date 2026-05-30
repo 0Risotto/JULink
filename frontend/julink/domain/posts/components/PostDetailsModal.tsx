@@ -3,8 +3,9 @@
 import React, { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Bookmark, Share, MoreHorizontal } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Share, MoreHorizontal, Flag } from "lucide-react";
 import { PostResponseDTO } from "../types";
+import ReportDialog from "@/domain/report/components/ReportDialog";
 import { toggleLike, toggleFavorite, deletePost } from "../services/postServices";
 import { formatDistanceToNow } from "date-fns";
 import { useAppSelector } from "@/store/hooks";
@@ -138,9 +139,28 @@ export default function PostDetailsModal({ post, onPostUpdated, onPostDeleted }:
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-               <MoreHorizontal size={20} />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                   <MoreHorizontal size={20} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <ReportDialog
+                  targetType="POST"
+                  targetId={post.postId}
+                  trigger={
+                    <DropdownMenuItem
+                      onSelect={(e) => e.preventDefault()}
+                      className="text-amber-600 dark:text-amber-500 hover:text-amber-700 cursor-pointer"
+                    >
+                      <Flag className="w-4 h-4 mr-2" />
+                      Report Post
+                    </DropdownMenuItem>
+                  }
+                />
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
 
