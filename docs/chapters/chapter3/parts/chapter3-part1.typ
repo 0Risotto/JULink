@@ -13,19 +13,22 @@
 
 == Stakeholders
 
-@Stakeholders_list shows the Stakeholders of the project
+The primary stakeholders interacting with the JULink platform have been consolidated to reflect the final implementation and authorization boundaries. These stakeholders are outlined in @stakeholders_list.
+
 #figure(
   caption: [Stakeholders list],
- table(
-  columns: 3,
-  [ST ID],[Stake holder],[Note],
-  [ST1],[Active Users],[Active users are users who usually post /
-interact with posts],
-  [ST2],[Passive Users],[Passive users are users who rarely interact
-with software they mainly view content],
-  [ST3],[Tech specialist],[Admins who have access to the DB and
-deletion on it ],
-  [ST4],[Ad providers],[External system that shows ads on our web
-application and pays us per views and clicks],
-) 
-) <Stakeholders_list>
+  table(
+    columns: (auto, auto, 1fr),
+    
+    [*ST ID*], [*Stakeholder*], [*Description*],
+
+    [ST1], [User], 
+    [A registered member of the university (student, faculty, or staff) who utilizes the platform to create content, engage with peers, manage their profile, and communicate via real-time chat.],
+    
+    [ST2], [Tech Specialist / Admin], 
+    [System administrators who have elevated access to the database and backend systems. They are responsible for platform maintenance, handling escalated reports, and enforcing content moderation.],
+    
+    [ST3], [Ad Provider], 
+    [External systems or integrated partners that supply advertising content dynamically displayed on user feeds.]
+  )
+) <stakeholders_list>
