@@ -238,7 +238,7 @@
 // ---------------------------------------------------------------------------------
 #figure(
   caption: [Delete Account use case diagram],
-  image("../../../assets/Use case diagrams/1-10/Delete Account use case diagram.svg"),
+  image("../../../assets/Use case diagrams/1-10/Delete account use case diagram.svg"),
 )
 #figure(
   caption: [Delete Account use case scenario],
@@ -439,7 +439,7 @@
 // ---------------------------------------------------------------------------------
 #figure(
   caption: [Toggle Follow Status use case diagram],
-  image("../../../assets/Use case diagrams/11-20/Toggle Follow Status use case diagram.svg"),
+  image("../../../assets/Use case diagrams/11-20/Toggle Follow use case diagram.svg"),
 )
 #figure(
   caption: [Toggle Follow Status use case scenario],
@@ -489,7 +489,7 @@
 // ---------------------------------------------------------------------------------
 #figure(
   caption: [View Mutual Connections use case diagram],
-  image("../../../assets/Use case diagrams/11-20/View Mutual Connections use case diagram.svg"),
+  image("../../../assets/Use case diagrams/11-20/View Mutual connections use case diagram.svg"),
 )
 #figure(
   caption: [View Mutual Connections use case scenario],
@@ -1240,7 +1240,7 @@
 // ---------------------------------------------------------------------------------
 #figure(
   caption: [Display Ads on Feed use case diagram],
-  image("../../../assets/Use case diagrams/41-50/Display Ads on Feed use case diagram.svg"),
+  image("../../../assets/Use case diagrams/41-50/Clickable ads and Display ads on feed.svg"),
 )
 #figure(
   caption: [Display Ads on Feed use case scenario],
@@ -1264,10 +1264,12 @@
 )
 #pagebreak()
 // ---------------------------------------------------------------------------------
-#figure(
-  caption: [Clickable Ads use case diagram],
-  image("../../../assets/Use case diagrams/41-50/Clickable Ads use case diagram.svg"),
-)
+
+// TODO: LOOK INTO IT
+//#figure(
+ // caption: [Clickable Ads use case diagram],
+  //image("../../../assets/Use case diagrams/41-50/Clickable Ads use case diagram.svg"),
+//)
 #figure(
   caption: [Clickable Ads use case scenario],
   table(
@@ -1459,7 +1461,7 @@
 )
 #figure(
   caption: [Discover via Hashtags (Search) sequence diagram],
-  image("../../../assets/Sequence diagrams/51-60/Discover via Hashtags (Search) sequence diagram.svg"),
+  image("../../../assets/Sequence diagrams/51-60/Discover via Hashtags sequence diagram.svg"),
 )
 #pagebreak()
 // ---------------------------------------------------------------------------------
@@ -2347,7 +2349,7 @@
 )
 #figure(
   caption: [Submit Report Reason sequence diagram],
-  image("../../../assets/Sequence diagrams/91-99/Submit Report Reason sequence diagram.svg"),
+  image("../../../assets/Sequence diagrams/91-99/Submit Report Reason sequece diagram.svg"),
 )
 #pagebreak()
 // ---------------------------------------------------------------------------------
