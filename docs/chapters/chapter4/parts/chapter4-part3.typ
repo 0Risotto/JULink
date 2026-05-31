@@ -439,7 +439,7 @@
 // ---------------------------------------------------------------------------------
 #figure(
   caption: [Toggle Follow Status use case diagram],
-  image("../../../assets/Use case diagrams/11-20/Toggle Follow use case diagram.svg"),
+  image("../../../assets/Use case diagrams/11-20/Toggle Follow Status use case diagram.svg"),
 )
 #figure(
   caption: [Toggle Follow Status use case scenario],
@@ -1239,7 +1239,7 @@
 #pagebreak()
 // ---------------------------------------------------------------------------------
 #figure(
-  caption: [Display Ads on Feed use case diagram],
+  caption: [Clickable ads and Display ads on feed use case diagram],
   image("../../../assets/Use case diagrams/41-50/Clickable ads and Display ads on feed.svg"),
 )
 #figure(
@@ -1259,18 +1259,6 @@
   ),
 )
 #figure(
-  caption: [Display Ads on Feed sequence diagram],
-  image("../../../assets/Sequence diagrams/41-50/Display Ads on Feed sequence diagram.svg"),
-)
-#pagebreak()
-// ---------------------------------------------------------------------------------
-
-// TODO: LOOK INTO IT
-//#figure(
- // caption: [Clickable Ads use case diagram],
-  //image("../../../assets/Use case diagrams/41-50/Clickable Ads use case diagram.svg"),
-//)
-#figure(
   caption: [Clickable Ads use case scenario],
   table(
     columns: 2,
@@ -1285,10 +1273,18 @@
     [*Not implemented in the current backend:* no Advertising context exists; documents the specified behavior only.],
   ),
 )
+
 #figure(
+  caption: [Display Ads on Feed sequence diagram],
+  image("../../../assets/Sequence diagrams/41-50/Display Ads on Feed sequence diagram.svg"),
+)
+
+figure(
   caption: [Clickable Ads sequence diagram],
   image("../../../assets/Sequence diagrams/41-50/Clickable Ads sequence diagram.svg"),
 )
+
+
 #pagebreak()
 // ---------------------------------------------------------------------------------
 #figure(

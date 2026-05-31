@@ -41,7 +41,7 @@ The functional requirements are shown in @Requirements_list
 
     [FR 8], [Log Out of Session], [The user shall be able to securely terminate their active session via the navigation menu. The system must invalidate the user's authentication token and instantly redirect them to the public login screen.], [ST1], [5], [3],
 
-    [FR 9], [Delete Account], [The user shall have the ability to permanently delete their account. The system must ensure a complete removal of the user's presence from the platform, including their profile data, posts, comments, media, and private messages.], [ST1, ST2], [5], [3],
+    [FR 9], [Delete Account], [The user shall have the ability to permanently delete their account. The system must ensure a complete removal of the user's presence from the platform, including their profile data, posts, comments, media, and private messages.], [ST1], [5], [3],
 
     [FR 10], [View Own Profile], [The user shall be able to view their personal profile page, which displays their profile picture, banner photo, full name, college, biography, total post count, and follower/following statistics.], [ST1], [5], [2],
 
