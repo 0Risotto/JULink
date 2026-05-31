@@ -17,7 +17,7 @@
 #show raw.where(block: true): set par(justify: false)
 
 
-== Project Implementation
+= Project Implementation
 
 This chapter presents and explains the key sections of the JULink source code that
 illustrate the system's core functionality. JULink is implemented as a *Spring Boot*
@@ -30,7 +30,7 @@ and live notifications) are delivered over *STOMP WebSocket*, authentication is 
 using *JWT*, and media is hosted on *Cloudinary*. The listings below quote the actual
 implementation of the most representative features.
 
-=== Account Creation, Email Verification, and Stateless Sessions
+== Account Creation, Email Verification, and Stateless Sessions
 
 Registration is the entry point to the platform and ties three subsystems together. The
 `createUser` method validates the request (enforcing the `@ju.edu.jo` university-email
@@ -119,7 +119,7 @@ public String generateToken(Authentication authentication) {
 ```
 ]
 
-=== The Social Graph and Built-in Privacy (Neo4j)
+== The Social Graph and Built-in Privacy (Neo4j)
 
 Follow relationships are modelled as a property graph in Neo4j, where every relationship
 query is *block-aware*: a `FOLLOWS` edge is only created or traversed when no `BLOCKED`
@@ -162,7 +162,7 @@ LIMIT $limit
 ```
 ]
 
-=== Blocking that Severs Relationships in Both Directions
+== Blocking that Severs Relationships in Both Directions
 
 Blocking is a transactional operation spanning both databases. It rejects self-blocks,
 persists the block record in PostgreSQL (idempotently, tolerating a concurrent duplicate),
@@ -200,7 +200,7 @@ public void block(String blockerUsername, String blockedUsername) {
 ```
 ]
 
-=== Forgiving, Privacy-Aware Search
+== Forgiving, Privacy-Aware Search
 
 Global search is implemented as a PostgreSQL native query. It tolerates partial input and
 spelling mistakes by combining case-insensitive substring matching for filtering with the
@@ -241,7 +241,7 @@ ORDER BY GREATEST(
 ```
 ]
 
-=== Real-Time Messaging over WebSocket
+== Real-Time Messaging over WebSocket
 
 Chat is delivered over STOMP WebSocket. The controller exposes message-application
 destinations (`/app/chat.send`, `/app/chat.typing`, `/app/chat.read`) and delegates to the
@@ -315,7 +315,7 @@ public ConversationResponse getOrCreateDM(String requesterUsername, CreateDMRequ
 ```
 ]
 
-=== Real-Time Calls and Unanswered-Call Handling
+== Real-Time Calls and Unanswered-Call Handling
 
 Calls are created in a `RINGING` state and signalled to participants over WebSocket. A
 scheduled task runs every 15 seconds and automatically expires calls that ring past their
@@ -348,7 +348,7 @@ public void expireRingingCalls(LocalDateTime now) {
 ```
 ]
 
-=== Centralised Notification Dispatch
+== Centralised Notification Dispatch
 
 All cross-context alerts flow through one `notifyUser` method. It enforces three
 safeguards in one place — it never notifies a user about their own action, it suppresses
@@ -405,7 +405,7 @@ public Page<NotificationResponse> getUnreadNotifications(String email, Pageable 
 ```
 ]
 
-=== Localised Lost & Found Alerts
+== Localised Lost & Found Alerts
 
 When a lost or found item is posted, the system proactively alerts every student in the
 same college. This reuses the bulk notification dispatch and is deliberately wrapped so a
@@ -435,7 +435,7 @@ private void notifySameCollegeUsers(LostAndFound lostAndFound, User owner) {
 ```
 ]
 
-=== The Shared Media Pipeline
+== The Shared Media Pipeline
 
 Profile pictures, banners, post galleries, and chat attachments all flow through a single
 `MediaUploadService`. It validates the upload, normalises and resizes images to bound their
@@ -470,7 +470,7 @@ public MediaUploadResult upload(MediaUploadRequest request) throws IOException, 
 ```
 ]
 
-=== Summary
+== Summary
 
 The listings above trace JULink's core functionality end to end: a verified,
 university-only identity (Listings 5.1–5.3); a privacy-first social graph in which the

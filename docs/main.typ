@@ -111,7 +111,8 @@
 #include "chapters/chapter2/chapter2.typ"
 #include "chapters/chapter3/chapter3.typ"
 #include "chapters/chapter4/chapter4.typ"
+#include "chapters/chapter5/chapter5.typ"
+#include "chapters/chapter6/chapter6.typ"
 #include "References/References.typ"
 #include "Appendices/Appendices.typ"
 
-// #include "chapters/chapter6/unitTesting.typ"

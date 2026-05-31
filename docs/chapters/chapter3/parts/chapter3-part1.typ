@@ -25,7 +25,7 @@ The primary stakeholders interacting with the JULink platform have been consolid
     [ST1], [User], 
     [A registered member of the university (student, faculty, or staff) who utilizes the platform to create content, engage with peers, manage their profile, and communicate via real-time chat.],
     
-    [ST2], [Tech Specialist / Admin], 
+    [ST2], [Administrator], 
     [System administrators who have elevated access to the database and backend systems. They are responsible for platform maintenance, handling escalated reports, and enforcing content moderation.],
     
     [ST3], [Ad Provider], 

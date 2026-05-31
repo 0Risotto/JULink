@@ -24,35 +24,29 @@ The domain requirements are presented in @DR_list
     [
       All users should belong to the
       University of Jordan either as
-      students, faculty, or staff
+      students, faculty, or staff.
     ],
     [
-      The system requires all users to have
-      an email that ends with \@ju.edu.jo
+      The system requires all users to register
+      with an email that ends with \@ju.edu.jo;
+      this is validated at registration and the
+      address must be confirmed via an email OTP.
     ],
 
     [DR 2],
     [
       All content must comply with the
       University of Jordan code of ethics
-      and conduct
+      and conduct.
     ],
     [
-      An AI solution will be implemented to
-      make sure all posts comply with the
-      University of Jordan code of conduct
-    ],
-
-    [DR 3],
-    [
-      JU Link official language is the
-      English language
-    ],
-    [
-      All operation in the app will be in the
-      English language as the primary language,
-      with possibility for Arabic language as a
-      second language
+      Uploaded images are screened automatically by
+      Cloudinary's image moderation: an image flagged
+      as inappropriate is rejected and never attached,
+      so the post is published with its text only.
+      Users can also report posts, profiles, messages,
+      and ads, which are escalated to administrators
+      for review.
     ],
   )
 )<DR_list>
