@@ -1,4 +1,4 @@
-export type ReportTargetType = "USER" | "POST" | "MESSAGE";
+export type ReportTargetType = "USER" | "POST" | "MESSAGE" | "AD";
 
 export interface ReportRequest {
   targetType: ReportTargetType;

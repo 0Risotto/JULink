@@ -119,6 +119,8 @@ export default function ReportDialog({ targetType, targetId, trigger }: ReportDi
         return "post";
       case "MESSAGE":
         return "message";
+      case "AD":
+        return "advertisement";
       default:
         return "item";
     }

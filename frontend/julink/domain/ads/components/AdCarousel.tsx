@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Coffee, Code, Sparkles, BookOpen, Briefcase, ExternalLink, ArrowRight } from "lucide-react";
+import { Coffee, Code, Sparkles, BookOpen, Briefcase, ExternalLink, ArrowRight, Flag } from "lucide-react";
 import { MOCK_ADS } from "../constants";
 import { cn } from "@/lib/utils";
+import ReportDialog from "@/domain/report/components/ReportDialog";
 
 interface AdCarouselProps {
   className?: string;
@@ -84,9 +85,26 @@ export default function AdCarousel({ className, autoPlayInterval = 4000 }: AdCar
           <div className="p-2 rounded-lg bg-white/10 backdrop-blur-sm border border-white/10">
             {getIcon(currentAd.iconName)}
           </div>
-          <span className="text-[10px] uppercase tracking-wider font-bold text-white/60 bg-black/25 px-2 py-0.5 rounded-full">
-            Sponsored
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] uppercase tracking-wider font-bold text-white/60 bg-black/25 px-2 py-0.5 rounded-full">
+              Sponsored
+            </span>
+            <ReportDialog
+              targetType="AD"
+              targetId={currentAd.id}
+              trigger={
+                <button 
+                  className="p-1 rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-all cursor-pointer"
+                  title="Report Ad"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  <Flag className="h-3.5 w-3.5" />
+                </button>
+              }
+            />
+          </div>
         </div>
 
         {/* Body: Title & Description */}
