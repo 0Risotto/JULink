@@ -1,5 +1,6 @@
 #let chapter-number = 6
-
+#counter(figure.where(kind: image)).update(0)
+#counter(figure.where(kind: table)).update(0)
 #show figure.where(kind: table): set figure(
   numbering: n => str(chapter-number) + "." + str(n),
 )
@@ -180,3 +181,6 @@ a five-fold traffic spike within the target window. The exercise also confirmed
 the expected hotspots — CPU-bound login hashing, network-bound media upload, and
 broker-bound real-time delivery — which gives clear, prioritised targets for
 future capacity planning and horizontal scaling.
+
+
+#pagebreak()

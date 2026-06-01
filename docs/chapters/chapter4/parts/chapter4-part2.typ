@@ -1,5 +1,7 @@
-#pagebreak()
-
+#let chapter-number = 4
+#show figure.where(kind: image): set figure(
+  numbering: n => str(chapter-number) + "." + str(n),
+)
 == Class diagram
 
 #figure(

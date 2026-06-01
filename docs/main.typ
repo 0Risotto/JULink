@@ -34,7 +34,7 @@
 #align(center)[
   #text(size: 22pt)[Graduation Project]
   #v(2em)
-  #text(size: 16pt)[Supervised by: Prof. Amjad Hudaib and Dr. Israa AlZghoul]
+  #text(size: 16pt)[Supervised by: Prof. Amjad Hudaib and Dr. Esra AlZaghoul]
 ]
 #place(bottom + center)[
   #move(dy: -1cm)[
@@ -69,16 +69,18 @@
     #v(0.5em)
     #text(size: 24pt)[Fall Semester 2025/2026]
   ]
-
+#scale(x: 8cm, y: 3cm)[
   #table(
     fill: (coloum, row) => if row == 0 { rgb("#0657B5") } else if coloum == 0 { rgb(white) },
     columns: 2,
     stroke: black,
-    [Student Name], [Student ID],
+
+    [*Student Name*], [*Student ID*],
     [Anas AL-Jallad], [0225343],
     [Ahmad AlManasrah], [0227255],
     [Anas AlRao'sh], [2222312],
   )
+]
 ]
 #set heading(numbering: "1.")
 #show heading: set block(spacing: 1em)
@@ -113,6 +115,6 @@
 #include "chapters/chapter4/chapter4.typ"
 #include "chapters/chapter5/chapter5.typ"
 #include "chapters/chapter6/chapter6.typ"
+#include "chapters/chapter7/chapter7.typ"
 #include "References/References.typ"
 #include "Appendices/Appendices.typ"
-
