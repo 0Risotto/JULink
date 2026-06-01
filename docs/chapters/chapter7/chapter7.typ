@@ -250,7 +250,7 @@ Clicking your name at the bottom of the navigation menu opens your personal *Pro
   image(shot("profile-add-post.jpeg"), width: 100%),
 )<um_profile_add_post>
 
-Just like on the home feed, you can click on any post on your profile to open it in expanded view (@um_profile_post_expand). Use the tabs on your profile to switch between viewing your public *Posts*, items you have *Reposted*, and your private *Saved* bookmarks (@um_profile_saved).
+Just like on the home feed, you can click on any post on your profile to open it in expanded view (@um_profile_post_expand). Use the tabs on your profile to switch between viewing your public *Posts* and your private *Saved* posts (@um_profile_saved).
 
 #figure(
   caption: [Expanding a post from your profile],
@@ -284,3 +284,5 @@ To securely exit the platform, click the arrows next to your name at the bottom 
   caption: [Logging out of your account],
   image(shot("logout-nav.png"), width: 100%),
 )<um_logout>
+
+#pagebreak()

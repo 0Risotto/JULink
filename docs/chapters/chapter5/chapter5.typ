@@ -1,8 +1,15 @@
 #let chapter-number = 5
 
+#counter(figure.where(kind: image)).update(0)
+
+
 #show figure.where(kind: image): set figure(
   numbering: n => str(chapter-number) + "." + str(n),
 )
+#show figure.where(
+  kind: table,
+): set figure.caption(position: top)
+
 #show figure.where(kind: table): set figure(
   numbering: n => str(chapter-number) + "." + str(n),
 )
@@ -481,3 +488,5 @@ discovery (Listing 5.7); real-time, mutual-friend-gated communication and callin
 the domain-driven structure keeps each concern isolated while cross-cutting rules —
 authentication, blocking, and notification — are centralised so they apply consistently
 across the whole platform.
+
+#pagebreak()
