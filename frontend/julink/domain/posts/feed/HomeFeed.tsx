@@ -6,6 +6,7 @@ import { PostResponseDTO } from "../types";
 import FeedPost from "../components/FeedPost";
 import { Spinner } from "@/components/ui/spinner";
 import AdCarousel from "@/domain/ads/components/AdCarousel";
+import FriendSuggestionsPanel from "@/domain/friendsseggustions/components/FriendSuggestionsPanel";
 
 export default function HomeFeed() {
   const [posts, setPosts] = useState<PostResponseDTO[]>([]);
@@ -94,6 +95,7 @@ export default function HomeFeed() {
             {posts.map((post, index) => (
               <React.Fragment key={post.postId}>
                 <FeedPost post={post} onPostUpdated={handlePostUpdated} onPostDeleted={handlePostDeleted} />
+                {index === 9 && <FriendSuggestionsPanel />}
                 {(index + 1) % 5 === 0 && (
                   <div className="block md:hidden my-4 px-4">
                     <AdCarousel />

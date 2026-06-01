@@ -7,6 +7,7 @@ import HashtagSearchItem from "@/domain/search/components/HashtagSearchItem";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search as SearchIcon, Loader2 } from "lucide-react";
+import FriendSuggestionsPanel from "@/domain/friendsseggustions/components/FriendSuggestionsPanel";
 
 export default function SearchPage() {
   const {
@@ -30,13 +31,17 @@ export default function SearchPage() {
   ];
 
   return (
-    <div className="max-w-2xl mx-auto w-full p-4 md:p-8 flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
+    <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-6 p-4 md:p-8 lg:grid-cols-[minmax(0,42rem)_280px] lg:items-start lg:justify-center">
+      <div className="flex flex-col gap-2 lg:col-start-1">
         <h1 className="text-3xl font-bold">Search</h1>
         <p className="text-muted-foreground">Find users, posts, and hashtags.</p>
       </div>
 
-      <div className="relative">
+      <div className="hidden lg:sticky lg:top-20 lg:col-start-2 lg:row-start-1 lg:row-span-4 lg:block">
+        <FriendSuggestionsPanel variant="search" />
+      </div>
+
+      <div className="relative lg:col-start-1">
         <SearchIcon className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
         <Input
           placeholder="Search..."
@@ -46,7 +51,7 @@ export default function SearchPage() {
         />
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-2 border-b">
+      <div className="flex gap-2 overflow-x-auto pb-2 border-b lg:col-start-1">
         {tabs.map((tab) => (
           <Button
             key={tab.value}
@@ -59,7 +64,7 @@ export default function SearchPage() {
         ))}
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 lg:col-start-1">
         {loading && (
           <div className="flex justify-center p-8">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
