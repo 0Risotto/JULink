@@ -22,7 +22,7 @@ export interface AttachmentResponseDTO {
 
 export interface PostResponseDTO {
   postId: string;
-  ownerId: number;
+  ownerId: string;
   ownerUsername: string;
   ownerFirstName: string;
   ownerLastName: string;
@@ -32,6 +32,7 @@ export interface PostResponseDTO {
   hashtags: string[];
   likesCount: number;
   commentsCount: number;
+  favoritesCount: number;
   likedByCurrentUser: boolean;
   favoritedByCurrentUser: boolean;
   seenByCurrentUser: boolean;
@@ -62,12 +63,15 @@ export interface UpdateCommentDTO {
 
 export interface CommentResponseDTO {
   commentId: string;
-  userId: number;
+  postId: string;
+  userId: string;
   username: string;
   firstName: string;
   lastName: string;
   profilePictureUrl?: string;
   content: string;
+  parentCommentId?: string | null;
+  replyCount: number;
   likesCount: number;
   likedByCurrentUser: boolean;
   createdAt?: string;
@@ -95,13 +99,13 @@ export interface PostMediaUploadResponseDTO {
 
 export interface Page<T> {
   content: T[];
-  pageable: any;
+  pageable: unknown;
   totalElements: number;
   totalPages: number;
   last: boolean;
   size: number;
   number: number;
-  sort: any;
+  sort: unknown;
   first: boolean;
   numberOfElements: number;
   empty: boolean;

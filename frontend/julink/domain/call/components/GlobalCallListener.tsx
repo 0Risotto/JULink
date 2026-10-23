@@ -1,9 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Client } from "@stomp/stompjs";
-import { useAppSelector } from "@/store/hooks";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Phone } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -12,9 +9,9 @@ import { useUser } from "@/domain/profile/hooks/useUser";
 import { getUserProfile } from "@/domain/profile/services/profileServices";
 import { UserProfileDTO } from "@/domain/profile/types";
 import { JitsiMeetingComponent } from "./JitsiMeetingComponent";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CardAction } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import * as chatApi from "@/domain/chat/api/chatApi";
-import { getWsBaseUrl } from "@/util/api/axios";
+import { getWsBaseUrl, getWsTicket } from "@/util/api/axios";
 
 export function GlobalCallListener() {
   const { myUsername, loadMyUsername } = useUser();
@@ -31,8 +28,6 @@ export function GlobalCallListener() {
   const [isDragging, setIsDragging] = useState(false);
   const dragStartPos = useRef({ x: 0, y: 0 });
 
-  const stompClientRef = useRef<Client | null>(null);
-  const router = useRouter();
 
   // Drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -74,103 +69,95 @@ export function GlobalCallListener() {
   }, [isDragging]);
 
   useEffect(() => {
-    // Only connect if user is logged in
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token) return;
-
-    // Fetch username if missing so that we can match incoming calls
     if (!myUsername) {
       loadMyUsername().catch(console.error);
-      return; // Wait for username to load before connecting
+      return;
     }
 
-    const client = new Client({
-      brokerURL: `${getWsBaseUrl()}/ws`,
-      connectHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-      debug: (str) => {
-        // console.log(str);
-      },
-      reconnectDelay: 5000,
-      onConnect: () => {
-        console.log("Connected to STOMP server globally");
+    let closed = false;
+    let socket: WebSocket | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
-        // Subscribe to user's specific video-calls queue
-        client.subscribe(`/queue/video-calls/${myUsername}`, (message) => {
+    const connect = async () => {
+      try {
+        const { ticket } = await getWsTicket();
+        if (closed) return;
+
+        socket = new WebSocket(
+          `${getWsBaseUrl()}/ws?ticket=${encodeURIComponent(ticket)}`,
+        );
+
+        socket.onmessage = (event) => {
           try {
-            const payload = JSON.parse(message.body);
-            if (payload.type === "CALL_INVITED") {
-              const isGroup = payload.scope === "GROUP";
-              console.log(`Received a ${isGroup ? "group " : ""}call payload for:`, payload.targetUsername, "from:", payload.callerUsername);
-              
-              // Check if the current user is the caller (to join the room they just initiated)
-              if (payload.callerUsername === myUsername) {
-                console.log(`[Outgoing Call] You initiated a call to ${payload.targetUsername}. Joining room...`);
-                const roomName = payload.videoUrl.split("/").pop() as string;
-                const callType = sessionStorage.getItem("callType") || "video";
-                setActiveCall({ roomName, isVideoCall: callType === "video" });
-                setIsMinimized(false);
-                if (payload.callId) {
-                  sessionStorage.setItem("activeCallId", payload.callId);
-                }
-              } 
-              // Check if the call is for the current user
-              else if (payload.targetUsername === myUsername) {
-                console.log(`[Incoming Call] You are being called by ${payload.callerUsername}!`);
-                
-                // Fetch caller profile info
-                getUserProfile(payload.callerUsername)
-                  .then((res) => {
-                    if (res.user) {
-                      setCallerProfile(res.user);
-                    }
-                  })
-                  .catch((err) => {
-                    console.error("Failed to load caller profile", err);
+            const frame = JSON.parse(event.data as string);
+            const call = frame?.call;
+            if (!call) return;
+
+            const participants: Array<{
+              username: string;
+              role: string;
+              status: string;
+            }> = call.participants || [];
+            const me = participants.find((p) => p.username === myUsername);
+            const caller = participants.find((p) => p.role === "caller");
+
+            if (frame.type === "session.created" || frame.type === "session.updated") {
+              if (call.status === "ringing") {
+                if (me?.role === "caller") {
+                  setActiveCall({
+                    roomName: call.room_name,
+                    isVideoCall: call.call_type === "video",
                   });
-
-                setIncomingCall({
-                  callerUsername: isGroup ? `${payload.callerUsername} (Group: ${payload.groupName})` : payload.callerUsername,
-                  videoUrl: payload.videoUrl,
-                });
-                setIsIncomingMinimized(false);
-                if (audioRef.current) {
-                  audioRef.current.currentTime = 0;
-                  audioRef.current.play().catch(console.error);
+                  setIsMinimized(false);
+                  sessionStorage.setItem("activeCallId", call.id);
+                } else if (me?.status === "invited") {
+                  if (caller?.username) {
+                    getUserProfile(caller.username)
+                      .then((res) => {
+                        if (res.user) setCallerProfile(res.user);
+                      })
+                      .catch(console.error);
+                  }
+                  setIncomingCall({
+                    callerUsername: caller?.username || "Unknown",
+                    videoUrl: call.jitsi_url,
+                  });
+                  setIsIncomingMinimized(false);
+                  sessionStorage.setItem("activeCallId", call.id);
+                  if (audioRef.current) {
+                    audioRef.current.currentTime = 0;
+                    audioRef.current.play().catch(console.error);
+                  }
                 }
-                if (payload.callId) {
-                  sessionStorage.setItem("activeCallId", payload.callId);
-                }
+              } else if (["declined", "cancelled", "ended"].includes(call.status)) {
+                stopRingtone();
+                setIncomingCall(null);
+                setCallerProfile(null);
+                setActiveCall(null);
+                sessionStorage.removeItem("activeCallId");
               }
-            } else if (
-              payload.type === "CALL_DECLINED" ||
-              payload.type === "CALL_CANCELLED" ||
-              payload.type === "CALL_ENDED" ||
-              payload.type === "CALL_MISSED"
-            ) {
-              console.log(`[Call Closed Event] Type: ${payload.type}`);
-              stopRingtone();
-              setIncomingCall(null);
-              setCallerProfile(null);
-              setActiveCall(null);
-              sessionStorage.removeItem("activeCallId");
             }
-          } catch (e) {
-            console.error("Error parsing video call message", e);
+          } catch (error) {
+            console.error("Error parsing call event", error);
           }
-        });
-      },
-      onStompError: (frame) => {
-        console.error("STOMP error:", frame.headers["message"]);
-      },
-    });
+        };
 
-    stompClientRef.current = client;
-    client.activate();
+        socket.onclose = () => {
+          if (!closed) reconnectTimer = setTimeout(connect, 3000);
+        };
+        socket.onerror = () => socket?.close();
+      } catch (error) {
+        console.error("Could not open call socket", error);
+        if (!closed) reconnectTimer = setTimeout(connect, 3000);
+      }
+    };
+
+    connect();
 
     return () => {
-      client.deactivate();
+      closed = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      socket?.close();
     };
   }, [myUsername]);
 

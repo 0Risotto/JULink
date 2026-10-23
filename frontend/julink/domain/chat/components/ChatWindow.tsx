@@ -16,9 +16,9 @@ import { MessageResponse } from "../types";
 import GroupSettingsDialog from "./GroupSettingsDialog";
 
 interface ChatWindowProps {
-  onSendMessage: (conversationId: number, content: string) => void;
-  onSendTyping: (conversationId: number, isTyping: boolean) => void;
-  onMarkRead: (conversationId: number, lastMessageId: number) => void;
+  onSendMessage: (conversationId: string, content: string) => void;
+  onSendTyping: (conversationId: string, isTyping: boolean) => void;
+  onMarkRead: (conversationId: string, lastMessageId: string) => void;
   onInitiateCall: (friendUsername: string) => void;
 }
 

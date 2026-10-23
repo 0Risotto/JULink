@@ -1,0 +1,64 @@
+pipeline {
+    agent {
+        docker {
+            image 'rust:1.99-slim'
+            args '-u root'
+        }
+    }
+
+    options {
+        timeout(time: 45, unit: 'MINUTES')
+        disableConcurrentBuilds()
+    }
+
+    environment {
+        CARGO_TERM_COLOR = 'always'
+    }
+
+    stages {
+        stage('Format') {
+            steps {
+                sh 'cargo fmt --all -- --check'
+            }
+        }
+
+        stage('Clippy') {
+            steps {
+                sh 'cargo clippy --workspace --all-targets --locked -- -D warnings'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'cargo test --workspace --locked'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'cargo build --workspace --locked'
+            }
+        }
+
+        // Image publishing needs Docker available in the Jenkins agent.
+        // Enable once the deployment target is wired up.
+        // stage('Images') {
+        //     when { branch 'main' }
+        //     steps {
+        //         sh '''
+        //             for svc in gateway identity social content feed search \
+        //                        messaging realtime calls community notifications; do
+        //                 docker build --build-arg SERVICE="julink-$svc" \
+        //                     -t "julink/$svc:${GIT_COMMIT}" .
+        //             done
+        //         '''
+        //     }
+        // }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}

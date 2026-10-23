@@ -33,7 +33,7 @@ export const useRegister = () => {
   const sendOtp = useCallback(
     async (email: string) => {
       const resultAction = await dispatch(sendOtpThunk(email));
-      return registerUserThunk.fulfilled.match(resultAction);
+      return sendOtpThunk.fulfilled.match(resultAction);
     },
     [dispatch]
   );

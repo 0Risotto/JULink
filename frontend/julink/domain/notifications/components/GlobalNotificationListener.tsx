@@ -1,19 +1,20 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { Client } from "@stomp/stompjs";
+import { useEffect } from "react";
 import { useAppDispatch } from "@/store/hooks";
 import { useUser } from "@/domain/profile/hooks/useUser";
-import { newNotificationReceived, fetchUnreadCount } from "../store/notificationSlice";
-import { getWsBaseUrl } from "@/util/api/axios";
+import {
+  fetchUnreadCount,
+  newNotificationReceived,
+} from "../store/notificationSlice";
+import { getWsBaseUrl, getWsTicket } from "@/util/api/axios";
+import { BackendNotification, mapNotification } from "../services/notificationService";
 
 export function GlobalNotificationListener() {
   const dispatch = useAppDispatch();
   const { myUsername, loadMyUsername } = useUser();
-  const stompClientRef = useRef<Client | null>(null);
 
   useEffect(() => {
-    // Request permission for native browser notifications on mount
     if (typeof window !== "undefined" && "Notification" in window) {
       if (Notification.permission === "default") {
         Notification.requestPermission().catch(console.error);
@@ -22,58 +23,71 @@ export function GlobalNotificationListener() {
   }, []);
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token) return;
-
     if (!myUsername) {
       loadMyUsername().catch(console.error);
-      return; // Wait for username to be loaded
+      return;
     }
 
-    // Load initial unread count
     dispatch(fetchUnreadCount());
 
-    const client = new Client({
-      brokerURL: `${getWsBaseUrl()}/ws`,
-      connectHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-      debug: (str) => {
-        // console.log(str);
-      },
-      reconnectDelay: 5000,
-      onConnect: () => {
-        console.log(`Connected to STOMP server globally for notifications of: ${myUsername}`);
+    let closed = false;
+    let socket: WebSocket | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
-        client.subscribe(`/topic/notifications/${myUsername}`, (message) => {
+    const connect = async () => {
+      try {
+        const { ticket } = await getWsTicket();
+        if (closed) return;
+
+        socket = new WebSocket(
+          `${getWsBaseUrl()}/ws?ticket=${encodeURIComponent(ticket)}`,
+        );
+
+        socket.onmessage = (event) => {
           try {
-            const payload = JSON.parse(message.body);
-            dispatch(newNotificationReceived(payload));
+            const frame = JSON.parse(event.data as string) as {
+              type?: string;
+              notification?: BackendNotification;
+            };
 
-            // Show native browser notification if permitted
-            if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-              new Notification("JULink Notification", {
-                body: payload.message,
-                icon: payload.actorProfilePicture || "/favicon.ico",
-              });
+            if (frame.type === "notification.created" && frame.notification) {
+              const notification = mapNotification(frame.notification);
+              dispatch(newNotificationReceived(notification));
+
+              if (
+                typeof window !== "undefined" &&
+                "Notification" in window &&
+                Notification.permission === "granted"
+              ) {
+                new Notification("JULink Notification", {
+                  body: notification.message,
+                  icon: notification.actorProfilePicture || "/favicon.ico",
+                });
+              }
             }
-          } catch (e) {
-            console.error("Error parsing notification message:", e);
+          } catch (error) {
+            console.error("Error parsing notification frame", error);
           }
-        });
-      },
-      onStompError: (frame) => {
-        console.error("STOMP notifications error:", frame.headers["message"]);
-      },
-    });
+        };
 
-    stompClientRef.current = client;
-    client.activate();
+        socket.onclose = () => {
+          if (!closed) reconnectTimer = setTimeout(connect, 3000);
+        };
+        socket.onerror = () => socket?.close();
+      } catch (error) {
+        console.error("Could not open notification socket", error);
+        if (!closed) reconnectTimer = setTimeout(connect, 3000);
+      }
+    };
+
+    connect();
 
     return () => {
-      client.deactivate();
+      closed = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      socket?.close();
     };
   }, [myUsername, dispatch, loadMyUsername]);
 
-  return null; // This is a background/headless listener component
+  return null;
 }

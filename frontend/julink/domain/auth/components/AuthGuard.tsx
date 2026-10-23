@@ -9,21 +9,23 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const token = useAppSelector((state) => state.login?.token);
+  const sessionReady = useAppSelector((state) => state.login?.sessionReady);
   const [isChecking, setIsChecking] = useState(true);
 
-  // Define public paths that do not require authentication
-  const isPublicPath = pathname.startsWith("/login") || pathname.startsWith("/register");
+  const isPublicPath =
+    pathname.startsWith("/login") || pathname.startsWith("/register");
 
   useEffect(() => {
+    if (!sessionReady) return;
+
     if (!token && !isPublicPath) {
       router.push("/login");
     } else {
       setIsChecking(false);
     }
-  }, [token, isPublicPath, router]);
+  }, [token, sessionReady, isPublicPath, router]);
 
-  // If we are checking auth state and it's a protected path, show a spinner to prevent flash of content
-  if (isChecking && !isPublicPath) {
+  if (!isPublicPath && (!sessionReady || isChecking)) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Spinner className="w-8 h-8" />
@@ -31,7 +33,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // If token is missing on a protected path, render nothing (useEffect will redirect)
   if (!token && !isPublicPath) {
     return null;
   }

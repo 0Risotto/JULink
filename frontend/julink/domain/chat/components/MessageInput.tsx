@@ -7,7 +7,7 @@ import * as chatApi from "../api/chatApi";
 import { MessageResponse } from "../types";
 
 interface MessageInputProps {
-  conversationId: number;
+  conversationId: string;
   onSendTyping: (isTyping: boolean) => void;
   onSendMessage: (content: string) => void;
   editingMessage?: MessageResponse | null;

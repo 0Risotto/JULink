@@ -1,0 +1,21 @@
+[package]
+name = "julink-social"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+async-nats.workspace = true
+axum.workspace = true
+julink-clients = { path = "../../crates/clients" }
+julink-common = { path = "../../crates/common" }
+julink-proto = { path = "../../crates/proto" }
+neo4rs.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sqlx.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+uuid.workspace = true

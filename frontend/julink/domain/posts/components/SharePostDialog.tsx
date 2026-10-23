@@ -21,7 +21,7 @@ export default function SharePostDialog({ postId, trigger }: SharePostDialogProp
   const [conversations, setConversations] = useState<ConversationResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [sharedConvIds, setSharedUserIds] = useState<number[]>([]);
+  const [sharedConvIds, setSharedUserIds] = useState<string[]>([]);
   const { myUsername } = useUser();
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function SharePostDialog({ postId, trigger }: SharePostDialogProp
     }
   }, [open]);
 
-  const handleShare = async (convId: number) => {
+  const handleShare = async (convId: string) => {
     try {
       await chatApi.sharePost(convId, { postId });
       setSharedUserIds((prev) => [...prev, convId]);

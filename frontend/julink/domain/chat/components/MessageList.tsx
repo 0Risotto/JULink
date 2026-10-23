@@ -23,7 +23,7 @@ interface MessageListProps {
   myUsername: string;
   typingUsers: string[];
   onEditMessage?: (msg: MessageResponse) => void;
-  onDeleteMessage?: (msgId: number) => void;
+  onDeleteMessage?: (msgId: string) => void;
   title?: string;
   image?: string | null;
   subtitle?: string;

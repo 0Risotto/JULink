@@ -4,11 +4,11 @@ import * as chatApi from "../api/chatApi";
 
 interface ChatState {
   conversations: ConversationResponse[];
-  activeConversationId: number | null;
-  messagesByConvId: Record<number, MessageResponse[]>;
-  typingState: Record<number, string[]>; // conversationId -> array of usernames typing
+  activeConversationId: string | null;
+  messagesByConvId: Record<string, MessageResponse[]>;
+  typingState: Record<string, string[]>; // conversationId -> array of usernames typing
   loadingConversations: boolean;
-  loadingMessages: Record<number, boolean>;
+  loadingMessages: Record<string, boolean>;
   error: string | null;
 }
 
@@ -35,7 +35,7 @@ export const fetchConversations = createAsyncThunk(
 
 export const fetchMessages = createAsyncThunk(
   "chat/fetchMessages",
-  async ({ conversationId, page = 0 }: { conversationId: number; page?: number }, { rejectWithValue }) => {
+  async ({ conversationId, page = 0 }: { conversationId: string; page?: number }, { rejectWithValue }) => {
     try {
       const response = await chatApi.getMessages(conversationId, page);
       return { conversationId, page, data: response };
@@ -49,7 +49,7 @@ const chatSlice = createSlice({
   name: "chat",
   initialState,
   reducers: {
-    setActiveConversation: (state, action: PayloadAction<number | null>) => {
+    setActiveConversation: (state, action: PayloadAction<string | null>) => {
       state.activeConversationId = action.payload;
       if (action.payload && state.conversations.length > 0) {
         const conv = state.conversations.find((c) => c.id === action.payload);
@@ -110,12 +110,13 @@ const chatSlice = createSlice({
         state.typingState[conversationId] = typingUsers.filter((u) => u !== username);
       }
     },
-    wsReadReceived: (state, action: PayloadAction<{ conversationId: number; username: string; lastReadMessageId: number }>) => {
+    wsReadReceived: (state, action: PayloadAction<{ conversationId: string; username: string; lastReadMessageId: string }>) => {
       const { conversationId, lastReadMessageId } = action.payload;
       const msgs = state.messagesByConvId[conversationId];
       if (msgs) {
-        for (let i = 0; i < msgs.length; i++) {
-          if (msgs[i].id <= lastReadMessageId) {
+        const index = msgs.findIndex((message) => message.id === lastReadMessageId);
+        if (index !== -1) {
+          for (let i = 0; i <= index; i += 1) {
             msgs[i].status = "READ";
           }
         }
@@ -130,7 +131,7 @@ const chatSlice = createSlice({
         state.conversations.unshift(updatedConv);
       }
     },
-    removeConversation: (state, action: PayloadAction<number>) => {
+    removeConversation: (state, action: PayloadAction<string>) => {
       state.conversations = state.conversations.filter((c) => c.id !== action.payload);
       if (state.activeConversationId === action.payload) {
         state.activeConversationId = null;

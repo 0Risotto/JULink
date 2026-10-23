@@ -23,7 +23,7 @@ export type TypeEnum = "LOST" | "FOUND";
 
 export interface LostAndFoundResponse {
   id: string;
-  ownerId: number;
+  ownerId: string;
   ownerUsername: string;
   ownerProfilePicture: string | null;
   description: string;

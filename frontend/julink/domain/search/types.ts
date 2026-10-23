@@ -1,19 +1,19 @@
 export interface Page<T> {
   content: T[];
-  pageable: any;
+  pageable: unknown;
   last: boolean;
   totalPages: number;
   totalElements: number;
   size: number;
   number: number;
-  sort: any;
+  sort: unknown;
   first: boolean;
   numberOfElements: number;
   empty: boolean;
 }
 
 export interface UserSearchResultDTO {
-  id: number;
+  id: string;
   username: string;
   firstName: string;
   lastName: string;
@@ -23,7 +23,7 @@ export interface UserSearchResultDTO {
 
 export interface PostSearchResultDTO {
   postId: string;
-  ownerId: number;
+  ownerId: string;
   ownerUsername: string;
   ownerFirstName: string;
   ownerLastName: string;
@@ -37,6 +37,7 @@ export interface PostSearchResultDTO {
 export interface HashtagSearchResultDTO {
   hashtagId: string;
   name: string;
+  usageCount?: number;
 }
 
 export interface SearchAllResponse {

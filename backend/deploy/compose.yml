@@ -1,0 +1,310 @@
+name: julink-rust
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: julink
+      POSTGRES_PASSWORD: julink
+      POSTGRES_DB: postgres
+      TZ: Asia/Amman
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U julink -d postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  neo4j:
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/julinkdev
+      TZ: Asia/Amman
+    ports:
+      - "7475:7474"
+      - "7688:7687"
+    volumes:
+      - neo4jdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p julinkdev 'RETURN 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  nats:
+    image: nats:2.11-alpine
+    command: ["-c", "/etc/nats/nats.conf"]
+    ports:
+      - "4223:4222"
+      - "8223:8222"
+    volumes:
+      - ./nats.conf:/etc/nats/nats.conf:ro
+      - natsdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8222/healthz >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  identity:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        SERVICE: julink-identity
+    environment:
+      PORT: "9000"
+      JULINK_ENV: dev
+      LOG_FORMAT: json
+      RUST_LOG: info,julink_identity=debug
+      CORS_ORIGINS: http://localhost:3000
+      DEV_AUTH: "true"
+      RUN_MIGRATIONS: "true"
+      DATABASE_URL: postgres://julink:julink@postgres:5432/julink_identity
+      JWT_ISSUER: julink
+      JWT_TTL_SECONDS: "900"
+      REFRESH_TTL_SECONDS: "2592000"
+      OTP_SECRET: dev-only-change-me
+      OTP_RESEND_COOLDOWN_SECONDS: "60"
+      DEV_OTP: "true"
+      COOKIE_SECURE: "false"
+      # Leave SMTP_HOST unset to log OTPs in development.
+      SMTP_FROM: "JULink <no-reply@julink.local>"
+    ports:
+      - "9000:9000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/health/live >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  gateway:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        SERVICE: julink-gateway
+    environment:
+      PORT: "8080"
+      JULINK_ENV: dev
+      LOG_FORMAT: json
+      RUST_LOG: info,julink_gateway=debug
+      CORS_ORIGINS: http://localhost:3000
+      IDENTITY_URL: http://identity:9000
+      SOCIAL_URL: http://social:9001
+      CONTENT_URL: http://content:9002
+      FEED_URL: http://feed:9003
+      SEARCH_URL: http://search:9004
+      MESSAGING_URL: http://messaging:9005
+      REALTIME_WS_URL: ws://realtime:9006/ws
+      REALTIME_URL: http://realtime:9006
+      CALLS_URL: http://calls:9007
+      COMMUNITY_URL: http://community:9008
+      NOTIFICATIONS_URL: http://notifications:9009
+    ports:
+      - "8080:8080"
+    depends_on:
+      identity:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health/live >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # ---- feature services -------------------------------------------------
+  # Start these with: docker compose -f deploy/compose.yml --profile full up --build
+
+  social:
+    profiles: ["full"]
+    build: { context: .., dockerfile: Dockerfile, args: { SERVICE: julink-social } }
+    environment:
+      PORT: "9001"
+      RUST_LOG: info,julink_social=debug
+      CORS_ORIGINS: http://localhost:3000
+      DATABASE_URL: postgres://julink:julink@postgres:5432/julink_social
+      RUN_MIGRATIONS: "true"
+      IDENTITY_URL: http://identity:9000
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: julinkdev
+      NATS_URL: nats://nats:4222
+    ports: ["9001:9001"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      identity:
+        condition: service_healthy
+
+  content:
+    profiles: ["full"]
+    build: { context: .., dockerfile: Dockerfile, args: { SERVICE: julink-content } }
+    environment:
+      PORT: "9002"
+      RUST_LOG: info,julink_content=debug
+      CORS_ORIGINS: http://localhost:3000
+      DATABASE_URL: postgres://julink:julink@postgres:5432/julink_content
+      RUN_MIGRATIONS: "true"
+    ports: ["9002:9002"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  feed:
+    profiles: ["full"]
+    build: { context: .., dockerfile: Dockerfile, args: { SERVICE: julink-feed } }
+    environment:
+      PORT: "9003"
+      RUST_LOG: info,julink_feed=debug
+      CORS_ORIGINS: http://localhost:3000
+      SOCIAL_URL: http://social:9001
+      CONTENT_URL: http://content:9002
+      IDENTITY_URL: http://identity:9000
+      FEED_CACHE_TTL_SECONDS: "60"
+    ports: ["9003:9003"]
+    depends_on:
+      identity:
+        condition: service_healthy
+      content:
+        condition: service_started
+
+  search:
+    profiles: ["full"]
+    build: { context: .., dockerfile: Dockerfile, args: { SERVICE: julink-search } }
+    environment:
+      PORT: "9004"
+      RUST_LOG: info,julink_search=debug
+      CORS_ORIGINS: http://localhost:3000
+      DATABASE_URL: postgres://julink:julink@postgres:5432/julink_search
+      RUN_MIGRATIONS: "true"
+      IDENTITY_URL: http://identity:9000
+      CONTENT_URL: http://content:9002
+      SYNC_INTERVAL_SECONDS: "60"
+      SYNC_ENABLED: "true"
+    ports: ["9004:9004"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      identity:
+        condition: service_healthy
+      content:
+        condition: service_started
+
+  messaging:
+    profiles: ["full"]
+    build: { context: .., dockerfile: Dockerfile, args: { SERVICE: julink-messaging } }
+    environment:
+      PORT: "9005"
+      RUST_LOG: info,julink_messaging=debug
+      CORS_ORIGINS: http://localhost:3000
+      DATABASE_URL: postgres://julink:julink@postgres:5432/julink_messaging
+      RUN_MIGRATIONS: "true"
+      IDENTITY_URL: http://identity:9000
+      NATS_URL: nats://nats:4222
+    ports: ["9005:9005"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      identity:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+
+  realtime:
+    profiles: ["full"]
+    build: { context: .., dockerfile: Dockerfile, args: { SERVICE: julink-realtime } }
+    environment:
+      PORT: "9006"
+      RUST_LOG: info,julink_realtime=debug
+      CORS_ORIGINS: http://localhost:3000
+      MESSAGING_URL: http://messaging:9005
+      NATS_URL: nats://nats:4222
+      TICKET_TTL_SECONDS: "30"
+    ports: ["9006:9006"]
+    depends_on:
+      messaging:
+        condition: service_started
+      nats:
+        condition: service_healthy
+
+  calls:
+    profiles: ["full"]
+    build: { context: .., dockerfile: Dockerfile, args: { SERVICE: julink-calls } }
+    environment:
+      PORT: "9007"
+      RUST_LOG: info,julink_calls=debug
+      CORS_ORIGINS: http://localhost:3000
+      DATABASE_URL: postgres://julink:julink@postgres:5432/julink_calls
+      RUN_MIGRATIONS: "true"
+      IDENTITY_URL: http://identity:9000
+      MESSAGING_URL: http://messaging:9005
+      JITSI_BASE_URL: https://meet.jit.si
+      NATS_URL: nats://nats:4222
+    ports: ["9007:9007"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      identity:
+        condition: service_healthy
+      messaging:
+        condition: service_started
+      nats:
+        condition: service_healthy
+
+  community:
+    profiles: ["full"]
+    build: { context: .., dockerfile: Dockerfile, args: { SERVICE: julink-community } }
+    environment:
+      PORT: "9008"
+      RUST_LOG: info,julink_community=debug
+      CORS_ORIGINS: http://localhost:3000
+      DATABASE_URL: postgres://julink:julink@postgres:5432/julink_community
+      RUN_MIGRATIONS: "true"
+    ports: ["9008:9008"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  notifications:
+    profiles: ["full"]
+    build: { context: .., dockerfile: Dockerfile, args: { SERVICE: julink-notifications } }
+    environment:
+      PORT: "9009"
+      RUST_LOG: info,julink_notifications=debug
+      CORS_ORIGINS: http://localhost:3000
+      DATABASE_URL: postgres://julink:julink@postgres:5432/julink_notifications
+      RUN_MIGRATIONS: "true"
+      MESSAGING_URL: http://messaging:9005
+      NATS_URL: nats://nats:4222
+    ports: ["9009:9009"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      messaging:
+        condition: service_started
+      nats:
+        condition: service_healthy
+
+  prometheus:
+    profiles: ["observability"]
+    image: prom/prometheus:v3.1.0
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+volumes:
+  pgdata:
+  neo4jdata:
+  natsdata:

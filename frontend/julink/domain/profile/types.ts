@@ -5,6 +5,7 @@ export interface UserFollowList {
 }
 
 export interface UserProfileDTO {
+  id?: string;
   username: string;
   firstName: string;
   lastName: string;
@@ -13,6 +14,7 @@ export interface UserProfileDTO {
   profilePicture?: string;
   bannerPhoto?: string;
   themePreference?: string;
+  firstLogin?: boolean;
   followings?: UserFollowList[];
   followers?: UserFollowList[];
   postsNumber?: number;
@@ -29,12 +31,11 @@ export interface UpdateProfileDTO {
 }
 
 export interface ApiResponse<T> {
-  status: 'Success' | 'Error' | 'success' | 'error';
+  status: "Success" | "Error" | "success" | "error";
   user?: T;
   message?: string;
 }
 
-// For posts if needed
 export interface Comment {
   commenterPfp: string;
   commenterUsername: string;

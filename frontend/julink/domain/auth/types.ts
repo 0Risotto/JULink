@@ -3,11 +3,26 @@ export interface LoginUserDTO {
   password: string;
 }
 
+export interface AuthUser {
+  id: string;
+  username: string;
+  display_name: string;
+  email: string;
+  email_verified: boolean;
+  avatar_url: string | null;
+  banner_url: string | null;
+  bio: string | null;
+  college: string | null;
+  theme_preference: string;
+  first_login: boolean;
+  created_at: string;
+}
+
 export interface LoginResponse {
-  status: "success" | "fail" | "error";
-  token?: string;
-  isFirstLogin?: boolean;
-  message?: string;
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  user: AuthUser;
 }
 
 export interface RegisterUserDTO {
@@ -19,10 +34,11 @@ export interface RegisterUserDTO {
   password: string;
 }
 
-// For createUser and OTP endpoints that return JSON responses
 export interface SimpleResponse {
   status: string;
   message?: string;
+  email?: string;
+  dev_code?: string;
 }
 
 export interface OtpVerificationDTO {

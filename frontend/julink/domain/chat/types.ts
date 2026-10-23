@@ -1,8 +1,14 @@
-export type MessageType = "TEXT" | "IMAGE" | "VIDEO" | "AUDIO" | "FILE";
+export type MessageType =
+  | "TEXT"
+  | "IMAGE"
+  | "VIDEO"
+  | "AUDIO"
+  | "FILE"
+  | "POST_SHARE";
 export type MessageStatus = "SENT" | "DELIVERED" | "READ";
 
 export interface UserSummary {
-  id: number;
+  id: string;
   username: string;
   firstName: string;
   lastName: string;
@@ -11,8 +17,8 @@ export interface UserSummary {
 }
 
 export interface MessageResponse {
-  id: number;
-  conversationId: number;
+  id: string;
+  conversationId: string;
   sender: UserSummary;
   content: string | null;
   messageType: MessageType;
@@ -27,7 +33,7 @@ export interface MessageResponse {
 }
 
 export interface ConversationResponse {
-  id: number;
+  id: string;
   group: boolean;
   groupName: string | null;
   groupPictureUrl: string | null;
@@ -38,7 +44,7 @@ export interface ConversationResponse {
 }
 
 export interface GroupCallResponse {
-  conversationId: number;
+  conversationId: string;
   roomName: string;
   videoUrl: string;
   videoCall: boolean;
@@ -59,7 +65,7 @@ export interface StartGroupCallRequest {
 }
 
 export interface MediaBytesRequest {
-  fileBytes: string; // Base64-encoded string
+  fileBytes: string;
   filename: string;
   contentType: string;
 }
@@ -74,15 +80,15 @@ export interface WsMessageEvent {
 }
 
 export interface WsTypingEvent {
-  conversationId: number;
+  conversationId: string;
   username: string;
   typing: boolean;
 }
 
 export interface WsReadEvent {
-  conversationId: number;
+  conversationId: string;
   username: string;
-  lastReadMessageId: number;
+  lastReadMessageId: string;
 }
 
 export interface Page<T> {
@@ -91,4 +97,5 @@ export interface Page<T> {
   totalPages: number;
   size: number;
   number: number;
+  last: boolean;
 }

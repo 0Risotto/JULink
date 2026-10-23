@@ -2,7 +2,6 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { RegisterUserDTO, SimpleResponse } from "../types";
 import { createUserService, sendOtpService, verifyOtpService } from "../services/authServices";
 
-// First step: Create user account
 export const registerUserThunk = createAsyncThunk<
   SimpleResponse,
   RegisterUserDTO,
@@ -10,61 +9,41 @@ export const registerUserThunk = createAsyncThunk<
 >("register/createUser", async (userData, { rejectWithValue }) => {
   try {
     const response = await createUserService(userData);
-    
-    // Backend returns an object with { status: "success", message: "..." }
-    if (response?.status !== "success") {
-      return rejectWithValue(response?.message || "Registration failed");
-    }
-    
     return response;
-  } catch (error: any) {
-    if (error.response?.data?.message) {
-      return rejectWithValue(error.response.data.message);
-    }
-    return rejectWithValue("Server error during registration");
+  } catch (error: unknown) {
+    const message =
+      (error as { response?: { data?: { detail?: string } } })?.response?.data
+        ?.detail || "Registration failed";
+    return rejectWithValue(message);
   }
 });
 
-// Second step: Send OTP
 export const sendOtpThunk = createAsyncThunk<
   SimpleResponse,
   string,
   { rejectValue: string }
 >("register/sendOtp", async (email, { rejectWithValue }) => {
   try {
-    const response = await sendOtpService(email);
-    
-    if (response?.status !== "success") {
-      return rejectWithValue(response?.message || "Failed to send OTP");
-    }
-    
-    return response;
-  } catch (error: any) {
-    if (error.response?.data?.message) {
-      return rejectWithValue(error.response.data.message);
-    }
-    return rejectWithValue("Server error sending OTP");
+    return await sendOtpService(email);
+  } catch (error: unknown) {
+    const message =
+      (error as { response?: { data?: { detail?: string } } })?.response?.data
+        ?.detail || "Failed to send OTP";
+    return rejectWithValue(message);
   }
 });
 
-// Third step: Verify OTP
 export const verifyOtpThunk = createAsyncThunk<
   SimpleResponse,
   { email: string; otp: string },
   { rejectValue: string }
 >("register/verifyOtp", async (data, { rejectWithValue }) => {
   try {
-    const response = await verifyOtpService(data);
-    
-    if (response?.status !== "success") {
-      return rejectWithValue(response?.message || "OTP verification failed");
-    }
-    
-    return response;
-  } catch (error: any) {
-    if (error.response?.data?.message) {
-      return rejectWithValue(error.response.data.message);
-    }
-    return rejectWithValue("Server error verifying OTP");
+    return await verifyOtpService(data);
+  } catch (error: unknown) {
+    const message =
+      (error as { response?: { data?: { detail?: string } } })?.response?.data
+        ?.detail || "OTP verification failed";
+    return rejectWithValue(message);
   }
 });

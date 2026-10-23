@@ -3,16 +3,56 @@ import {
   GetBlockedUsersResponse,
   GetBlockStatusResponse,
   BlockActionResponse,
+  BlockedUser,
 } from "../types";
 
-export const blockUser = (username: string) =>
-  post<BlockActionResponse>(`/blocks/${username}`);
+interface BackendPage<T> {
+  items: T[];
+  next_cursor: string | null;
+}
 
-export const unblockUser = (username: string) =>
-  del<BlockActionResponse>(`/blocks/${username}`);
+interface BackendFollowUser {
+  user_id: string;
+  username: string;
+}
 
-export const getBlockedUsers = () =>
-  get<GetBlockedUsersResponse>("/blocks");
+export const blockUser = async (username: string): Promise<BlockActionResponse> => {
+  await post<void>(`/blocks/${encodeURIComponent(username)}`);
+  return { status: "success" };
+};
 
-export const getBlockStatus = (username: string) =>
-  get<GetBlockStatusResponse>(`/blocks/${username}/status`);
+export const unblockUser = async (
+  username: string,
+): Promise<BlockActionResponse> => {
+  await del<void>(`/blocks/${encodeURIComponent(username)}`);
+  return { status: "success" };
+};
+
+export const getBlockedUsers = async (): Promise<GetBlockedUsersResponse> => {
+  const data = await get<BackendPage<BackendFollowUser>>("/blocks", {
+    params: { limit: 100 },
+  });
+  const blockedUsers: BlockedUser[] = data.items.map((user) => ({
+    username: user.username,
+    fullName: user.username,
+    profilePictureUrl: null,
+    blockedAt: "",
+  }));
+  return { status: "success", blockedUsers };
+};
+
+export const getBlockStatus = async (
+  username: string,
+): Promise<GetBlockStatusResponse> => {
+  const data = await get<{ blocked: boolean; blocked_by: boolean }>(
+    `/blocks/${encodeURIComponent(username)}/status`,
+  );
+  return {
+    status: "success",
+    blockStatus: {
+      blockedByMe: data.blocked,
+      blockedMe: data.blocked_by,
+      blockedEitherWay: data.blocked || data.blocked_by,
+    },
+  };
+};

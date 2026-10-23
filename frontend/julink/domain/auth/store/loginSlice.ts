@@ -1,16 +1,19 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { loginThunk } from "./loginThunks";
+import { clearAccessToken, getAccessToken } from "@/util/api/axios";
 
 interface LoginState {
   token: string | null;
-  isFirstLogin: boolean | null;
+  sessionReady: boolean;
+  firstLogin: boolean | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: LoginState = {
-  token: typeof window !== "undefined" ? localStorage.getItem("token") : null,
-  isFirstLogin: null,
+  token: getAccessToken(),
+  sessionReady: false,
+  firstLogin: null,
   loading: false,
   error: null,
 };
@@ -19,10 +22,16 @@ const loginSlice = createSlice({
   name: "login",
   initialState,
   reducers: {
+    setToken: (state, action: PayloadAction<string | null>) => {
+      state.token = action.payload;
+    },
+    setSessionReady: (state, action: PayloadAction<boolean>) => {
+      state.sessionReady = action.payload;
+    },
     logout: (state) => {
       state.token = null;
-      state.isFirstLogin = null;
-      localStorage.removeItem("token");
+      state.firstLogin = null;
+      clearAccessToken();
     },
   },
   extraReducers: (builder) => {
@@ -33,12 +42,9 @@ const loginSlice = createSlice({
       })
       .addCase(loginThunk.fulfilled, (state, action) => {
         state.loading = false;
-        state.token = action.payload.token || null;
-        state.isFirstLogin = action.payload.isFirstLogin ?? null;
-
-        if (action.payload.token) {
-          localStorage.setItem("token", action.payload.token);
-        }
+        state.token = action.payload.access_token;
+        state.firstLogin = action.payload.user.first_login;
+        state.sessionReady = true;
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
@@ -47,5 +53,5 @@ const loginSlice = createSlice({
   },
 });
 
-export const { logout } = loginSlice.actions;
+export const { setToken, setSessionReady, logout } = loginSlice.actions;
 export default loginSlice.reducer;

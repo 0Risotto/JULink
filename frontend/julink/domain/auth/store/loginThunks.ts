@@ -1,6 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { LoginUserDTO, LoginResponse } from "../types";
 import { loginService } from "../services/authServices";
+import { rememberAccessToken } from "@/util/api/axios";
 
 export const loginThunk = createAsyncThunk<
   LoginResponse,
@@ -10,12 +11,16 @@ export const loginThunk = createAsyncThunk<
   try {
     const response = await loginService(data);
 
-    if (response.status !== "success") {
-      return rejectWithValue(response.message || "Login failed");
+    if (!response.access_token) {
+      return rejectWithValue("Login failed");
     }
 
+    rememberAccessToken(response.access_token);
     return response;
-  } catch {
-    return rejectWithValue("Server error");
+  } catch (error: unknown) {
+    const message =
+      (error as { response?: { data?: { detail?: string } } })?.response?.data
+        ?.detail || "Server error";
+    return rejectWithValue(message);
   }
 });

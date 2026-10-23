@@ -32,7 +32,7 @@ export function JitsiMeetingComponent({ roomName, isVideoCall = true, autoEndCal
         </div>
       )}
       <JitsiMeeting
-        domain="meet.opensuse.org"
+        domain="meet.jit.si"
         roomName={roomName}
         getIFrameRef={(iframeRef) => {
           iframeRef.style.height = "100%";

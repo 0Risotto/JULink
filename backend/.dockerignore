@@ -1,0 +1,7 @@
+target
+julink
+.git
+.idea
+.env
+deploy
+*.log
